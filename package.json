@@ -10,14 +10,42 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:org"
+    "onLanguage:org",
+    "onCommand:vorg.preview",
+    "onCommand:vorg.previewToSide"
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "languages": [
+      {
+        "id": "org",
+        "aliases": [
+          "Org",
+          "org-mode"
+        ],
+        "extensions": [
+          ".org"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "org",
+        "scopeName": "source.org",
+        "path": "./syntaxes/org.tmLanguage.json"
+      }
+    ],
     "commands": [
       {
         "command": "vorg.preview",
-        "title": "VOrg: Open Preview"
+        "title": "VOrg: Open Preview",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "vorg.previewToSide",
+        "title": "VOrg: Open Preview to the Side",
+        "icon": "$(open-preview)"
       }
     ],
     "menus": {
@@ -26,9 +54,28 @@
           "when": "editorLangId == org",
           "command": "vorg.preview",
           "group": "navigation"
+        },
+        {
+          "when": "editorLangId == org",
+          "command": "vorg.previewToSide",
+          "group": "navigation"
         }
       ]
-    }
+    },
+    "keybindings": [
+      {
+        "command": "vorg.preview",
+        "key": "ctrl+shift+v",
+        "mac": "cmd+shift+v",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "vorg.previewToSide",
+        "key": "ctrl+k v",
+        "mac": "cmd+k v",
+        "when": "editorLangId == org"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

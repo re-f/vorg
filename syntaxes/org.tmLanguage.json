@@ -1,0 +1,241 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Org",
+  "patterns": [
+    {
+      "include": "#headers"
+    },
+    {
+      "include": "#markup"
+    },
+    {
+      "include": "#links"
+    },
+    {
+      "include": "#code-blocks"
+    },
+    {
+      "include": "#lists"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#comments"
+    }
+  ],
+  "repository": {
+    "headers": {
+      "patterns": [
+        {
+          "name": "markup.heading.1.org",
+          "match": "^(\\*{1})\\s+(.*)$",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.heading.org"
+            },
+            "2": {
+              "name": "entity.name.section.org"
+            }
+          }
+        },
+        {
+          "name": "markup.heading.2.org",
+          "match": "^(\\*{2})\\s+(.*)$",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.heading.org"
+            },
+            "2": {
+              "name": "entity.name.section.org"
+            }
+          }
+        },
+        {
+          "name": "markup.heading.3.org",
+          "match": "^(\\*{3})\\s+(.*)$",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.heading.org"
+            },
+            "2": {
+              "name": "entity.name.section.org"
+            }
+          }
+        },
+        {
+          "name": "markup.heading.4.org",
+          "match": "^(\\*{4})\\s+(.*)$",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.heading.org"
+            },
+            "2": {
+              "name": "entity.name.section.org"
+            }
+          }
+        },
+        {
+          "name": "markup.heading.5.org",
+          "match": "^(\\*{5})\\s+(.*)$",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.heading.org"
+            },
+            "2": {
+              "name": "entity.name.section.org"
+            }
+          }
+        },
+        {
+          "name": "markup.heading.6.org",
+          "match": "^(\\*{6,})\\s+(.*)$",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.heading.org"
+            },
+            "2": {
+              "name": "entity.name.section.org"
+            }
+          }
+        }
+      ]
+    },
+    "markup": {
+      "patterns": [
+        {
+          "name": "markup.bold.org",
+          "match": "\\*([^*\\s].*?[^*\\s])\\*",
+          "captures": {
+            "1": {
+              "name": "markup.bold.org"
+            }
+          }
+        },
+        {
+          "name": "markup.italic.org",
+          "match": "/([^/\\s].*?[^/\\s])/",
+          "captures": {
+            "1": {
+              "name": "markup.italic.org"
+            }
+          }
+        },
+        {
+          "name": "markup.underline.org",
+          "match": "_([^_\\s].*?[^_\\s])_",
+          "captures": {
+            "1": {
+              "name": "markup.underline.org"
+            }
+          }
+        },
+        {
+          "name": "markup.raw.inline.org",
+          "match": "=([^=\\s].*?[^=\\s])=",
+          "captures": {
+            "1": {
+              "name": "markup.raw.inline.org"
+            }
+          }
+        },
+        {
+          "name": "markup.raw.inline.org",
+          "match": "~([^~\\s].*?[^~\\s])~",
+          "captures": {
+            "1": {
+              "name": "markup.raw.inline.org"
+            }
+          }
+        }
+      ]
+    },
+    "links": {
+      "patterns": [
+        {
+          "name": "markup.underline.link.org",
+          "match": "\\[\\[([^\\]]+)\\]\\]",
+          "captures": {
+            "1": {
+              "name": "string.other.link.title.org"
+            }
+          }
+        },
+        {
+          "name": "markup.underline.link.org",
+          "match": "\\[\\[([^\\]]+)\\]\\[([^\\]]+)\\]\\]",
+          "captures": {
+            "1": {
+              "name": "string.other.link.title.org"
+            },
+            "2": {
+              "name": "string.other.link.description.org"
+            }
+          }
+        }
+      ]
+    },
+    "code-blocks": {
+      "patterns": [
+        {
+          "name": "markup.fenced_code.block.org",
+          "begin": "^\\s*#\\+BEGIN_SRC\\s*(\\w*)\\s*$",
+          "end": "^\\s*#\\+END_SRC\\s*$",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.fenced.org"
+            },
+            "1": {
+              "name": "fenced_code.block.language.org"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.fenced.org"
+            }
+          },
+          "contentName": "markup.raw.block.org"
+        }
+      ]
+    },
+    "lists": {
+      "patterns": [
+        {
+          "name": "markup.list.unnumbered.org",
+          "match": "^\\s*(-|\\+)\\s+",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.list.begin.org"
+            }
+          }
+        },
+        {
+          "name": "markup.list.numbered.org",
+          "match": "^\\s*(\\d+\\.|\\d+\\))\\s+",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.list.begin.org"
+            }
+          }
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.other.org",
+          "match": "^\\s*#\\+\\w+:.*$"
+        }
+      ]
+    },
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.org",
+          "match": "^\\s*#(?!\\+).*$"
+        }
+      ]
+    }
+  },
+  "scopeName": "source.org"
+} 

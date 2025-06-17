@@ -1,0 +1,111 @@
+#+TITLE: VOrg 扩展测试文档
+#+AUTHOR: VOrg 开发者
+#+DATE: 2024-01-01
+
+* 欢迎使用 VOrg 扩展
+
+这是一个测试 VOrg 扩展功能的示例文档。
+
+** 基本语法测试
+
+*** 文本格式
+- *粗体文本*
+- /斜体文本/
+- _下划线文本_
+- =代码文本=
+- ~等宽字体~
+
+*** 列表测试
+
+**** 无序列表
+- 第一项
+- 第二项
+  - 子项目 1
+  - 子项目 2
+- 第三项
+
+**** 有序列表
+1. 第一步
+2. 第二步
+   1. 子步骤 A
+   2. 子步骤 B
+3. 第三步
+
+**** 任务列表
+- [ ] 未完成任务
+- [X] 已完成任务
+- [-] 部分完成任务
+
+** 代码块测试
+
+这是一个内联代码示例：=console.log("Hello World")=
+
+#+BEGIN_SRC javascript
+function greet(name) {
+    console.log(`Hello, ${name}!`);
+}
+
+greet("VOrg");
+#+END_SRC
+
+#+BEGIN_SRC python
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+print(fibonacci(10))
+#+END_SRC
+
+** 引用块测试
+
+#+BEGIN_QUOTE
+这是一个引用块的示例。
+它可以包含多行文本。
+
+— 某位智者
+#+END_QUOTE
+
+** 表格测试
+
+| 姓名   | 年龄 | 城市   |
+|--------+------+--------|
+| 张三   |   25 | 北京   |
+| 李四   |   30 | 上海   |
+| 王五   |   28 | 广州   |
+
+** 链接测试
+
+- 外部链接：[[https://orgmode.org][Org Mode 官网]]
+- 内部链接：[[#代码块测试][跳转到代码块部分]]
+
+** 图片测试
+
+[[https://via.placeholder.com/400x200?text=VOrg+Preview][示例图片]]
+
+** 数学公式测试
+
+行内公式：$E = mc^2$
+
+块级公式：
+$$\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}$$
+
+** 标签测试 :tag1:tag2:important:
+
+这个标题包含了一些标签。
+
+* 总结
+
+VOrg 扩展支持：
+1. 实时预览 Org-mode 文档
+2. 支持明暗主题切换
+3. 美观的样式渲染
+4. 并排预览功能
+5. 完整的 Org-mode 语法支持
+
+使用方法：
+- 按 =Ctrl+Shift+V= (Windows/Linux) 或 =Cmd+Shift+V= (Mac) 打开预览
+- 按 =Ctrl+K V= (Windows/Linux) 或 =Cmd+K V= (Mac) 打开并排预览
+- 或者使用命令面板执行相应命令
+
+享受使用 VOrg 扩展！ 
