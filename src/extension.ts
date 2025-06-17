@@ -85,6 +85,20 @@ export function activate(context: vscode.ExtensionContext) {
         null,
         context.subscriptions
       );
+
+      // 处理来自预览窗口的消息
+      currentSidePanel.webview.onDidReceiveMessage(
+        message => {
+          switch (message.command) {
+            case 'ready':
+              // 预览窗口准备就绪，发送初始滚动位置
+              syncScrollToPreview(currentSidePanel);
+              break;
+          }
+        },
+        undefined,
+        context.subscriptions
+      );
     }
 
     updatePreview(currentSidePanel);
@@ -125,6 +139,44 @@ export function activate(context: vscode.ExtensionContext) {
     null,
     context.subscriptions
   );
+
+  // 监听编辑器滚动事件
+  vscode.window.onDidChangeTextEditorVisibleRanges(
+    event => {
+      if (event.textEditor === vscode.window.activeTextEditor) {
+        // 同步滚动到预览窗口
+        if (currentSidePanel) {
+          syncScrollToPreview(currentSidePanel);
+        }
+        if (currentPanel) {
+          syncScrollToPreview(currentPanel);
+        }
+      }
+    },
+    null,
+    context.subscriptions
+  );
+
+  function syncScrollToPreview(panel: vscode.WebviewPanel | undefined) {
+    if (!panel || !vscode.window.activeTextEditor) {
+      return;
+    }
+
+    const editor = vscode.window.activeTextEditor;
+    const visibleRanges = editor.visibleRanges;
+    
+    if (visibleRanges.length > 0) {
+      const firstVisibleLine = visibleRanges[0].start.line;
+      const totalLines = editor.document.lineCount;
+      const scrollPercentage = firstVisibleLine / Math.max(totalLines - 1, 1);
+      
+      // 发送滚动位置到预览窗口
+      panel.webview.postMessage({
+        command: 'updateScroll',
+        scrollPercentage: scrollPercentage
+      });
+    }
+  }
 
   function updatePreview(panel: vscode.WebviewPanel) {
     if (!panel || !vscode.window.activeTextEditor) {
@@ -187,6 +239,42 @@ export function activate(context: vscode.ExtensionContext) {
       // 获取当前 VS Code 主题信息
       const isDarkTheme = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
 
+      // 添加行号标记到 HTML 中以便滚动同步
+      const lines = text.split('\n');
+      let htmlWithLineMarkers = '';
+      let currentLineIndex = 0;
+
+      // 为每个标题添加行号标记
+      const htmlLines = html.split('\n');
+      htmlLines.forEach((line, index) => {
+        if (line.includes('<h1') || line.includes('<h2') || line.includes('<h3') || 
+            line.includes('<h4') || line.includes('<h5') || line.includes('<h6')) {
+          // 找到对应的原始行号
+          const headerMatch = line.match(/>([^<]+)</);
+          if (headerMatch) {
+            const headerText = headerMatch[1].trim();
+            const originalLineIndex = lines.findIndex((orgLine, lineIndex) => {
+              return lineIndex >= currentLineIndex && 
+                     orgLine.trim().startsWith('*') && 
+                     orgLine.includes(headerText);
+            });
+            if (originalLineIndex !== -1) {
+              currentLineIndex = originalLineIndex + 1;
+              htmlWithLineMarkers += line.replace(/(<h[1-6][^>]*>)/, `$1<span class="line-marker" data-line="${originalLineIndex}"></span>`);
+            } else {
+              htmlWithLineMarkers += line;
+            }
+          } else {
+            htmlWithLineMarkers += line;
+          }
+        } else {
+          htmlWithLineMarkers += line;
+        }
+        if (index < htmlLines.length - 1) {
+          htmlWithLineMarkers += '\n';
+        }
+      });
+
       // 添加美观的样式，支持明暗主题
       const styledHtml = `
         <!DOCTYPE html>
@@ -222,6 +310,7 @@ export function activate(context: vscode.ExtensionContext) {
                 margin-bottom: 0.5em;
                 font-weight: 600;
                 line-height: 1.25;
+                position: relative;
               }
 
               h1 {
@@ -344,10 +433,72 @@ export function activate(context: vscode.ExtensionContext) {
                 font-size: 0.8em;
                 margin-left: 0.5em;
               }
+
+              /* 行号标记（不可见） */
+              .line-marker {
+                display: none;
+              }
+
+              /* 滚动指示器 */
+              .scroll-indicator {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 3px;
+                background-color: var(--quote-border);
+                transform-origin: left;
+                z-index: 1000;
+                opacity: 0.7;
+              }
             </style>
           </head>
           <body>
-            ${html}
+            <div class="scroll-indicator" id="scrollIndicator"></div>
+            ${htmlWithLineMarkers || html}
+            
+            <script>
+              const vscode = acquireVsCodeApi();
+              
+              // 通知 VS Code 预览窗口已准备就绪
+              vscode.postMessage({ command: 'ready' });
+              
+              // 监听来自 VS Code 的消息
+              window.addEventListener('message', event => {
+                const message = event.data;
+                
+                switch (message.command) {
+                  case 'updateScroll':
+                    updateScrollPosition(message.scrollPercentage);
+                    break;
+                }
+              });
+              
+              function updateScrollPosition(percentage) {
+                const body = document.body;
+                const documentHeight = body.scrollHeight - window.innerHeight;
+                const targetScrollTop = documentHeight * percentage;
+                
+                // 平滑滚动到目标位置
+                window.scrollTo({
+                  top: targetScrollTop,
+                  behavior: 'smooth'
+                });
+                
+                // 更新滚动指示器
+                updateScrollIndicator(percentage);
+              }
+              
+              function updateScrollIndicator(percentage) {
+                const indicator = document.getElementById('scrollIndicator');
+                if (indicator) {
+                  indicator.style.transform = \`scaleX(\${percentage})\`;
+                }
+              }
+              
+              // 初始化滚动指示器
+              updateScrollIndicator(0);
+            </script>
           </body>
         </html>
       `;
