@@ -1,0 +1,65 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# VOrg 扩展指南
+
+## 项目概述
+VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，类似于 Markdown Preview。它允许用户在编辑 Org-mode 文档的同时，实时查看渲染后的效果。
+
+## 主要功能
+1. Org-mode 预览 (`vorg.preview`)
+   - 实时预览 Org-mode 文档
+   - 支持 Org-mode 语法高亮
+   - 提供类似 Markdown Preview 的预览体验
+
+2. 文档解析与转换
+   - 使用 uniorg 解析 Org-mode 文档
+   - 通过 rehype 将 Org-mode 转换为 HTML
+   - 支持 Org-mode 的所有标准语法
+
+3. 预览功能
+   - 支持实时更新
+   - 提供预览窗口
+   - 支持滚动同步
+   - 支持主题适配
+
+## 核心文件
+- [src/extension.ts](mdc:src/extension.ts) - 扩展的主要实现文件
+  - 包含预览功能的实现
+  - 处理文档解析和转换
+  - 管理预览窗口
+
+## 技术栈
+- VS Code Extension API
+- unified 处理流程
+  - uniorg-parse: Org-mode 解析器
+  - uniorg-rehype: Org-mode 到 HTML 的转换器
+  - rehype-stringify: HTML 字符串化
+- WebView API: 用于显示预览
+
+## 使用说明
+1. 打开 Org-mode 文件
+2. 使用以下方式之一打开预览：
+   - 点击编辑器右上角的预览图标
+   - 使用命令面板执行 `VOrg: Open Preview`
+   - 使用快捷键 `Ctrl+Shift+V`（Windows/Linux）或 `Cmd+Shift+V`（Mac）
+
+## 预览支持的功能
+- 标题层级（使用 * 标记）
+- 列表（有序和无序）
+- 链接
+- 代码块
+- 表格
+- 引用
+- 任务列表
+- 时间戳
+- 标签
+
+## 注意事项
+- 预览会实时更新，无需手动刷新
+- 支持 VS Code 的主题，预览样式会自动适应
+- 可以同时打开多个预览窗口
+- 支持预览窗口的缩放和布局调整
+
