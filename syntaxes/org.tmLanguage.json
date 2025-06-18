@@ -6,6 +6,15 @@
       "include": "#headers"
     },
     {
+      "include": "#todo-keywords"
+    },
+    {
+      "include": "#tags"
+    },
+    {
+      "include": "#properties"
+    },
+    {
       "include": "#markup"
     },
     {
@@ -15,13 +24,34 @@
       "include": "#code-blocks"
     },
     {
+      "include": "#quote-blocks"
+    },
+    {
+      "include": "#example-blocks"
+    },
+    {
+      "include": "#tables"
+    },
+    {
       "include": "#lists"
+    },
+    {
+      "include": "#task-lists"
+    },
+    {
+      "include": "#math"
+    },
+    {
+      "include": "#timestamps"
     },
     {
       "include": "#keywords"
     },
     {
       "include": "#comments"
+    },
+    {
+      "include": "#horizontal-rule"
     }
   ],
   "repository": {
@@ -29,73 +59,145 @@
       "patterns": [
         {
           "name": "markup.heading.1.org",
-          "match": "^(\\*{1})\\s+(.*)$",
+          "match": "^(\\*{1})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)\\s*(:[\\w:]*:)?\\s*$",
           "captures": {
             "1": {
               "name": "punctuation.definition.heading.org"
             },
             "2": {
+              "name": "keyword.other.todo.org"
+            },
+            "3": {
               "name": "entity.name.section.org"
+            },
+            "4": {
+              "name": "entity.name.tag.org"
             }
           }
         },
         {
           "name": "markup.heading.2.org",
-          "match": "^(\\*{2})\\s+(.*)$",
+          "match": "^(\\*{2})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)\\s*(:[\\w:]*:)?\\s*$",
           "captures": {
             "1": {
               "name": "punctuation.definition.heading.org"
             },
             "2": {
+              "name": "keyword.other.todo.org"
+            },
+            "3": {
               "name": "entity.name.section.org"
+            },
+            "4": {
+              "name": "entity.name.tag.org"
             }
           }
         },
         {
           "name": "markup.heading.3.org",
-          "match": "^(\\*{3})\\s+(.*)$",
+          "match": "^(\\*{3})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)\\s*(:[\\w:]*:)?\\s*$",
           "captures": {
             "1": {
               "name": "punctuation.definition.heading.org"
             },
             "2": {
+              "name": "keyword.other.todo.org"
+            },
+            "3": {
               "name": "entity.name.section.org"
+            },
+            "4": {
+              "name": "entity.name.tag.org"
             }
           }
         },
         {
           "name": "markup.heading.4.org",
-          "match": "^(\\*{4})\\s+(.*)$",
+          "match": "^(\\*{4})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)\\s*(:[\\w:]*:)?\\s*$",
           "captures": {
             "1": {
               "name": "punctuation.definition.heading.org"
             },
             "2": {
+              "name": "keyword.other.todo.org"
+            },
+            "3": {
               "name": "entity.name.section.org"
+            },
+            "4": {
+              "name": "entity.name.tag.org"
             }
           }
         },
         {
           "name": "markup.heading.5.org",
-          "match": "^(\\*{5})\\s+(.*)$",
+          "match": "^(\\*{5})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)\\s*(:[\\w:]*:)?\\s*$",
           "captures": {
             "1": {
               "name": "punctuation.definition.heading.org"
             },
             "2": {
+              "name": "keyword.other.todo.org"
+            },
+            "3": {
               "name": "entity.name.section.org"
+            },
+            "4": {
+              "name": "entity.name.tag.org"
             }
           }
         },
         {
           "name": "markup.heading.6.org",
-          "match": "^(\\*{6,})\\s+(.*)$",
+          "match": "^(\\*{6,})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)\\s*(:[\\w:]*:)?\\s*$",
           "captures": {
             "1": {
               "name": "punctuation.definition.heading.org"
             },
             "2": {
+              "name": "keyword.other.todo.org"
+            },
+            "3": {
               "name": "entity.name.section.org"
+            },
+            "4": {
+              "name": "entity.name.tag.org"
+            }
+          }
+        }
+      ]
+    },
+    "todo-keywords": {
+      "patterns": [
+        {
+          "name": "keyword.other.todo.org",
+          "match": "\\b(TODO|NEXT|WAITING)\\b"
+        },
+        {
+          "name": "keyword.other.done.org",
+          "match": "\\b(DONE|CANCELLED)\\b"
+        }
+      ]
+    },
+    "tags": {
+      "patterns": [
+        {
+          "name": "entity.name.tag.org",
+          "match": ":[\\w]+:"
+        }
+      ]
+    },
+    "properties": {
+      "patterns": [
+        {
+          "name": "storage.type.property.org",
+          "match": "^\\s*:([A-Z_]+):\\s*(.*)$",
+          "captures": {
+            "1": {
+              "name": "entity.name.function.org"
+            },
+            "2": {
+              "name": "string.unquoted.org"
             }
           }
         }
@@ -105,7 +207,7 @@
       "patterns": [
         {
           "name": "markup.bold.org",
-          "match": "\\*([^*\\s].*?[^*\\s])\\*",
+          "match": "(?<!\\w)\\*([^*\\s](?:[^*]*[^*\\s])?)\\*(?!\\w)",
           "captures": {
             "1": {
               "name": "markup.bold.org"
@@ -114,7 +216,7 @@
         },
         {
           "name": "markup.italic.org",
-          "match": "/([^/\\s].*?[^/\\s])/",
+          "match": "(?<!\\w)/([^/\\s](?:[^/]*[^/\\s])?)/(?!\\w)",
           "captures": {
             "1": {
               "name": "markup.italic.org"
@@ -123,7 +225,7 @@
         },
         {
           "name": "markup.underline.org",
-          "match": "_([^_\\s].*?[^_\\s])_",
+          "match": "(?<!\\w)_([^_\\s](?:[^_]*[^_\\s])?)_(?!\\w)",
           "captures": {
             "1": {
               "name": "markup.underline.org"
@@ -131,8 +233,17 @@
           }
         },
         {
+          "name": "markup.strikethrough.org",
+          "match": "(?<!\\w)\\+([^+\\s](?:[^+]*[^+\\s])?)\\+(?!\\w)",
+          "captures": {
+            "1": {
+              "name": "markup.strikethrough.org"
+            }
+          }
+        },
+        {
           "name": "markup.raw.inline.org",
-          "match": "=([^=\\s].*?[^=\\s])=",
+          "match": "(?<!\\w)=([^=\\s](?:[^=]*[^=\\s])?)=(?!\\w)",
           "captures": {
             "1": {
               "name": "markup.raw.inline.org"
@@ -141,7 +252,7 @@
         },
         {
           "name": "markup.raw.inline.org",
-          "match": "~([^~\\s].*?[^~\\s])~",
+          "match": "(?<!\\w)~([^~\\s](?:[^~]*[^~\\s])?)~(?!\\w)",
           "captures": {
             "1": {
               "name": "markup.raw.inline.org"
@@ -153,16 +264,28 @@
     "links": {
       "patterns": [
         {
-          "name": "markup.underline.link.org",
-          "match": "\\[\\[([^\\]]+)\\]\\]",
+          "name": "markup.underline.link.external.org",
+          "match": "\\[\\[(https?://[^\\]]+)\\]\\[([^\\]]+)\\]\\]",
           "captures": {
             "1": {
-              "name": "string.other.link.title.org"
+              "name": "string.other.link.url.org"
+            },
+            "2": {
+              "name": "string.other.link.description.org"
             }
           }
         },
         {
-          "name": "markup.underline.link.org",
+          "name": "markup.underline.link.external.org",
+          "match": "\\[\\[(https?://[^\\]]+)\\]\\]",
+          "captures": {
+            "1": {
+              "name": "string.other.link.url.org"
+            }
+          }
+        },
+        {
+          "name": "markup.underline.link.internal.org",
           "match": "\\[\\[([^\\]]+)\\]\\[([^\\]]+)\\]\\]",
           "captures": {
             "1": {
@@ -172,6 +295,24 @@
               "name": "string.other.link.description.org"
             }
           }
+        },
+        {
+          "name": "markup.underline.link.internal.org",
+          "match": "\\[\\[([^\\]]+)\\]\\]",
+          "captures": {
+            "1": {
+              "name": "string.other.link.title.org"
+            }
+          }
+        },
+        {
+          "name": "markup.underline.link.bare.org",
+          "match": "https?://[^\\s]+",
+          "captures": {
+            "0": {
+              "name": "string.other.link.url.org"
+            }
+          }
         }
       ]
     },
@@ -179,7 +320,7 @@
       "patterns": [
         {
           "name": "markup.fenced_code.block.org",
-          "begin": "^\\s*#\\+BEGIN_SRC\\s*(\\w*)\\s*$",
+          "begin": "^\\s*#\\+BEGIN_SRC\\s*(\\w*)\\s*(.*)$",
           "end": "^\\s*#\\+END_SRC\\s*$",
           "beginCaptures": {
             "0": {
@@ -187,6 +328,9 @@
             },
             "1": {
               "name": "fenced_code.block.language.org"
+            },
+            "2": {
+              "name": "fenced_code.block.arguments.org"
             }
           },
           "endCaptures": {
@@ -198,30 +342,169 @@
         }
       ]
     },
+    "quote-blocks": {
+      "patterns": [
+        {
+          "name": "markup.quote.block.org",
+          "begin": "^\\s*#\\+BEGIN_QUOTE\\s*$",
+          "end": "^\\s*#\\+END_QUOTE\\s*$",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.quote.org"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.quote.org"
+            }
+          },
+          "contentName": "markup.quote.org"
+        }
+      ]
+    },
+    "example-blocks": {
+      "patterns": [
+        {
+          "name": "markup.raw.block.org",
+          "begin": "^\\s*#\\+BEGIN_EXAMPLE\\s*$",
+          "end": "^\\s*#\\+END_EXAMPLE\\s*$",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.example.org"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.example.org"
+            }
+          },
+          "contentName": "markup.raw.block.org"
+        }
+      ]
+    },
+    "tables": {
+      "patterns": [
+        {
+          "name": "markup.table.org",
+          "match": "^\\s*(\\|.*)$",
+          "captures": {
+            "1": {
+              "name": "markup.table.row.org",
+              "patterns": [
+                {
+                  "name": "punctuation.separator.table.org",
+                  "match": "\\|"
+                },
+                {
+                  "name": "markup.table.cell.org",
+                  "match": "[^|]+"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "markup.table.separator.org",
+          "match": "^\\s*\\|[-+:=|\\s]*\\|\\s*$"
+        }
+      ]
+    },
     "lists": {
       "patterns": [
         {
           "name": "markup.list.unnumbered.org",
-          "match": "^\\s*(-|\\+)\\s+",
+          "match": "^(\\s*)(-|\\+|\\*)\\s+",
           "captures": {
-            "1": {
+            "2": {
               "name": "punctuation.definition.list.begin.org"
             }
           }
         },
         {
           "name": "markup.list.numbered.org",
-          "match": "^\\s*(\\d+\\.|\\d+\\))\\s+",
+          "match": "^(\\s*)(\\d+\\.|\\d+\\)|[a-zA-Z]\\.|[a-zA-Z]\\))\\s+",
           "captures": {
-            "1": {
+            "2": {
               "name": "punctuation.definition.list.begin.org"
             }
           }
         }
       ]
     },
+    "task-lists": {
+      "patterns": [
+        {
+          "name": "markup.list.task.org",
+          "match": "^(\\s*)(-|\\+|\\*)\\s+(\\[[ X-]\\])\\s+",
+          "captures": {
+            "2": {
+              "name": "punctuation.definition.list.begin.org"
+            },
+            "3": {
+              "name": "markup.list.task.checkbox.org"
+            }
+          }
+        }
+      ]
+    },
+    "math": {
+      "patterns": [
+        {
+          "name": "markup.math.block.org",
+          "begin": "^\\s*\\$\\$",
+          "end": "\\$\\$\\s*$",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.math.org"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.math.org"
+            }
+          },
+          "contentName": "markup.math.org"
+        },
+        {
+          "name": "markup.math.inline.org",
+          "match": "\\$([^$]+)\\$",
+          "captures": {
+            "0": {
+              "name": "markup.math.org"
+            },
+            "1": {
+              "name": "markup.math.content.org"
+            }
+          }
+        }
+      ]
+    },
+    "timestamps": {
+      "patterns": [
+        {
+          "name": "constant.other.timestamp.org",
+          "match": "<\\d{4}-\\d{2}-\\d{2}(?:\\s+\\w{3})?(?:\\s+\\d{2}:\\d{2})?(?:-\\d{2}:\\d{2})?(?:\\s+\\+\\d+[dwmy])?(?:\\s+-\\d+[dwmy])?>"
+        },
+        {
+          "name": "constant.other.timestamp.org",
+          "match": "\\[\\d{4}-\\d{2}-\\d{2}(?:\\s+\\w{3})?(?:\\s+\\d{2}:\\d{2})?(?:-\\d{2}:\\d{2})?(?:\\s+\\+\\d+[dwmy])?(?:\\s+-\\d+[dwmy])?\\]"
+        }
+      ]
+    },
     "keywords": {
       "patterns": [
+        {
+          "name": "keyword.other.special.org",
+          "match": "^\\s*#\\+(TITLE|AUTHOR|DATE|EMAIL|DESCRIPTION|KEYWORDS|LANGUAGE|OPTIONS|STARTUP|TODO|SEQ_TODO|TYP_TODO|TAGS|FILETAGS|ARCHIVE|CATEGORY|COLUMNS|CONSTANTS|LINK|PRIORITIES|PROPERTY|SETUPFILE|DRAWERS|LATEX_CLASS|LATEX_CLASS_OPTIONS|LATEX_HEADER|HTML_HEAD|EXPORT_SELECT_TAGS|EXPORT_EXCLUDE_TAGS|BIND):\\s*(.*)$",
+          "captures": {
+            "1": {
+              "name": "entity.name.function.org"
+            },
+            "2": {
+              "name": "string.unquoted.org"
+            }
+          }
+        },
         {
           "name": "keyword.other.org",
           "match": "^\\s*#\\+\\w+:.*$"
@@ -233,6 +516,14 @@
         {
           "name": "comment.line.number-sign.org",
           "match": "^\\s*#(?!\\+).*$"
+        }
+      ]
+    },
+    "horizontal-rule": {
+      "patterns": [
+        {
+          "name": "meta.separator.org",
+          "match": "^\\s*-{5,}\\s*$"
         }
       ]
     }

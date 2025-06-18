@@ -1,34 +1,42 @@
-#+TITLE: VOrg 扩展测试文档
+#+TITLE: VOrg 语法渲染功能测试
 #+AUTHOR: VOrg 开发者
 #+DATE: 2024-01-01
+#+DESCRIPTION: 这是一个展示 VOrg 语法渲染功能的完整测试文档
+#+KEYWORDS: org-mode, vscode, syntax-highlighting
+#+LANGUAGE: zh
 
-* 欢迎使用 VOrg 扩展
+# 这是一个注释行
 
-这是一个测试 VOrg 扩展功能的示例文档。
+* TODO 欢迎使用 VOrg 扩展 :welcome:important:
 
-** 基本语法测试
+这是一个测试 VOrg 扩展语法渲染功能的示例文档。
 
-*** 文本格式
+** DONE 基本语法测试 :basic:
+
+*** TODO 文本格式 :formatting:
 - *粗体文本*
 - /斜体文本/
 - _下划线文本_
+- +删除线文本+
 - =代码文本=
 - ~等宽字体~
 
-*** 列表测试
+*** NEXT 列表测试 :lists:
 
 **** 无序列表
 - 第一项
-- 第二项
++ 第二项
+* 第三项
   - 子项目 1
   - 子项目 2
-- 第三项
+    - 子子项目 A
+    - 子子项目 B
 
 **** 有序列表
 1. 第一步
 2. 第二步
-   1. 子步骤 A
-   2. 子步骤 B
+   a. 子步骤 A
+   b. 子步骤 B
 3. 第三步
 
 **** 任务列表
@@ -36,76 +44,159 @@
 - [X] 已完成任务
 - [-] 部分完成任务
 
-** 代码块测试
+** 属性和时间戳测试
+
+:PROPERTIES:
+:CREATED: [2024-01-01 Mon 10:00]
+:ID: unique-id-123
+:CATEGORY: example
+:END:
+
+SCHEDULED: <2024-01-15 Mon 14:00>
+DEADLINE: <2024-01-31 Wed>
+
+-----
+
+** WAITING 代码块测试 :code:
 
 这是一个内联代码示例：=console.log("Hello World")=
 
 #+BEGIN_SRC javascript
 function greet(name) {
     console.log(`Hello, ${name}!`);
+    return `Greeting sent to ${name}`;
 }
 
-greet("VOrg");
+// 调用函数
+const result = greet("VOrg");
+console.log(result);
 #+END_SRC
 
-#+BEGIN_SRC python
-def fibonacci(n):
+#+BEGIN_SRC python -n -r
+def fibonacci(n):               # (ref:fib-func)
+    """计算斐波那契数列第n项"""
     if n <= 1:
         return n
     return fibonacci(n-1) + fibonacci(n-2)
 
-print(fibonacci(10))
+# 测试函数
+for i in range(10):             # (ref:test-loop)
+    print(f"fibonacci({i}) = {fibonacci(i)}")
 #+END_SRC
 
-** 引用块测试
+引用代码行：在[[(ref:fib-func)]]定义了递归函数，在[[(ref:test-loop)]]进行测试。
+
+** 引用块和示例块测试
 
 #+BEGIN_QUOTE
 这是一个引用块的示例。
 它可以包含多行文本。
 
+引用内容可以是名人名言或者重要段落。
+
 — 某位智者
 #+END_QUOTE
 
-** 表格测试
+#+BEGIN_EXAMPLE
+这是一个示例块
+所有内容都会按原样显示
+    包括缩进和格式
+不会进行任何标记语言解析
+#+END_EXAMPLE
 
-| 姓名   | 年龄 | 城市   |
-|--------+------+--------|
-| 张三   |   25 | 北京   |
-| 李四   |   30 | 上海   |
-| 王五   |   28 | 广州   |
+** 表格测试 :tables:
 
-** 链接测试
+简单表格：
+| 姓名   | 年龄 | 城市   | 职业     |
+|--------+------+--------+----------|
+| 张三   |   25 | 北京   | 工程师   |
+| 李四   |   30 | 上海   | 设计师   |
+| 王五   |   28 | 广州   | 产品经理 |
 
-- 外部链接：[[https://orgmode.org][Org Mode 官网]]
-- 内部链接：[[#代码块测试][跳转到代码块部分]]
+对齐表格：
+|   名称   |  数量  |     价格     |     总价     |
+|:---------|:------:|-------------:|:------------:|
+| 苹果     |    5   |        3.50  |    17.50     |
+| 香蕉     |    8   |        2.00  |    16.00     |
+| 橙子     |    3   |        4.00  |    12.00     |
+|----------+--------+--------------+--------------|
+| 总计     |   16   |              |    45.50     |
 
-** 图片测试
+** 链接测试 :links:
 
-[[https://via.placeholder.com/400x200?text=VOrg+Preview][示例图片]]
+*** 外部链接
+- 带描述的链接：[[https://orgmode.org][Org Mode 官网]]
+- 直接链接：[[https://code.visualstudio.com]]
+- 裸链接：https://github.com
 
-** 数学公式测试
+*** 内部链接
+- 跳转到标题：[[*代码块测试][代码块部分]]
+- 跳转到锚点：[[#anchor-point][锚点位置]]
+- 文件链接：[[file:README.md][项目说明]]
 
-行内公式：$E = mc^2$
+** 数学公式测试 :math:
+
+行内公式：质能方程 $E = mc^2$ 是物理学的重要公式。
 
 块级公式：
 $$\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}$$
 
-** 标签测试 :tag1:tag2:important:
+$$
+\sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}
+$$
 
-这个标题包含了一些标签。
+** CANCELLED 标签和关键字测试 :tag1:tag2:important:
 
-* 总结
+这个标题包含了多个标签，状态是已取消。
 
-VOrg 扩展支持：
-1. 实时预览 Org-mode 文档
-2. 支持明暗主题切换
-3. 美观的样式渲染
-4. 并排预览功能
-5. 完整的 Org-mode 语法支持
+*** 特殊关键字
+- TODO: 待办事项
+- DONE: 已完成
+- NEXT: 下一步
+- WAITING: 等待中
+- CANCELLED: 已取消
+
+** 其他语法元素
+
+*** 分隔线
+下面是一个水平分隔线：
+
+-----
+
+*** 时间戳格式
+- 简单日期：<2024-01-01>
+- 带时间：<2024-01-01 Mon 14:30>
+- 时间范围：<2024-01-01 Mon 14:30-16:00>
+- 重复任务：<2024-01-01 Mon +1w>
+- 截止日期：<2024-01-31 Wed -2d>
+
+*** 脚注
+这里有一个脚注引用[fn:1]，还有另一个[fn:example]。
+
+[fn:1] 这是第一个脚注的内容。
+
+[fn:example] 这是一个带名称的脚注示例。
+
+* 总结 :summary:
+
+VOrg 扩展现在支持完整的 Org-mode 语法渲染：
+
+1. ✅ *标题层级*（1-6级，支持TODO状态和标签）
+2. ✅ *文本格式*（粗体、斜体、下划线、删除线、代码、等宽）
+3. ✅ *列表*（有序、无序、任务列表）
+4. ✅ *代码块*（支持语言标识和参数）
+5. ✅ *引用块和示例块*
+6. ✅ *表格*（完整的表格语法支持）
+7. ✅ *链接*（内部、外部、裸链接）
+8. ✅ *数学公式*（行内和块级）
+9. ✅ *时间戳*（多种格式）
+10. ✅ *属性和关键字*
+11. ✅ *标签系统*
+12. ✅ *注释和分隔线*
 
 使用方法：
 - 按 =Ctrl+Shift+V= (Windows/Linux) 或 =Cmd+Shift+V= (Mac) 打开预览
 - 按 =Ctrl+K V= (Windows/Linux) 或 =Cmd+K V= (Mac) 打开并排预览
-- 或者使用命令面板执行相应命令
+- 使用命令面板执行 "VOrg: Open Preview" 相关命令
 
-享受使用 VOrg 扩展！ 
+享受使用 VOrg 扩展的完整语法高亮功能！ 🎉 
