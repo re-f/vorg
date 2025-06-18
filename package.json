@@ -84,7 +84,7 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "test:unit": "npm run compile && npm run lint"
+    "test:unit": "npm run compile && node ./out/test/unit/unitTestRunner.js"
   },
   "devDependencies": {
     "@types/vscode": "^1.60.0",

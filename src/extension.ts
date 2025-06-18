@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { PreviewCommands } from './commands/previewCommands';
 import { OrgOutlineProvider } from './outline/orgOutlineProvider';
+import { OrgFoldingProvider } from './folding/orgFoldingProvider';
 import { OrgSyntaxHighlighter } from './syntaxHighlighter';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -18,6 +19,13 @@ export function activate(context: vscode.ExtensionContext) {
   const outlineProviderDisposable = vscode.languages.registerDocumentSymbolProvider(
     { scheme: 'file', language: 'org' },
     outlineProvider
+  );
+  
+  // 注册 Folding Provider
+  const foldingProvider = new OrgFoldingProvider();
+  const foldingProviderDisposable = vscode.languages.registerFoldingRangeProvider(
+    { scheme: 'file', language: 'org' },
+    foldingProvider
   );
   
   // 初始化语法高亮器
@@ -49,6 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
   // 添加到订阅列表
   context.subscriptions.push(
     outlineProviderDisposable,
+    foldingProviderDisposable,
     onDidChangeActiveTextEditor,
     onDidChangeTextDocument
   );
