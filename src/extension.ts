@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { PreviewCommands } from './commands/previewCommands';
 import { LinkCommands } from './commands/linkCommands';
+import { DebugCommands } from './commands/debugCommands';
 
 import { OrgFoldingProvider } from './folding/orgFoldingProvider';
 import { OrgLinkProvider } from './links/orgLinkProvider';
@@ -13,6 +14,7 @@ export function activate(context: vscode.ExtensionContext) {
   // 注册命令
   previewCommands.registerCommands(context);
   LinkCommands.registerCommands(context);
+  DebugCommands.registerCommands(context);
   
   // 注册事件监听器
   previewCommands.registerEventListeners(context);

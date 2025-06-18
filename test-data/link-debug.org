@@ -1,0 +1,16 @@
+#+TITLE: 链接调试测试
+
+* 测试链接
+
+简单测试：[[id:TODO-TASK-1111-2222-3333-444444444444][待办任务]]
+
+其他测试：
+- [[https://example.com][网站]]
+- [[file:test.org][文件]]  
+- [[#heading][标题]]
+
+无描述链接：
+- [[id:simple-id]]
+- [[https://example.com]]
+
+裸链接：https://example.com 

@@ -1,0 +1,478 @@
+#+TITLE: 语法高亮测试文件
+#+AUTHOR: Test User
+#+DATE: 2024-01-20
+#+LANGUAGE: zh-CN
+#+OPTIONS: toc:nil num:nil
+#+STARTUP: overview
+
+* 测试标题 :tag1:tag2:
+** TODO 待办事项
+** DONE 已完成任务
+
+* 属性测试
+:PROPERTIES:
+:ID: test-123
+:CREATED: [2024-01-20]
+:CATEGORY: test
+:TAGS: example
+:END:
+
+这是一个带属性的条目。
+
+* 代码块测试
+
+** Python 代码块
+#+BEGIN_SRC python :results output
+def hello_world():
+    print("Hello, World!")
+    return "success"
+
+class Calculator:
+    def __init__(self):
+        self.result = 0
+    
+    def add(self, x, y):
+        """Add two numbers"""
+        return x + y
+
+calc = Calculator()
+result = calc.add(5, 3)
+print(f"Result: {result}")
+#+END_SRC
+
+** JavaScript 代码块
+#+BEGIN_SRC javascript :session :exports both
+const greeting = "Hello from JavaScript";
+console.log(greeting);
+
+// 函数定义
+function calculateSum(a, b) {
+    return a + b;
+}
+
+// 箭头函数
+const multiply = (x, y) => x * y;
+
+// 对象解构
+const user = { name: "John", age: 30 };
+const { name, age } = user;
+
+console.log(`User: ${name}, Age: ${age}`);
+#+END_SRC
+
+** TypeScript 代码块
+#+BEGIN_SRC typescript
+interface User {
+    id: number;
+    name: string;
+    email?: string;
+}
+
+class UserService {
+    private users: User[] = [];
+    
+    addUser(user: User): void {
+        this.users.push(user);
+    }
+    
+    getUserById(id: number): User | undefined {
+        return this.users.find(user => user.id === id);
+    }
+}
+
+const service = new UserService();
+service.addUser({ id: 1, name: "Alice" });
+#+END_SRC
+
+** Java 代码块
+#+BEGIN_SRC java
+public class HelloWorld {
+    private String message;
+    
+    public HelloWorld(String message) {
+        this.message = message;
+    }
+    
+    public void printMessage() {
+        System.out.println(this.message);
+    }
+    
+    public static void main(String[] args) {
+        HelloWorld hw = new HelloWorld("Hello, Java!");
+        hw.printMessage();
+    }
+}
+#+END_SRC
+
+** C++ 代码块
+#+BEGIN_SRC cpp
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+class Calculator {
+private:
+    std::vector<int> numbers;
+    
+public:
+    void addNumber(int num) {
+        numbers.push_back(num);
+    }
+    
+    int sum() const {
+        return std::accumulate(numbers.begin(), numbers.end(), 0);
+    }
+};
+
+int main() {
+    Calculator calc;
+    calc.addNumber(10);
+    calc.addNumber(20);
+    std::cout << "Sum: " << calc.sum() << std::endl;
+    return 0;
+}
+#+END_SRC
+
+** Rust 代码块
+#+BEGIN_SRC rust
+use std::collections::HashMap;
+
+#[derive(Debug)]
+struct Person {
+    name: String,
+    age: u32,
+}
+
+impl Person {
+    fn new(name: String, age: u32) -> Self {
+        Person { name, age }
+    }
+    
+    fn greet(&self) -> String {
+        format!("Hello, I'm {} and I'm {} years old", self.name, self.age)
+    }
+}
+
+fn main() {
+    let person = Person::new("Alice".to_string(), 30);
+    println!("{}", person.greet());
+    
+    let mut scores = HashMap::new();
+    scores.insert("Alice", 100);
+    scores.insert("Bob", 95);
+}
+#+END_SRC
+
+** Shell 脚本
+#+BEGIN_SRC bash
+#!/bin/bash
+
+# 函数定义
+function backup_files() {
+    local source_dir=$1
+    local backup_dir=$2
+    
+    if [ ! -d "$backup_dir" ]; then
+        mkdir -p "$backup_dir"
+    fi
+    
+    cp -r "$source_dir"/* "$backup_dir/"
+    echo "Backup completed: $source_dir -> $backup_dir"
+}
+
+# 变量定义
+SOURCE="/home/user/documents"
+BACKUP="/backup/$(date +%Y%m%d)"
+
+# 调用函数
+backup_files "$SOURCE" "$BACKUP"
+
+# 条件判断
+if [ $? -eq 0 ]; then
+    echo "Success!"
+else
+    echo "Failed!"
+fi
+#+END_SRC
+
+** SQL 查询
+#+BEGIN_SRC sql
+-- 创建表
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 插入数据
+INSERT INTO users (name, email) VALUES 
+    ('Alice', 'alice@example.com'),
+    ('Bob', 'bob@example.com'),
+    ('Charlie', 'charlie@example.com');
+
+-- 查询数据
+SELECT 
+    u.id,
+    u.name,
+    u.email,
+    DATE_FORMAT(u.created_at, '%Y-%m-%d') as signup_date
+FROM users u
+WHERE u.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+ORDER BY u.created_at DESC
+LIMIT 10;
+
+-- 更新数据
+UPDATE users 
+SET email = 'newemail@example.com' 
+WHERE name = 'Alice';
+#+END_SRC
+
+** JSON 配置
+#+BEGIN_SRC json
+{
+  "name": "my-project",
+  "version": "1.0.0",
+  "description": "A sample project",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest",
+    "build": "webpack --mode production"
+  },
+  "dependencies": {
+    "express": "^4.18.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "webpack": "^5.74.0"
+  },
+  "author": "John Doe",
+  "license": "MIT"
+}
+#+END_SRC
+
+** YAML 配置
+#+BEGIN_SRC yaml
+# Docker Compose 配置
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://user:pass@db:5432/myapp
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./src:/app/src
+      - /app/node_modules
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
+#+END_SRC
+
+** HTML 代码
+#+BEGIN_SRC html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>示例页面</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <ul class="nav-list">
+                <li><a href="#home">首页</a></li>
+                <li><a href="#about">关于</a></li>
+                <li><a href="#contact">联系</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main class="main-content">
+        <section id="home">
+            <h1>欢迎来到我的网站</h1>
+            <p>这是一个示例页面，展示HTML语法高亮。</p>
+        </section>
+    </main>
+    
+    <script src="app.js"></script>
+</body>
+</html>
+#+END_SRC
+
+** CSS 样式
+#+BEGIN_SRC css
+/* 全局样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f4f4f4;
+}
+
+/* 头部样式 */
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.navbar ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.navbar a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .navbar ul {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+#+END_SRC
+
+* 其他块类型测试
+
+#+BEGIN_QUOTE
+这是一个引用块，用于引用其他人的话或者重要信息。
+引用块通常会有特殊的样式显示。
+#+END_QUOTE
+
+#+BEGIN_EXAMPLE
+这是一个示例块
+用于展示原始文本
+不会被解释为 org-mode 语法
+#+END_EXAMPLE
+
+#+BEGIN_EXPORT html
+<div class="custom-html">
+  <p>这是导出到HTML的内容</p>
+</div>
+#+END_EXPORT
+
+#+BEGIN_VERSE
+诗歌或者韵文
+每行都会保持
+原始的格式
+#+END_VERSE
+
+#+BEGIN_CENTER
+这段内容会居中显示
+用于强调重要信息
+#+END_CENTER
+
+* 链接和时间戳测试
+
+** 内部链接测试
+- 带描述的内部链接: [[id:TODO-TASK-1111-2222-3333-444444444444][待办任务]]
+- 简单内部链接: [[#测试标题][跳转到测试标题]]  
+- 文件链接: [[file:../README.md][项目说明文档]]
+- 标题链接: [[*代码块测试][查看代码示例]]
+- 无描述链接: [[#测试标题]]
+
+** 外部链接测试
+- 带描述的外部链接: [[https://orgmode.org][Org-mode官网]]
+- 带描述的GitHub链接: [[https://github.com/orgmode/org-mode][Org-mode源码]]
+- 无描述外部链接: [[https://www.gnu.org/software/emacs/]]
+- 裸链接: https://code.visualstudio.com
+
+** 特殊链接测试
+- ID链接: [[id:550e8400-e29b-41d4-a716-446655440000][项目A]]
+- 自定义链接: [[custom:my-protocol][自定义协议链接]]
+- 邮件链接: [[mailto:admin@example.com][联系管理员]]
+
+** 时间戳测试
+- 时间戳: <2024-01-20 周六 10:30>
+- 计划时间: SCHEDULED: <2024-01-21 周日>
+- 截止时间: DEADLINE: <2024-01-25 周四 18:00>
+- 时间范围: <2024-01-20 周六 09:00-17:00>
+
+* 数学公式测试
+
+行内公式: $E = mc^2$
+
+块级公式:
+$$
+\sum_{i=1}^{n} x_i = x_1 + x_2 + \cdots + x_n
+$$
+
+* 表格测试
+
+| 姓名   | 年龄 | 城市   |
+|--------+------+--------|
+| 张三   |   25 | 北京   |
+| 李四   |   30 | 上海   |
+| 王五   |   28 | 广州   |
+
+* 列表测试
+
+- 无序列表项 1
+- 无序列表项 2
+  - 子项 2.1
+  - 子项 2.2
+
+1. 有序列表项 1
+2. 有序列表项 2
+
+任务列表:
+- [ ] 未完成任务
+- [X] 已完成任务
+- [-] 部分完成任务
+
+* 文本格式化测试
+
+这里有 *粗体文本*，/斜体文本/，_下划线文本_，+删除线文本+，=等宽文本=，~代码文本~。
+
+* 注释测试
+
+# 这是一个注释行
+# 注释不会在导出时显示
+
+---
+
+水平分割线上方的内容 

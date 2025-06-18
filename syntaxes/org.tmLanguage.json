@@ -194,7 +194,7 @@
           "match": "^\\s*:([A-Z_]+):\\s*(.*)$",
           "captures": {
             "1": {
-              "name": "entity.name.function.org"
+              "name": "keyword.control.property.org"
             },
             "2": {
               "name": "string.unquoted.org"
@@ -264,14 +264,14 @@
     "links": {
       "patterns": [
         {
-          "name": "markup.underline.link.external.org",
+          "name": "markup.link.with.description.org",
           "match": "\\[\\[(https?://[^\\]]+)\\]\\[([^\\]]+)\\]\\]",
           "captures": {
             "1": {
-              "name": "string.other.link.url.org"
+              "name": "string.other.link.url.external.org"
             },
             "2": {
-              "name": "string.other.link.description.org"
+              "name": "entity.name.function.link.description.org"
             }
           }
         },
@@ -280,19 +280,19 @@
           "match": "\\[\\[(https?://[^\\]]+)\\]\\]",
           "captures": {
             "1": {
-              "name": "string.other.link.url.org"
+              "name": "string.other.link.url.external.org"
             }
           }
         },
         {
-          "name": "markup.underline.link.internal.org",
+          "name": "markup.link.with.description.org",
           "match": "\\[\\[([^\\]]+)\\]\\[([^\\]]+)\\]\\]",
           "captures": {
             "1": {
-              "name": "string.other.link.title.org"
+              "name": "string.other.link.reference.org"
             },
             "2": {
-              "name": "string.other.link.description.org"
+              "name": "entity.name.function.link.description.org"
             }
           }
         },
@@ -301,7 +301,7 @@
           "match": "\\[\\[([^\\]]+)\\]\\]",
           "captures": {
             "1": {
-              "name": "string.other.link.title.org"
+              "name": "string.other.link.reference.org"
             }
           }
         },
@@ -310,7 +310,7 @@
           "match": "https?://[^\\s]+",
           "captures": {
             "0": {
-              "name": "string.other.link.url.org"
+              "name": "string.other.link.url.bare.org"
             }
           }
         }
@@ -319,26 +319,444 @@
     "code-blocks": {
       "patterns": [
         {
-          "name": "markup.fenced_code.block.org",
-          "begin": "^\\s*#\\+BEGIN_SRC\\s*(\\w*)\\s*(.*)$",
-          "end": "^\\s*#\\+END_SRC\\s*$",
+          "name": "markup.fenced_code.block.python.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s+(python)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
           "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.fenced.org"
-            },
             "1": {
-              "name": "fenced_code.block.language.org"
+              "name": "keyword.control.flow.begin.org"
             },
             "2": {
-              "name": "fenced_code.block.arguments.org"
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
             }
           },
           "endCaptures": {
-            "0": {
-              "name": "punctuation.definition.fenced.org"
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.python"
+            }
+          ]
+        },
+        {
+          "name": "markup.fenced_code.block.javascript.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s+(javascript|js)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.js"
+            }
+          ]
+        },
+        {
+          "name": "markup.fenced_code.block.typescript.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s+(typescript|ts)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.ts"
+            }
+          ]
+        },
+        {
+          "name": "markup.fenced_code.block.java.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s+(java)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.java"
+            }
+          ]
+        },
+        {
+          "name": "markup.fenced_code.block.c.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s+(c)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.c"
+            }
+          ]
+        },
+        {
+          "name": "markup.fenced_code.block.cpp.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s+(cpp|c\\+\\+)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.cpp"
+            }
+          ]
+        },
+        {
+          "name": "markup.fenced_code.block.rust.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s+(rust)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.rust"
+            }
+          ]
+        },
+        {
+          "name": "markup.fenced_code.block.go.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s+(go)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.go"
+            }
+          ]
+        },
+        {
+          "name": "markup.fenced_code.block.shell.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s+(shell|bash|sh)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.shell"
+            }
+          ]
+        },
+        {
+          "name": "markup.fenced_code.block.sql.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s+(sql)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.sql"
+            }
+          ]
+        },
+        {
+          "name": "markup.fenced_code.block.json.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s+(json)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.json"
+            }
+          ]
+        },
+        {
+          "name": "markup.fenced_code.block.yaml.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s+(yaml|yml)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.yaml"
+            }
+          ]
+        },
+        {
+          "name": "markup.fenced_code.block.html.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s+(html)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "patterns": [
+            {
+              "include": "text.html.basic"
+            }
+          ]
+        },
+        {
+          "name": "markup.fenced_code.block.css.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s+(css)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.css"
+            }
+          ]
+        },
+        {
+          "name": "markup.fenced_code.block.org",
+          "begin": "^\\s*#\\+(BEGIN_SRC)\\s*(\\w*)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_SRC)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
             }
           },
           "contentName": "markup.raw.block.org"
+        },
+        {
+          "name": "markup.fenced_code.block.org",
+          "begin": "^\\s*#\\+(BEGIN_EXPORT)\\s*(\\w*)\\s*(.*)$",
+          "end": "^\\s*#\\+(END_EXPORT)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            },
+            "2": {
+              "name": "entity.name.type.language.org"
+            },
+            "3": {
+              "name": "string.unquoted.arguments.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "contentName": "markup.raw.block.org"
+        },
+        {
+          "name": "markup.fenced_code.block.org",
+          "begin": "^\\s*#\\+(BEGIN_VERSE)\\s*$",
+          "end": "^\\s*#\\+(END_VERSE)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "contentName": "markup.italic.org"
+        },
+        {
+          "name": "markup.fenced_code.block.org",
+          "begin": "^\\s*#\\+(BEGIN_CENTER)\\s*$",
+          "end": "^\\s*#\\+(END_CENTER)\\s*$",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.flow.begin.org"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.flow.end.org"
+            }
+          },
+          "contentName": "markup.other.org"
         }
       ]
     },
@@ -346,16 +764,16 @@
       "patterns": [
         {
           "name": "markup.quote.block.org",
-          "begin": "^\\s*#\\+BEGIN_QUOTE\\s*$",
-          "end": "^\\s*#\\+END_QUOTE\\s*$",
+          "begin": "^\\s*#\\+(BEGIN_QUOTE)\\s*$",
+          "end": "^\\s*#\\+(END_QUOTE)\\s*$",
           "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.quote.org"
+            "1": {
+              "name": "keyword.control.flow.begin.org"
             }
           },
           "endCaptures": {
-            "0": {
-              "name": "punctuation.definition.quote.org"
+            "1": {
+              "name": "keyword.control.flow.end.org"
             }
           },
           "contentName": "markup.quote.org"
@@ -366,16 +784,16 @@
       "patterns": [
         {
           "name": "markup.raw.block.org",
-          "begin": "^\\s*#\\+BEGIN_EXAMPLE\\s*$",
-          "end": "^\\s*#\\+END_EXAMPLE\\s*$",
+          "begin": "^\\s*#\\+(BEGIN_EXAMPLE)\\s*$",
+          "end": "^\\s*#\\+(END_EXAMPLE)\\s*$",
           "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.example.org"
+            "1": {
+              "name": "keyword.control.flow.begin.org"
             }
           },
           "endCaptures": {
-            "0": {
-              "name": "punctuation.definition.example.org"
+            "1": {
+              "name": "keyword.control.flow.end.org"
             }
           },
           "contentName": "markup.raw.block.org"
@@ -498,7 +916,7 @@
           "match": "^\\s*#\\+(TITLE|AUTHOR|DATE|EMAIL|DESCRIPTION|KEYWORDS|LANGUAGE|OPTIONS|STARTUP|TODO|SEQ_TODO|TYP_TODO|TAGS|FILETAGS|ARCHIVE|CATEGORY|COLUMNS|CONSTANTS|LINK|PRIORITIES|PROPERTY|SETUPFILE|DRAWERS|LATEX_CLASS|LATEX_CLASS_OPTIONS|LATEX_HEADER|HTML_HEAD|EXPORT_SELECT_TAGS|EXPORT_EXCLUDE_TAGS|BIND):\\s*(.*)$",
           "captures": {
             "1": {
-              "name": "entity.name.function.org"
+              "name": "keyword.control.directive.org"
             },
             "2": {
               "name": "string.unquoted.org"
@@ -507,7 +925,15 @@
         },
         {
           "name": "keyword.other.org",
-          "match": "^\\s*#\\+\\w+:.*$"
+          "match": "^\\s*#\\+(\\w+):\\s*(.*)$",
+          "captures": {
+            "1": {
+              "name": "keyword.control.directive.org"
+            },
+            "2": {
+              "name": "string.unquoted.org"
+            }
+          }
         }
       ]
     },

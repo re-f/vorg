@@ -58,6 +58,11 @@
         "command": "vorg.insertLink",
         "title": "VOrg: Insert Link",
         "icon": "$(link)"
+      },
+      {
+        "command": "vorg.debug.refreshHighlighting",
+        "title": "VOrg: Debug - Refresh Highlighting",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {
