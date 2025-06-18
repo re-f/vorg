@@ -1,0 +1,69 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Commit Message Conventions
+
+Use conventional commits format with concise descriptions:
+
+## Format
+```
+<type>(<scope>): <description>
+
+[optional body]
+```
+
+## Types
+- `feat`: new feature
+- `fix`: bug fix  
+- `refactor`: code refactoring without behavior change
+- `docs`: documentation changes
+- `style`: formatting, missing semi colons, etc.
+- `test`: adding or updating tests
+- `chore`: maintenance tasks, dependencies, build config
+
+## Guidelines
+1. **Keep it concise**: Limit subject line to 50 characters
+2. **Use imperative mood**: "add feature" not "added feature"
+3. **No period at the end** of subject line
+4. **Capitalize first letter** of subject line
+5. **Use scope when relevant**: (preview), (syntax), (commands), etc.
+6. **Focus on what and why**, not how
+
+## Examples
+✅ Good:
+```
+feat(preview): add dark theme support
+fix(scroll): resolve sync issue with large files
+refactor: restructure codebase into modular architecture
+docs: update installation instructions
+```
+
+❌ Avoid:
+```
+Update code and fix some bugs
+Fixed the thing that was broken
+Added some new functionality to the preview system
+```
+
+## Scopes for VOrg
+- `preview`: preview functionality
+- `syntax`: syntax highlighting
+- `commands`: command handling
+- `ui`: user interface
+- `config`: configuration
+- `deps`: dependencies
+
+## Example Commit with Body
+```
+refactor: restructure codebase into modular architecture
+
+Reorganize single-file extension into focused modules (commands, preview, types, utils)
+to improve maintainability and prepare for future orgmode features.
+
+- Split 548-line extension.ts into 7 specialized modules
+- Maintain full backward compatibility
+- Add type definitions and constants management
+- Create extensible architecture for syntax highlighting, editing features, etc.
+```
