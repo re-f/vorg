@@ -47,11 +47,6 @@
     },
     "offSide": true
   },
-  "wordPattern": "(-?\\d*\\.\\d\\w*)|([^\\`\\~\\!\\@\\#\\%\\^\\&\\*\\(\\)\\-\\=\\+\\[\\{\\]\\}\\\\\\|\\;\\:\\'\\\"\\,\\.\\<\\>\\/\\?\\s]+)",
-  "indentationRules": {
-    "increaseIndentPattern": "^\\s*(-|\\+|\\*|\\d+\\.|[a-zA-Z]\\.)\\s+",
-    "decreaseIndentPattern": "^\\s*$"
-  },
   "onEnterRules": [
     {
       "beforeText": "^\\s*(-|\\+|\\*|\\d+\\.|[a-zA-Z]\\.)\\s+.*$",
@@ -71,5 +66,10 @@
         "indent": "none"
       }
     }
-  ]
+  ],
+  "wordPattern": "(-?\\d*\\.\\d\\w*)|([^\\`\\~\\!\\@\\#\\%\\^\\&\\*\\(\\)\\-\\=\\+\\[\\{\\]\\}\\\\\\|\\;\\:\\'\\\"\\,\\.\\<\\>\\/\\?\\s]+)",
+  "indentationRules": {
+    "increaseIndentPattern": "^\\s*(-|\\+|\\*|\\d+\\.|[a-zA-Z]\\.)\\s+",
+    "decreaseIndentPattern": "^\\s*$"
+  }
 } 

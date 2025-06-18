@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { PreviewCommands } from './commands/previewCommands';
 import { LinkCommands } from './commands/linkCommands';
-import { OrgOutlineProvider } from './outline/orgOutlineProvider';
+
 import { OrgFoldingProvider } from './folding/orgFoldingProvider';
 import { OrgLinkProvider } from './links/orgLinkProvider';
 import { OrgSyntaxHighlighter } from './syntaxHighlighter';
@@ -17,12 +17,8 @@ export function activate(context: vscode.ExtensionContext) {
   // 注册事件监听器
   previewCommands.registerEventListeners(context);
   
-  // 注册 Outline Provider
-  const outlineProvider = new OrgOutlineProvider();
-  const outlineProviderDisposable = vscode.languages.registerDocumentSymbolProvider(
-    { scheme: 'file', language: 'org' },
-    outlineProvider
-  );
+  // 注意：我们不注册DocumentSymbolProvider，因为VS Code内置功能已经能够处理org文件的符号
+  // 这避免了重复符号的问题
   
   // 注册 Folding Provider
   const foldingProvider = new OrgFoldingProvider();
@@ -72,7 +68,6 @@ export function activate(context: vscode.ExtensionContext) {
   
   // 添加到订阅列表
   context.subscriptions.push(
-    outlineProviderDisposable,
     foldingProviderDisposable,
     linkProviderDisposable,
     definitionProviderDisposable,
