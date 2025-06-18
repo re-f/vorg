@@ -10,6 +10,7 @@ VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，�
 - 🚀 **完整语法支持** - 支持所有标准 Org-mode 语法
 - 💻 **现代界面** - 美观的预览样式和用户体验
 - 🔄 **滚动同步** - 编辑器与预览窗口精准同步滚动
+- 📋 **文档大纲** - 智能解析文档结构，提供完整的 Outline 导航
 
 ## 🚀 快速开始
 
@@ -23,6 +24,11 @@ VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，�
 2. **并排预览**：
    - 快捷键：`Ctrl+K V` (Windows/Linux) 或 `Cmd+K V` (Mac)
    - 命令面板：`VOrg: Open Preview to the Side`
+
+3. **文档大纲导航**：
+   - 查看侧边栏的 "Outline" 面板
+   - 使用 `Ctrl+Shift+O` (Windows/Linux) 或 `Cmd+Shift+O` (Mac) 快速跳转
+   - 自动解析标题层级、文档属性和标签
 
 ### 支持的 Org-mode 语法
 
@@ -77,7 +83,13 @@ npm test
 ```
 vorg/
 ├── src/                       # 源代码
-│   └── extension.ts          # 主扩展逻辑
+│   ├── extension.ts          # 主扩展逻辑
+│   ├── commands/             # 命令管理
+│   ├── preview/              # 预览功能
+│   ├── outline/              # 大纲导航
+│   │   └── orgOutlineProvider.ts  # Outline Provider
+│   ├── types/                # 类型定义
+│   └── utils/                # 工具函数
 ├── syntaxes/                 # 语法定义
 │   └── org.tmLanguage.json   # Org-mode 语法高亮
 ├── docs/                     # 文档
@@ -108,21 +120,11 @@ vorg/
 | 实时预览 | ✅ | ❌ |
 | 并排预览 | ✅ | ❌ |
 | 滚动同步 | ✅ | ❌ |
+| 文档大纲 | ✅ | ❌ |
 | 主题适配 | ✅ | ⚠️ |
 | 完整语法支持 | ✅ | ⚠️ |
 | 现代界面 | ✅ | ❌ |
 
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-### 开发指南
-
-1. Fork 项目
-2. 创建功能分支：`git checkout -b feature/new-feature`
-3. 提交更改：`git commit -am 'Add new feature'`
-4. 推送分支：`git push origin feature/new-feature`
-5. 提交 Pull Request
 
 ## 📄 许可证
 
@@ -137,10 +139,8 @@ MIT License
 - [ ] 优化大文档性能
 
 ### 长期愿景
-- [ ] 双向编辑支持（预览窗口编辑）
 - [ ] 插件生态系统
-- [ ] 云同步功能
-- [ ] 移动端支持
+- [ ] 支持 org-babel
 
 ## 📞 支持
 

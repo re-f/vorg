@@ -25,12 +25,6 @@ VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，�
    - 支持滚动同步
    - 支持主题适配
 
-## 核心文件
-- [src/extension.ts](mdc:src/extension.ts) - 扩展的主要实现文件
-  - 包含预览功能的实现
-  - 处理文档解析和转换
-  - 管理预览窗口
-
 ## 技术栈
 - VS Code Extension API
 - unified 处理流程
@@ -39,12 +33,6 @@ VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，�
   - rehype-stringify: HTML 字符串化
 - WebView API: 用于显示预览
 
-## 使用说明
-1. 打开 Org-mode 文件
-2. 使用以下方式之一打开预览：
-   - 点击编辑器右上角的预览图标
-   - 使用命令面板执行 `VOrg: Open Preview`
-   - 使用快捷键 `Ctrl+Shift+V`（Windows/Linux）或 `Cmd+Shift+V`（Mac）
 
 ## 预览支持的功能
 - 标题层级（使用 * 标记）
