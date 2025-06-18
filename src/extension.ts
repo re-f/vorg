@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import { PreviewCommands } from './commands/previewCommands';
+import { LinkCommands } from './commands/linkCommands';
 import { OrgOutlineProvider } from './outline/orgOutlineProvider';
 import { OrgFoldingProvider } from './folding/orgFoldingProvider';
+import { OrgLinkProvider } from './links/orgLinkProvider';
 import { OrgSyntaxHighlighter } from './syntaxHighlighter';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -10,6 +12,7 @@ export function activate(context: vscode.ExtensionContext) {
   
   // 注册命令
   previewCommands.registerCommands(context);
+  LinkCommands.registerCommands(context);
   
   // 注册事件监听器
   previewCommands.registerEventListeners(context);
@@ -26,6 +29,19 @@ export function activate(context: vscode.ExtensionContext) {
   const foldingProviderDisposable = vscode.languages.registerFoldingRangeProvider(
     { scheme: 'file', language: 'org' },
     foldingProvider
+  );
+  
+  // 注册 Link Provider
+  const linkProvider = new OrgLinkProvider();
+  const linkProviderDisposable = vscode.languages.registerDocumentLinkProvider(
+    { scheme: 'file', language: 'org' },
+    linkProvider
+  );
+  
+  // 注册 Definition Provider (用于 Ctrl+Click 跳转)
+  const definitionProviderDisposable = vscode.languages.registerDefinitionProvider(
+    { scheme: 'file', language: 'org' },
+    linkProvider
   );
   
   // 初始化语法高亮器
@@ -58,6 +74,8 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     outlineProviderDisposable,
     foldingProviderDisposable,
+    linkProviderDisposable,
+    definitionProviderDisposable,
     onDidChangeActiveTextEditor,
     onDidChangeTextDocument
   );

@@ -1,0 +1,116 @@
+#+TITLE: 链接跳转功能测试 - 主文件
+#+AUTHOR: VOrg 测试套件
+#+DATE: 2024-01-01
+#+DESCRIPTION: 这是VOrg扩展链接跳转功能的完整测试文件
+
+* 欢迎使用VOrg链接测试套件
+
+这个文件包含了所有类型的链接测试用例，用于验证VOrg扩展的链接跳转功能。
+
+** 🔗 内部链接测试
+
+*** 基本内部链接（org-mode标准格式）
+- 带星号前缀的内部链接：[[*🔗 HTTP链接测试]]
+- 跳转到语法规则部分：[[*🧪 基本语法规则]]
+
+*** ID链接测试（同文件）
+这是一个带ID的标题，稍后会用到：
+
+**** 测试标题A
+:PROPERTIES:
+:ID: MAIN-TEST-A123-4567-8901-BCDEF0123456
+:CREATED: [2024-01-01 Mon 10:00]
+:END:
+
+这是用于测试同文件ID链接的标题。
+
+- 同文件ID链接：[[id:MAIN-TEST-A123-4567-8901-BCDEF0123456][跳转到测试标题A]]
+
+** 🌐 跨文件链接测试
+
+*** 跨文件ID链接
+- 跳转到项目文件的VOrg项目：[[id:PROJ-VORG-2024-1234-5678-9ABCDEF01234][VOrg扩展项目]]
+- 跳转到笔记文件的重要笔记：[[id:NOTE-IMPORTANT-ABCD-1234-EFGH-567890AB][重要开发笔记]]
+- 跳转到深层目录的标题：[[id:DEEP-SECTION-9876-5432-1098-FEDCBA654321][深层目录测试]]
+
+*** 跨文件普通链接
+- 链接到项目文件：[[file:projects.org][项目管理文档]]
+- 链接到笔记文件：[[file:notes.org][开发笔记]]
+- 链接到子目录文件：[[file:subdir/deep.org][深层目录文档]]
+
+** 🔗 HTTP链接测试
+
+*** 外部网站链接
+- 带描述的HTTP链接：[[https://orgmode.org][Org Mode 官方网站]]
+- 简单HTTP链接：[[https://github.com]]
+- HTTPS链接：[[https://code.visualstudio.com][VS Code官网]]
+
+*** 直接链接（无方括号）
+直接HTTP链接：https://www.example.com
+HTTPS链接：https://developer.mozilla.org
+
+** 📁 文件链接测试
+
+*** 项目文件链接
+- 项目根目录文件：[[file:../README.md][项目说明文档]]
+- 配置文件：[[file:../package.json][Package配置]]
+- 源码文件：[[file:../src/extension.ts][扩展主文件]]
+
+*** 测试数据文件链接
+- 带描述的文件链接：[[file:projects.org][项目管理]]
+- 简单文件链接：[[file:notes.org]]
+- 相对路径文件：[[file:./subdir/deep.org][子目录文件]]
+
+*** 直接文件链接（无方括号）
+file:projects.org
+file:../src/links/orgLinkProvider.ts
+
+** 📝 TODO和状态测试
+
+*** TODO 待完成的任务
+:PROPERTIES:
+:ID: TODO-TASK-1111-2222-3333-444444444444
+:END:
+
+这是一个待完成的任务。
+
+*** DONE 已完成的任务 :completed:
+:PROPERTIES:
+:ID: DONE-TASK-5555-6666-7777-888888888888
+:END:
+
+这是一个已完成的任务。
+
+*** 状态链接测试
+- 链接到TODO任务：[[*TODO 待完成的任务]]
+- 链接到DONE任务：[[*DONE 已完成的任务]]
+- 通过ID链接到TODO：[[id:TODO-TASK-1111-2222-3333-444444444444][待办任务]]
+
+** 🧪 基本语法规则
+
+*** 链接语法说明
+1. =[[link][description]]= - 带描述的链接
+2. =[[link]]= - 简单链接  
+3. =[[*heading]]= - 内部标题链接（org-mode标准）
+4. =[[id:UUID][description]]= - ID链接（可跨文件）
+5. =file:path/to/file= - 文件链接
+6. =http://example.com= - HTTP链接
+
+*注意：只有 =[[*heading]]= 格式的内部链接是org-mode标准，=[[heading]]= 格式不被支持。*
+
+*** 快捷键说明
+- *Ctrl+Click* (Win/Linux) 或 *Cmd+Click* (Mac) - 跟随链接
+- *Ctrl+Enter* (Win/Linux) 或 *Cmd+Enter* (Mac) - 跟随光标处链接
+- *Ctrl+L* (Win/Linux) 或 *Cmd+L* (Mac) - 插入新链接
+
+** 🎯 测试建议
+
+1. **内部链接测试**：点击文档内的各种内部链接
+2. **跨文件测试**：测试跳转到其他.org文件
+3. **ID链接测试**：验证全局ID搜索功能
+4. **HTTP链接测试**：确认外部链接在浏览器中打开
+5. **文件链接测试**：检查文件跳转功能
+
+---
+
+*这个测试套件涵盖了所有主要的链接类型和用例。请逐一测试每种链接格式！* 

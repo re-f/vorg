@@ -13,6 +13,7 @@ VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，�
 - 📋 **文档大纲** - 智能解析文档结构，提供完整的 Outline 导航
 - 🌈 **智能语法高亮** - 完整的 TextMate 语法定义和增强装饰器高亮
 - 🎨 **主题自适应** - 自动跟随 VS Code 主题，深色浅色无缝切换
+- 🔗 **链接跳转** - 支持多种链接类型的智能跳转和插入功能
 
 ## 🚀 快速开始
 
@@ -27,7 +28,12 @@ VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，�
    - 快捷键：`Ctrl+K V` (Windows/Linux) 或 `Cmd+K V` (Mac)
    - 命令面板：`VOrg: Open Preview to the Side`
 
-3. **文档大纲导航**：
+3. **链接跳转**：
+   - 快捷键：`Ctrl+Enter` (Windows/Linux) 或 `Cmd+Enter` (Mac) - 跟随光标处的链接
+   - 快捷键：`Ctrl+L` (Windows/Linux) 或 `Cmd+L` (Mac) - 插入新链接
+   - 鼠标：`Ctrl+Click` (Windows/Linux) 或 `Cmd+Click` (Mac) - 跟随链接
+
+4. **文档大纲导航**：
    - 查看侧边栏的 "Outline" 面板
    - 使用 `Ctrl+Shift+O` (Windows/Linux) 或 `Cmd+Shift+O` (Mac) 快速跳转
    - 自动解析标题层级、文档属性和标签
@@ -41,7 +47,7 @@ VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，�
 - **代码块**（支持语言标识和语法高亮）
 - **引用块和示例块**
 - **表格**（完整的表格语法支持）
-- **链接**（内部、外部和裸链接）
+- **链接**（内部、外部和裸链接，支持跳转功能）
 - **数学公式**（行内和块级公式）
 - **时间戳**（多种时间格式）
 - **标签**（标题标签和属性）
@@ -93,6 +99,8 @@ vorg/
 │   ├── preview/              # 预览功能
 │   ├── outline/              # 大纲导航
 │   │   └── orgOutlineProvider.ts  # Outline Provider
+│   ├── links/                # 链接跳转功能
+│   │   └── orgLinkProvider.ts     # Link Provider
 │   ├── types/                # 类型定义
 │   └── utils/                # 工具函数
 ├── syntaxes/                 # 语法定义
@@ -137,7 +145,19 @@ MIT License
 
 ## 🔮 未来规划
 
+### 支持的链接类型
+
+VOrg 现在支持完整的 Org-mode 链接跳转功能：
+
+1. **[[link][description]]** - 带描述的链接
+2. **[[link]]** - 简单链接
+3. **file:path/to/file** - 文件链接
+4. **http://example.com** - 网页链接
+5. **[[*heading]]** - 内部链接到同文件的标题（org-mode标准格式）
+6. **[[id:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX][description]]** - 全局ID跳转（支持跨文件）
+
 ### 短期目标
+- [x] 链接跳转功能
 - [ ] 添加导出功能（PDF、HTML、Word）
 - [ ] 支持数学公式渲染（MathJax）
 - [ ] 添加图表支持（Mermaid、PlantUML）
@@ -146,6 +166,10 @@ MIT License
 ### 长期愿景
 - [ ] 插件生态系统
 - [ ] 支持 org-babel
+- [ ] 缓存工作区中 org 文件元数据，如
+  - [ ] org-ids
+  - [ ] headline
+  - [ ] ...
 
 ## 📞 支持
 

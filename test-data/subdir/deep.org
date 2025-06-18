@@ -1,0 +1,113 @@
+#+TITLE: 深层目录测试文档
+#+AUTHOR: VOrg 测试套件
+#+DATE: 2024-01-01
+#+DESCRIPTION: 测试跨目录链接和深层文件结构
+
+* 深层目录链接测试
+
+这个文件位于 =test-data/subdir/= 目录中，用于测试跨目录的链接功能。
+
+** 深层目录测试标题
+:PROPERTIES:
+:ID: DEEP-SECTION-9876-5432-1098-FEDCBA654321
+:CREATED: [2024-01-01 Mon 12:00]
+:LOCATION: subdir/deep.org
+:END:
+
+这是一个位于深层目录中的标题，用于测试跨文件和跨目录的ID链接功能。
+
+*** 深层目录的特点
+1. **相对路径复杂** - 需要正确处理 =../= 路径
+2. **ID链接全局** - ID应该在整个工作区内唯一
+3. **文件链接测试** - 测试跨目录的文件链接
+
+*** 测试用例
+**** 相对路径链接测试
+- 回到上级目录主文件：[[file:../main.org][主测试文件]]
+- 链接到同级项目文件：[[file:../projects.org][项目管理]]
+- 链接到笔记文件：[[file:../notes.org][开发笔记]]
+
+**** 绝对ID链接测试
+- 主文件测试标题：[[id:MAIN-TEST-A123-4567-8901-BCDEF0123456][主文件中的测试标题]]
+- VOrg项目：[[id:PROJ-VORG-2024-1234-5678-9ABCDEF01234][VOrg扩展项目]]
+- 重要开发笔记：[[id:NOTE-IMPORTANT-ABCD-1234-EFGH-567890AB][重要笔记]]
+
+** 子目录特有内容
+
+*** 配置文件测试
+:PROPERTIES:
+:ID: DEEP-CONFIG-TEST-1111-AAAA-2222-BBBB333333
+:END:
+
+**** 项目配置文件链接
+- 根目录README：[[file:../../README.md][项目说明文档]]
+- Package配置：[[file:../../package.json][Package配置文件]]
+- 扩展主文件：[[file:../../src/extension.ts][扩展入口文件]]
+- 链接Provider：[[file:../../src/links/orgLinkProvider.ts][链接提供器]]
+
+*** 深层嵌套标题测试
+
+**** 第四级标题
+这是第四级标题。
+
+***** 第五级标题
+这是第五级标题。
+
+****** 第六级标题
+:PROPERTIES:
+:ID: DEEP-LEVEL6-HEADING-ABCD-1234-EF56-789012
+:END:
+
+这是第六级标题，测试深层嵌套的ID链接。
+
+*** 链接语法测试
+
+**** HTTP链接（在深层目录中）
+- 外部网站：[[https://www.google.com][Google搜索]]
+- 开发文档：[[https://code.visualstudio.com/docs][VS Code文档]]
+
+**** 相对文件链接
+- 父目录文件：[[file:../main.org]]
+- 根目录文件：[[file:../../example.org]]
+
+**** 直接链接
+https://orgmode.org
+file:../projects.org
+file:../../src/README.md
+
+** 测试数据
+
+*** 表格测试
+| 文件类型 | 位置 | 链接类型 | 状态 |
+|----------|------|----------|------|
+| main.org | 父目录 | 相对路径 | ✓ |
+| projects.org | 父目录 | 相对路径 | ✓ |
+| notes.org | 父目录 | 相对路径 | ✓ |
+| README.md | 根目录 | 绝对路径 | ✓ |
+
+*** 代码块测试
+#+BEGIN_SRC bash
+# 从深层目录回到根目录
+cd ../../
+
+# 查看项目结构
+tree -I node_modules
+#+END_SRC
+
+** 返回导航
+
+*** 快速返回链接
+- 🏠 [[file:../main.org][返回主测试文件]]
+- 📋 [[file:../projects.org][项目管理文档]]  
+- 📝 [[file:../notes.org][开发笔记]]
+- 📚 [[file:../../README.md][项目README]]
+
+*** ID链接测试确认
+确认以下ID链接在深层目录中也能正常工作：
+- [[id:MAIN-TEST-A123-4567-8901-BCDEF0123456][✓ 主文件测试标题]]
+- [[id:PROJ-VORG-2024-1234-5678-9ABCDEF01234][✓ VOrg项目]]
+- [[id:NOTE-IMPORTANT-ABCD-1234-EFGH-567890AB][✓ 重要笔记]]
+
+---
+
+*这个深层目录文件测试了所有类型的跨目录链接功能！* 

@@ -1,0 +1,272 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# VOrg 功能开发指南
+
+## 功能开发完整清单
+
+当为 VOrg 扩展添加新功能时，请按照以下清单确保所有相关文件都得到正确更新。
+
+## 🏗️ 核心代码开发
+
+### 1. 实现核心功能
+- **新功能模块**：在 `src/` 下创建或修改相应的功能文件
+- **提供者（Providers）**：如果是 VS Code API 功能，在相应目录创建提供者类
+  - [src/outline/](mdc:src/outline) - 大纲相关功能
+  - [src/links/](mdc:src/links) - 链接相关功能
+  - [src/folding/](mdc:src/folding) - 折叠相关功能
+  - [src/preview/](mdc:src/preview) - 预览相关功能
+
+### 2. 命令注册
+- **命令实现**：在 [src/commands/](mdc:src/commands) 目录添加命令实现
+- **命令注册**：在 [src/commands/index.ts](mdc:src/commands/index.ts) 注册新命令
+- **扩展激活**：在 [src/extension.ts](mdc:src/extension.ts) 中注册提供者和命令
+
+### 3. 扩展清单更新
+必须更新 [package.json](mdc:package.json) 的以下部分：
+
+#### 激活事件
+```json
+"activationEvents": [
+  "onCommand:vorg.yourNewCommand",
+  "onLanguage:org"
+]
+```
+
+#### 命令定义
+```json
+"commands": [
+  {
+    "command": "vorg.yourNewCommand",
+    "title": "VOrg: Your New Feature",
+    "icon": "$(your-icon)"
+  }
+]
+```
+
+#### 快捷键绑定
+```json
+"keybindings": [
+  {
+    "command": "vorg.yourNewCommand",
+    "key": "ctrl+alt+n",
+    "mac": "cmd+alt+n",
+    "when": "editorLangId == org"
+  }
+]
+```
+
+#### 菜单项
+```json
+"menus": {
+  "editor/title": [
+    {
+      "when": "editorLangId == org",
+      "command": "vorg.yourNewCommand",
+      "group": "navigation"
+    }
+  ]
+}
+```
+
+## 🧪 测试开发
+
+### 1. 单元测试
+在 [src/test/unit/](mdc:src/test/unit) 创建或扩展单元测试：
+
+#### Mock 设置
+- 使用 [src/test/unit/vscode-mock.ts](mdc:src/test/unit/vscode-mock.ts) 中的 VS Code API Mock
+- 如需新的 Mock 类型，在 Mock 文件中添加
+
+#### 测试文件命名
+- 文件名格式：`yourFeature.unit.test.ts`
+- 测试类名格式：`YourFeature Unit Tests`
+
+#### 测试结构示例
+```typescript
+suite('Your Feature Unit Tests', () => {
+  let provider: YourFeatureProvider;
+  
+  setup(() => {
+    provider = new YourFeatureProvider();
+  });
+  
+  test('应该正确处理基本用例', () => {
+    // 测试实现
+    assert.ok(result);
+    assert.strictEqual(actual, expected);
+  });
+});
+```
+
+### 2. 集成测试
+在 [src/test/suite/](mdc:src/test/suite) 创建或扩展集成测试：
+
+#### 测试文件命名
+- 文件名格式：`yourFeature.test.ts`
+- 使用真实的 VS Code API 进行测试
+
+#### 集成测试示例
+```typescript
+import * as vscode from 'vscode';
+import { YourFeatureProvider } from '../../yourFeature/yourFeatureProvider';
+
+suite('YourFeature Integration Tests', () => {
+  test('应该在真实VS Code环境中正常工作', async () => {
+    const doc = await vscode.workspace.openTextDocument({
+      content: '* Test Content',
+      language: 'org'
+    });
+    
+    // 测试实现
+  });
+});
+```
+
+### 3. 测试数据更新
+根据新功能需求更新 [test-data/](mdc:test-data) 中的测试文件：
+
+#### 主测试文件
+- [test-data/main.org](mdc:test-data/main.org) - 添加新功能的测试用例
+
+#### 专用测试文件
+- [test-data/projects.org](mdc:test-data/projects.org) - 项目相关测试
+- [test-data/notes.org](mdc:test-data/notes.org) - 笔记相关测试
+- [test-data/subdir/deep.org](mdc:test-data/subdir/deep.org) - 深层目录测试
+
+#### 测试数据格式
+```org
+** 🔧 Your New Feature Test
+
+*** 基本功能测试
+测试内容描述
+
+*** 边界情况测试
+边界情况的测试内容
+
+*** ID链接测试
+:PROPERTIES:
+:ID: YOUR-FEATURE-UUID-1234-5678-9ABC-DEF012345678
+:END:
+
+用于测试ID链接功能的内容
+```
+
+### 4. 测试运行
+确保所有测试命令都能正常运行：
+
+```bash
+# 编译代码
+npm run compile
+
+# 运行集成测试
+npm test
+
+# 运行单元测试
+npm run test:unit
+
+# 监听模式
+npm run watch
+```
+
+## 📚 文档更新
+
+### 1. 功能文档
+在 [docs/](mdc:docs) 目录更新相关文档：
+
+#### 功能特性文档
+- [docs/FEATURES.md](mdc:docs/FEATURES.md) - 添加新功能的详细描述
+
+#### 用户指南
+- [docs/USER_GUIDE.md](mdc:docs/USER_GUIDE.md) - 添加使用教程和示例
+
+#### 技术文档
+- [docs/TECHNICAL.md](mdc:docs/TECHNICAL.md) - 添加技术实现细节
+
+#### 语法高亮文档（如适用）
+- [docs/SYNTAX_HIGHLIGHTING.md](mdc:docs/SYNTAX_HIGHLIGHTING.md) - 新增语法支持说明
+
+### 2. 主文档更新
+更新项目根目录的主要文档：
+
+#### README 更新
+- [README.md](mdc:README.md) - 在功能特点、使用方法和功能对比部分添加新功能
+
+#### 示例文件
+- [example.org](mdc:example.org) - 添加新功能的使用示例
+
+## 🎨 语法和配置
+
+### 1. 语法高亮
+如果新功能涉及新的语法元素：
+
+#### TextMate 语法
+- [syntaxes/org.tmLanguage.json](mdc:syntaxes/org.tmLanguage.json) - 添加新的语法规则
+
+#### 语言配置
+- [language-configuration.json](mdc:language-configuration.json) - 更新语言特性配置
+
+#### 语法高亮增强
+- [src/syntaxHighlighter.ts](mdc:src/syntaxHighlighter.ts) - 添加装饰器高亮支持
+
+### 2. TypeScript 配置
+确保新文件包含在编译范围内：
+- [tsconfig.json](mdc:tsconfig.json) - 检查编译配置
+- 新建目录需要确保不在 `exclude` 列表中
+
+## 🚀 开发和测试流程
+
+### 1. 开发环境设置
+```bash
+# 安装依赖
+npm install
+
+# 编译并监听
+npm run watch
+
+# 在VS Code中按F5启动扩展开发主机
+```
+
+### 2. 测试流程
+1. **单元测试优先**：先编写单元测试确保核心逻辑正确
+2. **集成测试验证**：在真实VS Code环境中测试完整功能
+3. **手动测试**：使用测试数据文件进行手动验证
+4. **回归测试**：确保现有功能未受影响
+
+### 3. 代码质量检查
+```bash
+# 代码检查
+npm run lint
+
+# 编译检查
+npm run compile
+
+# 完整测试
+npm run pretest
+```
+
+## ✅ 发布前检查清单
+
+- [ ] **核心功能**：新功能实现完整且正确
+- [ ] **命令注册**：package.json 中正确注册命令、快捷键和菜单
+- [ ] **扩展激活**：extension.ts 中正确注册提供者
+- [ ] **单元测试**：覆盖核心逻辑的单元测试
+- [ ] **集成测试**：VS Code 环境中的集成测试
+- [ ] **测试数据**：更新 test-data 中的测试用例
+- [ ] **文档更新**：README、用户指南、技术文档
+- [ ] **语法支持**：新语法的 TextMate 规则和高亮
+- [ ] **代码质量**：通过 lint 和 compile 检查
+
+## 🔄 迭代开发建议
+
+1. **小步迭代**：将大功能拆分为小的可测试单元
+2. **测试驱动**：先写测试再实现功能
+3. **文档同步**：代码和文档同步更新
+4. **持续集成**：每次提交都运行完整测试套件
+5. **用户反馈**：使用测试数据模拟真实用户场景
+
+---
+
+*遵循此指南可确保新功能的高质量交付和项目的长期可维护性。*

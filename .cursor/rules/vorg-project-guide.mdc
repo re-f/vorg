@@ -1,0 +1,83 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# VOrg Project Guide
+
+## Project Overview
+VOrg is a VS Code extension that provides real-time preview functionality for Org-mode documents, similar to Markdown Preview Enhanced. It includes syntax highlighting, document outline, link navigation, and theme adaptation.
+
+## Architecture & Entry Points
+
+### Main Extension Entry
+- [src/extension.ts](mdc:src/extension.ts) - Main extension activation point, registers all providers and commands
+- [package.json](mdc:package.json) - Extension manifest with commands, keybindings, and contribution points
+
+### Core Feature Modules
+
+#### Preview System
+- [src/preview/index.ts](mdc:src/preview/index.ts) - Preview system entry point
+- [src/preview/previewManager.ts](mdc:src/preview/previewManager.ts) - Manages preview lifecycle and webview panels
+- [src/preview/htmlGenerator.ts](mdc:src/preview/htmlGenerator.ts) - Converts Org-mode AST to HTML using unified/uniorg pipeline
+- [src/preview/scrollSync.ts](mdc:src/preview/scrollSync.ts) - Synchronizes scrolling between editor and preview
+
+#### Navigation & Structure
+- [src/outline/orgOutlineProvider.ts](mdc:src/outline/orgOutlineProvider.ts) - VS Code Outline provider for document structure navigation
+- [src/links/orgLinkProvider.ts](mdc:src/links/orgLinkProvider.ts) - Handles link detection, navigation, and insertion
+- [src/folding/orgFoldingProvider.ts](mdc:src/folding/orgFoldingProvider.ts) - Code folding support for Org-mode headings
+
+#### Commands & Actions
+- [src/commands/index.ts](mdc:src/commands/index.ts) - Command registration and management
+- [src/commands/previewCommands.ts](mdc:src/commands/previewCommands.ts) - Preview-related commands (open, toggle, refresh)
+- [src/commands/linkCommands.ts](mdc:src/commands/linkCommands.ts) - Link navigation and insertion commands
+
+#### Syntax & Language Support
+- [src/syntaxHighlighter.ts](mdc:src/syntaxHighlighter.ts) - Enhanced syntax highlighting with decorations
+- [syntaxes/org.tmLanguage.json](mdc:syntaxes/org.tmLanguage.json) - TextMate grammar definition for Org-mode
+- [language-configuration.json](mdc:language-configuration.json) - Language configuration (brackets, comments, etc.)
+
+### Utilities & Types
+- [src/types/index.ts](mdc:src/types/index.ts) - TypeScript type definitions
+- [src/utils/constants.ts](mdc:src/utils/constants.ts) - Project constants and configuration
+
+## Development Workflow
+
+### Build & Test
+- `npm run compile` - TypeScript compilation
+- `npm run watch` - Watch mode compilation
+- `npm test` - Run test suite
+- Press F5 in VS Code to launch Extension Development Host
+
+### Testing Structure
+- [src/test/runTest.ts](mdc:src/test/runTest.ts) - Test runner entry point
+- [src/test/suite/](mdc:src/test/suite/) - Integration tests
+- [src/test/unit/](mdc:src/test/unit/) - Unit tests with VS Code mocking
+
+### Test Data
+- [test-data/](mdc:test-data/) - Sample Org-mode files for testing
+- [example.org](mdc:example.org) - Main example file for development
+
+## Documentation Structure
+- [docs/FEATURES.md](mdc:docs/FEATURES.md) - Detailed feature descriptions
+- [docs/USER_GUIDE.md](mdc:docs/USER_GUIDE.md) - Complete usage tutorial
+- [docs/TECHNICAL.md](mdc:docs/TECHNICAL.md) - Architecture and implementation details
+- [docs/SYNTAX_HIGHLIGHTING.md](mdc:docs/SYNTAX_HIGHLIGHTING.md) - Syntax highlighting documentation
+
+## Key Technologies
+- **unified/uniorg** - Org-mode parsing and HTML generation pipeline
+- **VS Code Extension API** - Extension framework
+- **TextMate Grammars** - Syntax highlighting
+- **TypeScript** - Primary development language
+
+## Common Development Patterns
+1. **Provider Pattern** - Outline, Link, and Folding providers implement VS Code interfaces
+2. **Command Registration** - Commands are defined in package.json and implemented in command modules  
+3. **Webview Communication** - Preview uses message passing between extension and webview
+4. **Event-Driven Updates** - File changes trigger preview updates and syntax re-highlighting
+
+## Debugging Tips
+- Use VS Code's Extension Development Host for testing
+- Preview webview can be inspected using Developer Tools
+- Check Output panel for extension logs
+- Test with various Org-mode files in test-data directory

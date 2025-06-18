@@ -1,0 +1,129 @@
+#+TITLE: 开发笔记
+#+AUTHOR: VOrg 开发者
+#+DATE: 2024-01-01
+#+TAGS: development notes vscode extension
+
+* 开发笔记概览
+
+这里记录了VOrg扩展开发过程中的重要笔记和经验总结。
+
+** 重要开发笔记
+:PROPERTIES:
+:ID: NOTE-IMPORTANT-ABCD-1234-EFGH-567890AB
+:CREATED: [2024-01-01 Mon 11:00]
+:CATEGORY: development
+:END:
+
+*** 链接跳转功能实现
+
+**** 核心组件
+1. **OrgLinkProvider** - 实现 =DefinitionProvider= 和 =DocumentLinkProvider=
+2. **LinkCommands** - 处理链接相关的命令
+3. **跨文件ID搜索** - 在整个工作区搜索ID
+
+**** 技术要点
+- 使用正则表达式匹配各种链接格式
+- 支持异步文件搜索和文档加载
+- 实现了智能的错误处理机制
+
+*** 代码示例
+
+#+BEGIN_SRC typescript
+// 链接识别的核心正则表达式
+const bracketRegex = /\[\[([^\]]+)\](?:\[([^\]]*)\])?\]/g;
+const httpRegex = /(https?:\/\/[^\s\]]+)/g;
+const fileRegex = /file:([^\s\]]+)/g;
+#+END_SRC
+
+** 技术笔记
+
+*** VSCode扩展开发经验
+:PROPERTIES:
+:ID: NOTE-VSCODE-EXT-TIPS-2024-1234-5678-90AB
+:END:
+
+**** Provider注册
+- =DocumentLinkProvider= 用于链接高亮和悬停
+- =DefinitionProvider= 用于Ctrl+Click跳转
+- 需要在 =activate= 函数中正确注册
+
+**** 文件操作
+- 使用 =vscode.workspace.findFiles= 搜索文件
+- =vscode.workspace.openTextDocument= 打开文档
+- 注意异常处理，避免单个文件错误影响整体功能
+
+*** TODO Org-mode规范研究
+:PROPERTIES:
+:ID: NOTE-ORGMODE-SPEC-STUDY-ABCD-EF12-3456
+:END:
+
+**** 已研究的功能
+- [X] 基本链接语法 =[[link][description]]=
+- [X] ID链接 =[[id:UUID][description]]=
+- [X] 文件链接 =file:path/to/file=
+- [X] HTTP链接支持
+- [ ] 代码块内链接引用
+- [ ] 表格公式链接
+- [ ] 日期时间链接
+
+** 问题解决记录
+
+*** 链接跳转不工作的问题
+:PROPERTIES:
+:ID: NOTE-PROBLEM-LINK-JUMP-FIX-2024-0101
+:CREATED: [2024-01-01 Mon 14:00]
+:RESOLVED: [2024-01-01 Mon 15:30]
+:END:
+
+**** 问题描述
+初始实现中，所有类型的链接跳转都无法正常工作。
+
+**** 根本原因
+1. =provideDefinition= 方法的正则表达式不准确
+2. =resolveLinkTarget= 方法参数签名错误
+3. 缺少对各种链接格式的精确匹配
+
+**** 解决方案
+1. 重写了 =findLinkAtPosition= 方法
+2. 修正了方法签名和参数传递
+3. 实现了跨文件ID搜索功能
+
+** 相关链接测试
+
+*** 跨文件引用
+- 回到主测试文件：[[file:main.org][主测试文件]]
+- 查看项目信息：[[id:PROJ-VORG-2024-1234-5678-9ABCDEF01234][VOrg项目详情]]
+- 深层目录测试：[[file:subdir/deep.org][深层目录文档]]
+
+*** 外部资源
+- Org Mode官方文档：[[https://orgmode.org/manual/][Org Manual]]
+- VSCode扩展API：[[https://code.visualstudio.com/api][VS Code Extension API]]
+- TypeScript文档：[[https://www.typescriptlang.org/docs/][TypeScript Docs]]
+
+** 代码片段收藏
+
+*** 链接解析代码
+#+BEGIN_SRC typescript
+private findLinkAtPosition(document: vscode.TextDocument, position: vscode.Position) {
+  const line = document.lineAt(position);
+  const lineText = line.text;
+  
+  // 检查方括号链接
+  const bracketRegex = /\[\[([^\]]+)\](?:\[([^\]]*)\])?\]/g;
+  let match;
+  
+  while ((match = bracketRegex.exec(lineText)) !== null) {
+    const startCol = match.index;
+    const endCol = match.index + match[0].length;
+    
+    if (position.character >= startCol && position.character <= endCol) {
+      return { linkTarget: match[1], range: new vscode.Range(...) };
+    }
+  }
+  return null;
+}
+#+END_SRC
+
+---
+
+*这些笔记记录了开发过程中的重要经验和解决方案！* 

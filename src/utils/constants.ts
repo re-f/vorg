@@ -4,7 +4,9 @@ export const PREVIEW_TITLE = 'Org Preview';
 
 export const COMMANDS = {
   PREVIEW: 'vorg.preview',
-  PREVIEW_TO_SIDE: 'vorg.previewToSide'
+  PREVIEW_TO_SIDE: 'vorg.previewToSide',
+  FOLLOW_LINK: 'vorg.followLink',
+  INSERT_LINK: 'vorg.insertLink'
 } as const;
 
 export const WEBVIEW_MESSAGES = {
