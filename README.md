@@ -38,7 +38,16 @@ VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，�
    - 快捷键：`Ctrl+Alt+Enter` (Windows/Linux) 或 `Cmd+Ctrl+Enter` (Mac) - 在子树末尾插入同级元素
    - 快捷键：`Shift+Alt+Enter` - 插入TODO标题
 
-5. **文档大纲导航**：
+5. **智能 TAB 折叠** (类似 Emacs org-mode TAB 行为)：
+   - 快捷键：`Tab` - 主要用于可见性控制（折叠/展开切换）
+     - 在标题上：切换折叠/展开状态
+     - 在列表项上：切换折叠状态（有子项）或增加缩进（无子项）
+     - 在代码块标题上：切换代码块的折叠/展开状态
+     - 在表格中：移动到下一个单元格
+     - 在代码块内：正常代码缩进
+   - 快捷键：`Shift+Tab` - 在列表中减少缩进，在表格中反向导航
+
+6. **文档大纲导航**：
    - 查看侧边栏的 "Outline" 面板
    - 使用 `Ctrl+Shift+O` (Windows/Linux) 或 `Cmd+Shift+O` (Mac) 快速跳转
    - 自动解析标题层级、文档属性和标签
@@ -64,6 +73,7 @@ VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，�
 - **[用户指南](docs/USER_GUIDE.md)** - 完整的使用教程和语法指南
 - **[技术文档](docs/TECHNICAL.md)** - 架构设计和技术实现细节
 - **[语法高亮](docs/SYNTAX_HIGHLIGHTING.md)** - 语法高亮功能详细说明
+- **[TAB 智能折叠](docs/TAB_SMART_INDENTATION.md)** - TAB 键智能折叠功能详细说明
 
 ## 🛠️ 开发
 

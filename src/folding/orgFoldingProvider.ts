@@ -66,9 +66,12 @@ export class OrgFoldingProvider implements vscode.FoldingRangeProvider {
         }
       }
     }
-    
+
     // 为代码块和其他块元素添加折叠
     this.addBlockFolding(lines, ranges);
+    
+    // 为列表项添加折叠
+    this.addListFolding(lines, ranges);
     
     return ranges;
   }
@@ -102,6 +105,77 @@ export class OrgFoldingProvider implements vscode.FoldingRangeProvider {
         blockType = '';
       }
     }
+  }
+
+  /**
+   * 为列表项添加折叠功能
+   */
+  private addListFolding(lines: string[], ranges: vscode.FoldingRange[]): void {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const listMatch = line.match(/^(\s*)([-+*]|\d+\.)\s+(.*)$/);
+      
+      if (listMatch) {
+        const currentIndent = listMatch[1].length;
+        const endLine = this.findListItemEnd(lines, i, currentIndent);
+        
+        // 只有当列表项有子内容时才创建折叠范围
+        if (endLine > i) {
+          ranges.push(new vscode.FoldingRange(
+            i,
+            endLine,
+            vscode.FoldingRangeKind.Region
+          ));
+        }
+      }
+    }
+  }
+
+  /**
+   * 查找列表项的结束位置
+   */
+  private findListItemEnd(lines: string[], startLine: number, parentIndent: number): number {
+    let endLine = startLine;
+    
+    for (let i = startLine + 1; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmedLine = line.trim();
+      
+      // 空行跳过
+      if (trimmedLine === '') {
+        continue;
+      }
+      
+      // 检查缩进
+      const indentMatch = line.match(/^(\s*)/);
+      const currentIndent = indentMatch ? indentMatch[1].length : 0;
+      
+      // 如果缩进大于父级，说明是子内容
+      if (currentIndent > parentIndent) {
+        endLine = i;
+        continue;
+      }
+      
+      // 如果缩进小于等于父级，检查是否是同级或更高级的列表项
+      const listMatch = line.match(/^(\s*)([-+*]|\d+\.)\s+/);
+      const headingMatch = line.match(/^(\*+)\s+/);
+      
+      if (listMatch && currentIndent <= parentIndent) {
+        // 遇到同级或更高级的列表项，停止
+        break;
+      } else if (headingMatch) {
+        // 遇到标题，停止
+        break;
+      } else if (currentIndent <= parentIndent) {
+        // 遇到其他同级或更高级的内容，停止
+        break;
+      } else {
+        // 其他情况下，如果缩进更多，视为子内容
+        endLine = i;
+      }
+    }
+    
+    return endLine;
   }
   
   private hasContentBetweenLines(lines: string[], startLine: number, endLine: number): boolean {

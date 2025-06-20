@@ -3,12 +3,17 @@
   "displayName": "VOrg",
   "description": "Org-mode preview for VS Code",
   "version": "0.0.1",
+  "publisher": "vorg-dev",
   "engines": {
     "vscode": "^1.60.0"
   },
   "categories": [
     "Other"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vorg-dev/vorg"
+  },
       "activationEvents": [
       "onLanguage:org",
       "onCommand:vorg.preview",
@@ -17,7 +22,9 @@
       "onCommand:vorg.insertLink",
       "onCommand:vorg.metaReturn",
       "onCommand:vorg.smartReturn",
-      "onCommand:vorg.insertTodoHeading"
+      "onCommand:vorg.insertTodoHeading",
+      "onCommand:vorg.smartTab",
+      "onCommand:vorg.smartShiftTab"
     ],
   "main": "./out/extension.js",
   "contributes": {
@@ -81,6 +88,16 @@
         "command": "vorg.insertTodoHeading",
         "title": "VOrg: Insert TODO Heading",
         "icon": "$(tasklist)"
+      },
+      {
+        "command": "vorg.smartTab",
+        "title": "VOrg: Smart Tab (Intelligent Indentation)",
+        "icon": "$(indent)"
+      },
+      {
+        "command": "vorg.smartShiftTab",
+        "title": "VOrg: Smart Shift+Tab (Reverse Indentation)",
+        "icon": "$(outdent)"
       }
     ],
     "menus": {
@@ -149,6 +166,18 @@
         "key": "shift+alt+enter",
         "mac": "shift+alt+enter",
         "when": "editorLangId == org"
+      },
+      {
+        "command": "vorg.smartTab",
+        "key": "tab",
+        "mac": "tab",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "vorg.smartShiftTab",
+        "key": "shift+tab",
+        "mac": "shift+tab",
+        "when": "editorLangId == org"
       }
     ]
   },
@@ -175,9 +204,9 @@
     "vscode-test": "^1.5.2"
   },
   "dependencies": {
-    "uniorg": "^2.0.0",
-    "uniorg-parse": "^2.0.0",
-    "uniorg-rehype": "^2.0.0",
+    "uniorg": "^1.3.0",
+    "uniorg-parse": "^3.2.0",
+    "uniorg-rehype": "^2.2.0",
     "rehype-stringify": "^9.0.3"
   }
 } 
