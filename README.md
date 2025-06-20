@@ -13,6 +13,7 @@ VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，�
 - 🌈 **智能语法高亮** - 完整的 TextMate 语法定义和增强装饰器高亮
 - 🎨 **主题自适应** - 自动跟随 VS Code 主题，深色浅色无缝切换
 - 🔗 **链接跳转** - 支持多种链接类型的智能跳转和插入功能
+- ⚡ **智能编辑** - 类似 Emacs org-meta-return 的上下文感知编辑功能
 
 ## 🚀 快速开始
 
@@ -32,7 +33,12 @@ VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，�
    - 快捷键：`Ctrl+L` (Windows/Linux) 或 `Cmd+L` (Mac) - 插入新链接
    - 鼠标：`Ctrl+Click` (Windows/Linux) 或 `Cmd+Click` (Mac) - 跟随链接
 
-4. **文档大纲导航**：
+4. **智能编辑** (类似 Emacs org-meta-return)：
+   - 快捷键：`Alt+Enter` - 智能插入新元素（标题、列表项、表格行等）
+   - 快捷键：`Ctrl+Alt+Enter` (Windows/Linux) 或 `Cmd+Ctrl+Enter` (Mac) - 在子树末尾插入同级元素
+   - 快捷键：`Shift+Alt+Enter` - 插入TODO标题
+
+5. **文档大纲导航**：
    - 查看侧边栏的 "Outline" 面板
    - 使用 `Ctrl+Shift+O` (Windows/Linux) 或 `Cmd+Shift+O` (Mac) 快速跳转
    - 自动解析标题层级、文档属性和标签
@@ -157,6 +163,7 @@ VOrg 现在支持完整的 Org-mode 链接跳转功能：
 
 ### 短期目标
 - [x] 链接跳转功能
+- [x] 智能编辑命令 (org-meta-return 风格)
 - [ ] 添加导出功能（PDF、HTML、Word）
 - [ ] 支持数学公式渲染（MathJax）
 - [ ] 添加图表支持（Mermaid、PlantUML）

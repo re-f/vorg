@@ -14,7 +14,10 @@
       "onCommand:vorg.preview",
       "onCommand:vorg.previewToSide",
       "onCommand:vorg.followLink",
-      "onCommand:vorg.insertLink"
+      "onCommand:vorg.insertLink",
+      "onCommand:vorg.metaReturn",
+      "onCommand:vorg.smartReturn",
+      "onCommand:vorg.insertTodoHeading"
     ],
   "main": "./out/extension.js",
   "contributes": {
@@ -63,6 +66,21 @@
         "command": "vorg.debug.refreshHighlighting",
         "title": "VOrg: Debug - Refresh Highlighting",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "vorg.metaReturn",
+        "title": "VOrg: Insert New Item (Meta Return)",
+        "icon": "$(add)"
+      },
+      {
+        "command": "vorg.smartReturn",
+        "title": "VOrg: Insert New Item at End (Smart Return)",
+        "icon": "$(insert)"
+      },
+      {
+        "command": "vorg.insertTodoHeading",
+        "title": "VOrg: Insert TODO Heading",
+        "icon": "$(tasklist)"
       }
     ],
     "menus": {
@@ -112,6 +130,24 @@
         "command": "vorg.insertLink",
         "key": "ctrl+l",
         "mac": "cmd+l",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "vorg.metaReturn",
+        "key": "alt+enter",
+        "mac": "alt+enter",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "vorg.smartReturn",
+        "key": "ctrl+alt+enter",
+        "mac": "cmd+ctrl+enter",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "vorg.insertTodoHeading",
+        "key": "shift+alt+enter",
+        "mac": "shift+alt+enter",
         "when": "editorLangId == org"
       }
     ]
