@@ -16,25 +16,28 @@ VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，�
 ** 使用方法
 
 1. *打开预览* ：
-   - 快捷键：=Ctrl+Shift+V= (Windows/Linux) 或 =Cmd+Shift+V= (Mac)
+   - 快捷键：=Ctrl+C Ctrl+E= - 类似 Emacs =C-c C-e=
    - 命令面板：=VOrg: Open Preview=
    - 点击编辑器右上角的预览图标
 
 2. *并排预览* ：
-   - 快捷键：=Ctrl+K V= (Windows/Linux) 或 =Cmd+K V= (Mac)
+   - 快捷键：=Ctrl+C Ctrl+K= - 在侧边打开预览
    - 命令面板：=VOrg: Open Preview to the Side=
 
-3. *链接跳转* ：
-   - 快捷键：=Ctrl+Enter= (Windows/Linux) 或 =Cmd+Enter= (Mac) - 跟随光标处的链接
-   - 快捷键：=Ctrl+L= (Windows/Linux) 或 =Cmd+L= (Mac) - 插入新链接
+3. *TODO 状态管理* ：
+   - 快捷键：=Ctrl+C Ctrl+T= - 切换TODO状态，类似 Emacs =C-c C-t=
+   - 快捷键：=Shift+Alt+Enter= - 插入新的TODO标题
+
+4. *链接跳转* ：
+   - 快捷键：=Ctrl+C Ctrl+O= - 跟随光标处的链接，类似 Emacs =C-c C-o=
+   - 快捷键：=Ctrl+C Ctrl+L= - 插入新链接，类似 Emacs =C-c C-l=
    - 鼠标：=Ctrl+Click= (Windows/Linux) 或 =Cmd+Click= (Mac) - 跟随链接
 
-4. *智能编辑* (类似 Emacs org-meta-return)：
-   - 快捷键：=Alt+Enter= - 智能插入新元素（标题、列表项、表格行等）
-   - 快捷键：=Ctrl+Alt+Enter= (Windows/Linux) 或 =Cmd+Ctrl+Enter= (Mac) - 在子树末尾插入同级元素
-   - 快捷键：=Shift+Alt+Enter= - 插入TODO标题
+5. *智能编辑* (类似 Emacs org-meta-return)：
+   - 快捷键：=Alt+Enter= - 智能插入新元素（标题、列表项、表格行等），类似 Emacs =M-RET=
+   - 快捷键：=Ctrl+Alt+Enter= - 在子树末尾插入同级元素，类似 Emacs =C-M-RET=
 
-5. *智能 TAB 折叠* (类似 Emacs org-mode TAB 行为)：
+6. *智能 TAB 折叠* (类似 Emacs org-mode TAB 行为)：
    - 快捷键：=Tab= - 主要用于可见性控制（折叠/展开切换）
      - 在标题上：切换折叠/展开状态
      - 在列表项上：切换折叠状态（有子项）或增加缩进（无子项）
@@ -43,7 +46,7 @@ VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，�
      - 在代码块内：正常代码缩进
    - 快捷键：=Shift+Tab= - 在列表中减少缩进，在表格中反向导航
 
-6. *文档大纲导航*：
+7. *文档大纲导航*：
    - 查看侧边栏的 "Outline" 面板
    - 使用 =Ctrl+Shift+O= (Windows/Linux) 或 =Cmd+Shift+O= (Mac) 快速跳转
    - 自动解析标题层级、文档属性和标签

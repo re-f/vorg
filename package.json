@@ -149,27 +149,21 @@
     },
     "keybindings": [
       {
-        "command": "vorg.preview",
-        "key": "ctrl+shift+v",
-        "mac": "cmd+shift+v",
-        "when": "editorLangId == org"
-      },
-      {
         "command": "vorg.previewToSide",
-        "key": "ctrl+k v",
-        "mac": "cmd+k v",
+        "key": "ctrl+c ctrl+e",
+        "mac": "ctrl+c ctrl+e",
         "when": "editorLangId == org"
       },
       {
         "command": "vorg.followLink",
-        "key": "ctrl+enter",
-        "mac": "cmd+enter",
+        "key": "ctrl+c ctrl+o",
+        "mac": "ctrl+c ctrl+o",
         "when": "editorLangId == org"
       },
       {
         "command": "vorg.insertLink",
-        "key": "ctrl+l",
-        "mac": "cmd+l",
+        "key": "ctrl+c ctrl+l",
+        "mac": "ctrl+c ctrl+l",
         "when": "editorLangId == org"
       },
       {
@@ -181,7 +175,7 @@
       {
         "command": "vorg.smartReturn",
         "key": "ctrl+alt+enter",
-        "mac": "cmd+ctrl+enter",
+        "mac": "ctrl+alt+enter",
         "when": "editorLangId == org"
       },
       {
@@ -192,8 +186,8 @@
       },
       {
         "command": "vorg.setTodoState",
-        "key": "ctrl+shift+t",
-        "mac": "cmd+shift+t",
+        "key": "ctrl+c ctrl+t",
+        "mac": "ctrl+c ctrl+t",
         "when": "editorLangId == org"
       },
       {
@@ -206,6 +200,30 @@
         "command": "vorg.smartShiftTab",
         "key": "shift+tab",
         "mac": "shift+tab",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "workbench.action.toggleSidebarVisibility",
+        "key": "ctrl+c ctrl+x ctrl+b",
+        "mac": "ctrl+c ctrl+x ctrl+b",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "editor.action.addCommentLine",
+        "key": "ctrl+c ctrl+;",
+        "mac": "ctrl+c ctrl+;",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "editor.fold",
+        "key": "ctrl+c ctrl+tab",
+        "mac": "ctrl+c ctrl+tab",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "editor.unfold",
+        "key": "ctrl+c ctrl+shift+tab",
+        "mac": "ctrl+c ctrl+shift+tab",
         "when": "editorLangId == org"
       }
     ]

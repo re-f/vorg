@@ -5,7 +5,7 @@
 #+STARTUP: overview
 #+OPTIONS: toc:2 num:t
 
-* TODO 🎯 VOrg 扩展功能测试总览
+* WAITING 🎯 VOrg 扩展功能测试总览
 
 这个文件包含了VOrg扩展所有功能的完整测试用例，包括：
 - 🔗 链接跳转功能（内部、外部、跨文件）
