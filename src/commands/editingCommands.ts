@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
+import { TodoKeywordManager } from '../utils/todoKeywordManager';
 
 /**
  * Org-mode 编辑命令，模拟 Emacs 中的 org-meta-return 等功能
  */
 export class EditingCommands {
+  private static todoKeywordManager = TodoKeywordManager.getInstance();
   
   /**
    * 注册编辑相关命令
@@ -24,6 +26,11 @@ export class EditingCommands {
       EditingCommands.insertTodoHeading();
     });
 
+    // 切换到特定TODO状态的命令
+    const setTodoStateCommand = vscode.commands.registerCommand('vorg.setTodoState', (state?: string) => {
+      EditingCommands.setTodoState(state);
+    });
+
     // TAB 键智能缩进命令
     const smartTabCommand = vscode.commands.registerCommand('vorg.smartTab', () => {
       EditingCommands.executeSmartTab();
@@ -34,7 +41,7 @@ export class EditingCommands {
       EditingCommands.executeSmartShiftTab();
     });
 
-    context.subscriptions.push(metaReturnCommand, smartReturnCommand, insertTodoCommand, smartTabCommand, smartShiftTabCommand);
+    context.subscriptions.push(metaReturnCommand, smartReturnCommand, insertTodoCommand, setTodoStateCommand, smartTabCommand, smartShiftTabCommand);
   }
 
   /**
@@ -122,23 +129,187 @@ export class EditingCommands {
       return;
     }
 
-         const position = editor.selection.active;
-     const document = editor.document;
-     const context = EditingCommands.analyzeContext(document, position);
-
-    const level = context.type === 'heading' ? (context.level || 1) : 1;
-    const stars = '*'.repeat(level);
+    const position = editor.selection.active;
+    const line = editor.document.lineAt(position.line);
+    const lineText = line.text;
+    
+    // 获取当前行的缩进级别
+    const indentMatch = lineText.match(/^(\s*)/);
+    const indent = indentMatch ? indentMatch[1] : '';
+    
+    // 确定星号数量
+    const stars = this.determineStarLevel(editor, position.line);
+    
+    // 获取默认TODO关键字
+    const defaultTodoKeyword = this.todoKeywordManager.getDefaultTodoKeyword();
     
     await editor.edit(editBuilder => {
-      if (context.type === 'heading') {
-        // 在标题后插入
-        const lineEnd = document.lineAt(position.line).range.end;
-        editBuilder.insert(lineEnd, `\n${stars} TODO `);
+      if (lineText.trim() === '') {
+        // 当前行为空，直接插入
+        editBuilder.insert(position, `${stars} ${defaultTodoKeyword} `);
       } else {
-        // 在当前位置插入
-        editBuilder.insert(position, `${stars} TODO `);
+        // 当前行有内容，在行末插入新行
+        const lineEnd = line.range.end;
+        editBuilder.insert(lineEnd, `\n${stars} ${defaultTodoKeyword} `);
       }
     });
+  }
+
+
+
+  /**
+   * 设置特定的TODO状态
+   */
+  private static async setTodoState(targetState?: string) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'org') {
+      return;
+    }
+
+    const position = editor.selection.active;
+    
+    // 查找当前位置所属的标题
+    const headingLineInfo = this.findCurrentHeading(editor.document, position);
+    if (!headingLineInfo) {
+      vscode.window.showInformationMessage('请将光标放在标题或其内容区域内');
+      return;
+    }
+
+    const { line, headingInfo } = headingLineInfo;
+
+    // 如果没有指定目标状态，显示选择列表
+    if (!targetState) {
+      const allKeywords = this.todoKeywordManager.getAllKeywords();
+      const items = [
+        { label: '(无状态)', value: '' },
+        ...allKeywords.map(k => ({
+          label: k.keyword,
+          value: k.keyword,
+          description: k.isDone ? '已完成状态' : '未完成状态'
+        }))
+      ];
+
+      const selected = await vscode.window.showQuickPick(items, {
+        placeHolder: '选择TODO状态'
+      });
+
+      if (!selected) {
+        return;
+      }
+
+      targetState = selected.value;
+    }
+
+    // 验证目标状态是否有效
+    if (targetState && !this.todoKeywordManager.isValidKeyword(targetState)) {
+      vscode.window.showErrorMessage(`无效的TODO状态: ${targetState}`);
+      return;
+    }
+
+    // 应用状态变更
+    await this.applyTodoStateChange(editor, line, headingInfo, targetState);
+  }
+
+  /**
+   * 应用TODO状态变更
+   */
+  private static async applyTodoStateChange(
+    editor: vscode.TextEditor,
+    line: vscode.TextLine,
+    headingInfo: HeadingInfo,
+    newState: string
+  ) {
+    const lineText = line.text;
+    let newLineText: string;
+
+    if (!newState) {
+      // 移除状态
+      if (headingInfo.todoState) {
+        newLineText = lineText.replace(
+          new RegExp(`^(\\*+)\\s+${headingInfo.todoState}\\s+(.*)$`),
+          '$1 $2'
+        );
+      } else {
+        return; // 已经没有状态了
+      }
+    } else {
+      // 设置新状态
+      if (headingInfo.todoState) {
+        // 替换现有状态
+        newLineText = lineText.replace(
+          new RegExp(`^(\\*+)\\s+${headingInfo.todoState}\\s+(.*)$`),
+          `$1 ${newState} $2`
+        );
+      } else {
+        // 添加新状态
+        newLineText = lineText.replace(
+          /^(\*+)\s+(.*)$/,
+          `$1 ${newState} $2`
+        );
+      }
+    }
+
+    // 应用文本变更
+    await editor.edit(editBuilder => {
+      editBuilder.replace(line.range, newLineText);
+    });
+
+    // 检查是否需要添加时间戳和备注
+    const keywordConfig = this.todoKeywordManager.getKeywordConfig(newState);
+    if (keywordConfig) {
+      await this.handleStateTransitionLogging(editor, line.lineNumber, keywordConfig, headingInfo.todoState, newState);
+    }
+  }
+
+  /**
+   * 处理状态转换日志记录（时间戳和备注）
+   */
+  private static async handleStateTransitionLogging(
+    editor: vscode.TextEditor,
+    lineNumber: number,
+    keywordConfig: any,
+    oldState: string | null,
+    newState: string
+  ) {
+    const needsTimestamp = keywordConfig.needsTimestamp;
+    const needsNote = keywordConfig.needsNote;
+
+    if (!needsTimestamp && !needsNote) {
+      return;
+    }
+
+    const insertPosition = new vscode.Position(lineNumber + 1, 0);
+    let logText = '';
+
+    // 添加时间戳
+    if (needsTimestamp) {
+      const now = new Date();
+      const timestamp = now.toISOString().slice(0, 19).replace('T', ' ');
+      
+      if (keywordConfig.isDone) {
+        logText += `   CLOSED: [${timestamp}]\n`;
+      } else {
+        logText += `   STATE: [${timestamp}] ${oldState || '(无)'} -> ${newState}\n`;
+      }
+    }
+
+    // 添加备注
+    if (needsNote) {
+      const note = await vscode.window.showInputBox({
+        prompt: `为状态变更添加备注 (${oldState || '无'} -> ${newState})`,
+        placeHolder: '输入备注内容...'
+      });
+
+      if (note) {
+        logText += `   - 备注：${note}\n`;
+      }
+    }
+
+    if (logText) {
+      await editor.edit(editBuilder => {
+        editBuilder.insert(insertPosition, logText);
+      });
+    }
   }
 
   /**
@@ -672,6 +843,98 @@ export class EditingCommands {
       }
     }
   }
+
+  /**
+   * 解析标题行
+   */
+  private static parseHeadingLine(lineText: string): HeadingInfo {
+    const allKeywords = this.todoKeywordManager.getAllKeywords();
+    const keywordRegex = new RegExp(`^(\\*+)\\s+(?:(${allKeywords.map(k => k.keyword).join('|')})\\s+)?(.*)$`);
+    const headingMatch = lineText.match(keywordRegex);
+    
+    if (!headingMatch) {
+      return {
+        level: 0,
+        stars: '',
+        todoState: null,
+        title: lineText
+      };
+    }
+
+    return {
+      level: headingMatch[1].length,
+      stars: headingMatch[1],
+      todoState: headingMatch[2] || null,
+      title: headingMatch[3] || ''
+    };
+  }
+
+  /**
+   * 确定标题的星号级别
+   */
+  private static determineStarLevel(editor: vscode.TextEditor, lineNumber: number): string {
+    const document = editor.document;
+    const line = document.lineAt(lineNumber);
+    const lineText = line.text;
+    const headingMatch = lineText.match(/^(\*+)\s+(?:(TODO|DONE|NEXT|WAITING|CANCELLED)\s+)?(.*)$/);
+
+    if (headingMatch) {
+      return headingMatch[1];
+    }
+    return '';
+  }
+
+  /**
+   * 查找当前位置所属的标题
+   */
+  private static findCurrentHeading(document: vscode.TextDocument, position: vscode.Position): { line: vscode.TextLine, headingInfo: HeadingInfo } | null {
+    // 首先检查当前行是否就是标题行
+    const currentLine = document.lineAt(position.line);
+    const currentHeadingInfo = this.parseHeadingLine(currentLine.text);
+    if (currentHeadingInfo.level > 0) {
+      return {
+        line: currentLine,
+        headingInfo: currentHeadingInfo
+      };
+    }
+
+    // 如果当前行不是标题行，向上查找所属的标题
+    for (let lineNumber = position.line - 1; lineNumber >= 0; lineNumber--) {
+      const line = document.lineAt(lineNumber);
+      const headingInfo = this.parseHeadingLine(line.text);
+      
+      if (headingInfo.level > 0) {
+        // 找到了一个标题，检查当前位置是否在这个标题的内容范围内
+        const nextHeadingLine = this.findNextHeadingLine(document, lineNumber, headingInfo.level);
+        
+        if (nextHeadingLine === -1 || position.line < nextHeadingLine) {
+          // 当前位置在这个标题的内容范围内
+          return {
+            line: line,
+            headingInfo: headingInfo
+          };
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * 查找下一个同级或更高级标题的行号
+   */
+  private static findNextHeadingLine(document: vscode.TextDocument, startLine: number, currentLevel: number): number {
+    for (let lineNumber = startLine + 1; lineNumber < document.lineCount; lineNumber++) {
+      const line = document.lineAt(lineNumber);
+      const headingInfo = this.parseHeadingLine(line.text);
+      
+      if (headingInfo.level > 0 && headingInfo.level <= currentLevel) {
+        return lineNumber;
+      }
+    }
+    
+    return -1; // 没有找到下一个同级或更高级标题
+  }
 }
 
 /**
@@ -685,4 +948,14 @@ interface ContextInfo {
   indent?: number;
   marker?: string;
   checkboxState?: string | null;
+} 
+
+/**
+ * 标题信息接口
+ */
+interface HeadingInfo {
+  level: number;
+  stars: string;
+  todoState: string | null;
+  title: string;
 } 

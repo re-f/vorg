@@ -1,6 +1,12 @@
 import * as vscode from 'vscode';
+import { TodoKeywordManager } from '../utils/todoKeywordManager';
 
 export class OrgOutlineProvider implements vscode.DocumentSymbolProvider {
+  private todoKeywordManager: TodoKeywordManager;
+
+  constructor() {
+    this.todoKeywordManager = TodoKeywordManager.getInstance();
+  }
   
   provideDocumentSymbols(
     document: vscode.TextDocument,
@@ -112,12 +118,14 @@ export class OrgOutlineProvider implements vscode.DocumentSymbolProvider {
     todoStatus: string | null;
     tags: string[];
   } {
-    let cleanTitle = titleText;
+    let cleanTitle = titleText.trim();
     let todoStatus: string | null = null;
     let tags: string[] = [];
     
     // 提取 TODO 状态
-    const todoMatch = cleanTitle.match(/^(TODO|DONE|NEXT|WAITING|CANCELLED|STARTED|DELEGATED|DEFERRED|SOMEDAY)\s+(.+)$/);
+    const allKeywords = this.todoKeywordManager.getAllKeywords();
+    const todoRegex = new RegExp(`^(${allKeywords.map(k => k.keyword).join('|')})\\s+(.+)$`);
+    const todoMatch = cleanTitle.match(todoRegex);
     if (todoMatch) {
       todoStatus = todoMatch[1];
       cleanTitle = todoMatch[2];

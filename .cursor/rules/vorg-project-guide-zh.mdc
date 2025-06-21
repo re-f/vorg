@@ -45,8 +45,8 @@ VOrg 是一个 VS Code 扩展，为 Org-mode 文档提供功能，类似于 Mark
 
 ### 构建与测试
 - `npm run compile` - TypeScript 编译
-- `npm run watch` - 监听模式编译
 - `npm test` - 运行测试套件
+- `npx vsce package` - 打包
 - 在 VS Code 中按 F5 启动扩展开发主机
 
 ### 测试结构

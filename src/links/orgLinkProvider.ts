@@ -1,7 +1,13 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { TodoKeywordManager } from '../utils/todoKeywordManager';
 
-export class OrgLinkProvider implements vscode.DefinitionProvider, vscode.DocumentLinkProvider {
+export class OrgLinkProvider implements vscode.DocumentLinkProvider {
+  private todoKeywordManager: TodoKeywordManager;
+
+  constructor() {
+    this.todoKeywordManager = TodoKeywordManager.getInstance();
+  }
   
   // 各种链接的正则表达式
   private static readonly LINK_PATTERNS = {
@@ -18,82 +24,6 @@ export class OrgLinkProvider implements vscode.DefinitionProvider, vscode.Docume
     // 属性中的ID
     PROPERTY_ID: /:ID:\s+([A-F0-9-]+)/gm
   };
-
-  /**
-   * 提供定义跳转功能 (Ctrl+Click)
-   */
-  async provideDefinition(
-    document: vscode.TextDocument,
-    position: vscode.Position,
-    token: vscode.CancellationToken
-  ): Promise<vscode.Definition | null> {
-    const line = document.lineAt(position);
-    
-    // 查找光标位置的链接
-    const linkMatch = this.findLinkAtPosition(document, position);
-    if (!linkMatch) {
-      return null;
-    }
-
-    return this.resolveLinkTarget(document, linkMatch.linkTarget, linkMatch.range.start);
-  }
-
-  /**
-   * 查找指定位置的链接
-   */
-  private findLinkAtPosition(document: vscode.TextDocument, position: vscode.Position): { linkTarget: string; range: vscode.Range } | null {
-    const line = document.lineAt(position);
-    const lineText = line.text;
-    
-    // 检查方括号链接 [[link][description]] 或 [[link]]
-    const bracketRegex = /\[\[([^\]]+)\](?:\[([^\]]*)\])?\]/g;
-    let match;
-    
-    while ((match = bracketRegex.exec(lineText)) !== null) {
-      const startCol = match.index;
-      const endCol = match.index + match[0].length;
-      
-      if (position.character >= startCol && position.character <= endCol) {
-        const range = new vscode.Range(
-          new vscode.Position(position.line, startCol),
-          new vscode.Position(position.line, endCol)
-        );
-        return { linkTarget: match[1], range };
-      }
-    }
-    
-    // 检查HTTP链接
-    const httpRegex = /(https?:\/\/[^\s\]]+)/g;
-    while ((match = httpRegex.exec(lineText)) !== null) {
-      const startCol = match.index;
-      const endCol = match.index + match[0].length;
-      
-      if (position.character >= startCol && position.character <= endCol) {
-        const range = new vscode.Range(
-          new vscode.Position(position.line, startCol),
-          new vscode.Position(position.line, endCol)
-        );
-        return { linkTarget: match[1], range };
-      }
-    }
-    
-    // 检查文件链接
-    const fileRegex = /file:([^\s\]]+)/g;
-    while ((match = fileRegex.exec(lineText)) !== null) {
-      const startCol = match.index;
-      const endCol = match.index + match[0].length;
-      
-      if (position.character >= startCol && position.character <= endCol) {
-        const range = new vscode.Range(
-          new vscode.Position(position.line, startCol),
-          new vscode.Position(position.line, endCol)
-        );
-        return { linkTarget: match[0], range }; // 包含 'file:' 前缀
-      }
-    }
-    
-    return null;
-  }
 
   /**
    * 提供文档链接功能
@@ -242,7 +172,9 @@ export class OrgLinkProvider implements vscode.DefinitionProvider, vscode.Docume
     while ((match = regex.exec(text)) !== null) {
       const headlineTitle = match[1].trim();
       // 移除状态关键字 (TODO, DONE, etc.)
-      const cleanTitle = headlineTitle.replace(/^(TODO|DONE|NEXT|WAITING|CANCELLED)\s+/, '');
+      const allKeywords = this.todoKeywordManager.getAllKeywords();
+      const keywordRegex = new RegExp(`^(${allKeywords.map(k => k.keyword).join('|')})\\s+`);
+      const cleanTitle = headlineTitle.replace(keywordRegex, '');
       
       if (cleanTitle === title || headlineTitle === title) {
         const position = document.positionAt(match.index);
@@ -391,7 +323,9 @@ export class OrgLinkProvider implements vscode.DefinitionProvider, vscode.Docume
       if (headingMatch) {
         let headlineTitle = headingMatch[2].trim();
         // 移除状态关键字 (TODO, DONE, etc.)
-        const cleanTitle = headlineTitle.replace(/^(TODO|DONE|NEXT|WAITING|CANCELLED)\s+/, '');
+        const allKeywords = this.todoKeywordManager.getAllKeywords();
+        const keywordRegex = new RegExp(`^(${allKeywords.map(k => k.keyword).join('|')})\\s+`);
+        const cleanTitle = headlineTitle.replace(keywordRegex, '');
         
         
         

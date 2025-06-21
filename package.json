@@ -24,11 +24,28 @@
       "onCommand:vorg.metaReturn",
       "onCommand:vorg.smartReturn",
       "onCommand:vorg.insertTodoHeading",
+      "onCommand:vorg.setTodoState",
       "onCommand:vorg.smartTab",
       "onCommand:vorg.smartShiftTab"
     ],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "VOrg",
+      "properties": {
+        "vorg.todoKeywords": {
+          "type": "string",
+          "default": "TODO(t) NEXT(n) WAITING(w) | DONE(d) CANCELLED(c)",
+          "description": "TODO状态关键字配置，格式类似Org-mode。'|'前为未完成状态，'|'后为已完成状态。支持状态转换记录，如 TODO(@/!) 表示状态切换时记录时间戳和备注。",
+          "markdownDescription": "TODO状态关键字配置，格式类似Org-mode。\n\n- `|` 前为未完成状态，`|` 后为已完成状态\n- 支持状态转换记录：`@` 表示记录时间戳，`!` 表示需要备注\n- 示例：`\"PreSale InDelivery HANGUP(@/!) End(@/!) | Terminated(@/!) DONE(@/!)\"`"
+        },
+        "vorg.defaultTodoKeyword": {
+          "type": "string",
+          "default": "TODO",
+          "description": "默认插入的TODO关键字，必须是todoKeywords配置中定义的关键字之一"
+        }
+      }
+    },
     "languages": [
       {
         "id": "org",
@@ -89,6 +106,11 @@
         "command": "vorg.insertTodoHeading",
         "title": "VOrg: Insert TODO Heading",
         "icon": "$(tasklist)"
+      },
+      {
+        "command": "vorg.setTodoState",
+        "title": "VOrg: Set TODO State",
+        "icon": "$(checklist)"
       },
       {
         "command": "vorg.smartTab",
@@ -166,6 +188,12 @@
         "command": "vorg.insertTodoHeading",
         "key": "shift+alt+enter",
         "mac": "shift+alt+enter",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "vorg.setTodoState",
+        "key": "ctrl+shift+t",
+        "mac": "cmd+shift+t",
         "when": "editorLangId == org"
       },
       {

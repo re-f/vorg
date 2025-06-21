@@ -1,24 +1,32 @@
 import * as vscode from 'vscode';
-import { OrgSyntaxHighlighter } from '../syntaxHighlighter';
+import { SyntaxHighlighter } from '../syntaxHighlighter';
 
 export class DebugCommands {
-    public static registerCommands(context: vscode.ExtensionContext) {
-        // 手动触发语法高亮的命令
-        const refreshHighlightingCommand = vscode.commands.registerCommand(
-            'vorg.debug.refreshHighlighting',
-            () => {
-                const editor = vscode.window.activeTextEditor;
-                if (editor && editor.document.languageId === 'org') {
-                    console.log('Debug: Manual refresh highlighting triggered');
-                    const highlighter = OrgSyntaxHighlighter.getInstance();
-                    highlighter.applySyntaxHighlighting(editor);
-                    vscode.window.showInformationMessage('Org语法高亮已刷新');
-                } else {
-                    vscode.window.showWarningMessage('请在Org文件中使用此命令');
-                }
-            }
-        );
+    private static syntaxHighlighter: SyntaxHighlighter;
+
+    static registerCommands(context: vscode.ExtensionContext): void {
+        this.syntaxHighlighter = new SyntaxHighlighter();
+
+        // 注册刷新语法高亮命令
+        const refreshHighlightingCommand = vscode.commands.registerCommand('vorg.debug.refreshHighlighting', () => {
+            DebugCommands.refreshHighlighting();
+        });
 
         context.subscriptions.push(refreshHighlightingCommand);
+    }
+
+    /**
+     * 刷新语法高亮
+     */
+    private static refreshHighlighting(): void {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor || editor.document.languageId !== 'org') {
+            vscode.window.showWarningMessage('请打开一个 .org 文件');
+            return;
+        }
+
+        this.syntaxHighlighter.refreshHighlighting();
+        this.syntaxHighlighter.applyHighlighting(editor);
+        vscode.window.showInformationMessage('语法高亮已刷新');
     }
 } 

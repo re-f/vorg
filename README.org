@@ -65,11 +65,12 @@ VOrg 是一个 VS Code 扩展，提供 Org-mode 文档的实时预览功能，�
 
 * 📚 文档
 
-- [[file:docs/FEATURES.md][功能特性]] - 详细的功能介绍和特性说明
 - [[file:docs/USER_GUIDE.md][用户指南]] - 完整的使用教程和语法指南
-- [[file:docs/TECHNICAL.md][技术文档]] - 架构设计和技术实现细节
+- [[file:docs/FEATURES.md][功能特性]] - 详细的功能介绍和特性说明
 - [[file:docs/SYNTAX_HIGHLIGHTING.md][语法高亮]] - 语法高亮功能详细说明
 - [[file:docs/TAB_SMART_INDENTATION.md][TAB 智能折叠]] - TAB 键智能折叠功能详细说明
+- [[file:docs/EDITING_FEATURES.md][编辑功能]] - 智能编辑功能详细说明
+- [[file:docs/TECHNICAL.md][技术文档]] - 架构设计和技术实现细节
 
 * 🛠️ 开发
 
