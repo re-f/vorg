@@ -4,6 +4,7 @@
   "description": "Org-mode preview for VS Code",
   "version": "0.0.1",
   "publisher": "vorg-dev",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.60.0"
   },
