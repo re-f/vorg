@@ -15,13 +15,16 @@ export class HtmlGenerator {
     }
 
     try {
-      // 使用 unified 处理流程转换 Org 到 HTML
+      // 首先使用 unified 处理流程转换 Org 到 HTML
       const processor = unified()
         .use(uniorgParse as any)
         .use(uniorgRehype as any)
         .use(rehypeStringify as any);
 
-      const html = processor.processSync(text).toString();
+      let html = processor.processSync(text).toString();
+      
+      // 后处理：添加 checkbox 支持
+      html = this.processCheckboxes(html, text);
 
       // 获取当前 VS Code 主题信息
       const isDarkTheme = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
@@ -148,6 +151,56 @@ export class HtmlGenerator {
     });
 
     return htmlWithLineMarkers;
+  }
+
+  private static processCheckboxes(html: string, orgText: string): string {
+    // 解析 org 文本来获取 checkbox 信息
+    const processor = unified().use(uniorgParse as any);
+    const ast = processor.parse(orgText);
+    
+    // 收集所有的 checkbox 信息
+    const checkboxItems: Array<{checkbox: string | null, content: string}> = [];
+    
+    function collectCheckboxes(node: any): void {
+      if (node.type === 'list-item' && node.checkbox !== null && node.checkbox !== undefined) {
+        // 提取列表项的文本内容
+        let content = '';
+        if (node.children && node.children.length > 0) {
+          const paragraph = node.children[0];
+          if (paragraph && paragraph.children) {
+            content = paragraph.children.map((child: any) => child.value || '').join('').trim();
+          }
+        }
+        checkboxItems.push({
+          checkbox: node.checkbox,
+          content: content
+        });
+      }
+      
+      if (node.children) {
+        node.children.forEach(collectCheckboxes);
+      }
+    }
+    
+    collectCheckboxes(ast);
+    
+    // 在 HTML 中替换对应的列表项
+    let processedHtml = html;
+    
+    checkboxItems.forEach((item) => {
+      if (item.content) {
+        // 匹配对应的 <li> 元素
+        const liPattern = new RegExp(`<li>([^<]*${item.content.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^<]*)</li>`, 'g');
+        
+        // 创建带 checkbox 的替换内容
+        const checkboxElement = `<input type="checkbox"${item.checkbox === 'on' ? ' checked' : ''} disabled>`;
+        const replacement = `<li class="task-list-item">${checkboxElement} $1</li>`;
+        
+        processedHtml = processedHtml.replace(liPattern, replacement);
+      }
+    });
+    
+    return processedHtml;
   }
 
   private static generateStyledHtml(content: string, isDarkTheme: boolean): string {

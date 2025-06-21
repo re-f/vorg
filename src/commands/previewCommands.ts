@@ -29,7 +29,9 @@ export class PreviewCommands {
     // 监听文档变化，实时更新预览
     vscode.workspace.onDidChangeTextDocument(
       event => {
-        if (event.document === vscode.window.activeTextEditor?.document) {
+        // 只处理当前活动的org文档
+        if (event.document === vscode.window.activeTextEditor?.document && 
+            event.document.languageId === 'org') {
           // 更新所有打开的预览窗口
           this.previewManager.updateAllPreviews();
         }
@@ -41,8 +43,8 @@ export class PreviewCommands {
     // 监听活动编辑器变化
     vscode.window.onDidChangeActiveTextEditor(
       editor => {
-        if (editor) {
-          // 当切换编辑器时，更新预览
+        if (editor && editor.document.languageId === 'org') {
+          // 当切换到org编辑器时，更新预览
           this.previewManager.updateAllPreviews();
         }
       },
@@ -53,7 +55,8 @@ export class PreviewCommands {
     // 监听编辑器滚动事件
     vscode.window.onDidChangeTextEditorVisibleRanges(
       event => {
-        if (event.textEditor === vscode.window.activeTextEditor) {
+        if (event.textEditor === vscode.window.activeTextEditor &&
+            event.textEditor.document.languageId === 'org') {
           // 同步滚动到预览窗口
           this.previewManager.syncScrollForAllPreviews();
         }

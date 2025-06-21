@@ -1,93 +1,88 @@
 import * as vscode from 'vscode';
+import { OrgOutlineProvider } from './outline/orgOutlineProvider';
+import { OrgLinkProvider } from './links/orgLinkProvider';
+import { OrgFoldingProvider } from './folding/orgFoldingProvider';
+import { PreviewManager } from './preview/previewManager';
+import { SyntaxHighlighter } from './syntaxHighlighter';
+import { TodoKeywordManager } from './utils/todoKeywordManager';
 import { PreviewCommands } from './commands/previewCommands';
 import { LinkCommands } from './commands/linkCommands';
 import { EditingCommands } from './commands/editingCommands';
 import { DebugCommands } from './commands/debugCommands';
 
-import { OrgFoldingProvider } from './folding/orgFoldingProvider';
-import { OrgLinkProvider } from './links/orgLinkProvider';
-import { OrgOutlineProvider } from './outline/orgOutlineProvider';
-import { OrgSyntaxHighlighter } from './syntaxHighlighter';
-
 export function activate(context: vscode.ExtensionContext) {
-  // 创建预览命令管理器
-  const previewCommands = new PreviewCommands(context);
+  console.log('VOrg extension is now active!');
+
+  // 初始化TODO关键字管理器
+  const todoKeywordManager = TodoKeywordManager.getInstance();
   
-  // 注册命令
+  // 初始化语法高亮器
+  const syntaxHighlighter = new SyntaxHighlighter();
+
+  // 注册大纲提供者
+  const outlineProvider = new OrgOutlineProvider();
+  context.subscriptions.push(
+    vscode.languages.registerDocumentSymbolProvider('org', outlineProvider)
+  );
+
+  // 注册链接提供者
+  const linkProvider = new OrgLinkProvider();
+  context.subscriptions.push(
+    vscode.languages.registerDocumentLinkProvider('org', linkProvider)
+  );
+
+  // 注册折叠提供者
+  const foldingProvider = new OrgFoldingProvider();
+  context.subscriptions.push(
+    vscode.languages.registerFoldingRangeProvider('org', foldingProvider)
+  );
+
+  // 注册预览管理器
+  const previewManager = new PreviewManager(context);
+
+  // 注册各种命令
+  const previewCommands = new PreviewCommands(context);
   previewCommands.registerCommands(context);
+  previewCommands.registerEventListeners(context); // 注册预览事件监听器
   LinkCommands.registerCommands(context);
   EditingCommands.registerCommands(context);
   DebugCommands.registerCommands(context);
-  
-  // 注册事件监听器
-  previewCommands.registerEventListeners(context);
-  
-  // 注册 Outline Provider（文档符号提供器）
-  const outlineProvider = new OrgOutlineProvider();
-  const outlineProviderDisposable = vscode.languages.registerDocumentSymbolProvider(
-    { scheme: 'file', language: 'org' },
-    outlineProvider
-  );
-  
-  // 注册 Folding Provider
-  const foldingProvider = new OrgFoldingProvider();
-  const foldingProviderDisposable = vscode.languages.registerFoldingRangeProvider(
-    { scheme: 'file', language: 'org' },
-    foldingProvider
-  );
-  
-  // 注册 Link Provider
-  const linkProvider = new OrgLinkProvider();
-  const linkProviderDisposable = vscode.languages.registerDocumentLinkProvider(
-    { scheme: 'file', language: 'org' },
-    linkProvider
-  );
-  
-  // 注册 Definition Provider (用于 Ctrl+Click 跳转)
-  const definitionProviderDisposable = vscode.languages.registerDefinitionProvider(
-    { scheme: 'file', language: 'org' },
-    linkProvider
-  );
-  
-  // 初始化语法高亮器
-  const syntaxHighlighter = OrgSyntaxHighlighter.getInstance();
-  
-  // 监听编辑器变化以应用语法高亮
-  const onDidChangeActiveTextEditor = vscode.window.onDidChangeActiveTextEditor((editor) => {
-    if (editor && editor.document.languageId === 'org') {
-      syntaxHighlighter.applySyntaxHighlighting(editor);
-    }
-  });
-  
-  // 监听文档内容变化以更新语法高亮
-  const onDidChangeTextDocument = vscode.workspace.onDidChangeTextDocument((event) => {
-    const editor = vscode.window.activeTextEditor;
-    if (editor && editor.document === event.document && event.document.languageId === 'org') {
-      // 使用防抖来避免过于频繁的更新
-      setTimeout(() => {
-        syntaxHighlighter.applySyntaxHighlighting(editor);
-      }, 100);
-    }
-  });
-  
-  // 对当前活动编辑器应用语法高亮
-  if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.document.languageId === 'org') {
-    syntaxHighlighter.applySyntaxHighlighting(vscode.window.activeTextEditor);
-  }
-  
-  // 添加到订阅列表
+
+  // 监听文档变化，应用语法高亮
   context.subscriptions.push(
-    outlineProviderDisposable,
-    foldingProviderDisposable,
-    linkProviderDisposable,
-    definitionProviderDisposable,
-    onDidChangeActiveTextEditor,
-    onDidChangeTextDocument
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      if (editor && editor.document.languageId === 'org') {
+        syntaxHighlighter.refreshHighlighting();
+        syntaxHighlighter.applyHighlighting(editor);
+      }
+    })
   );
+
+  // 监听文档内容变化
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeTextDocument((event) => {
+      if (event.document.languageId === 'org') {
+        const editor = vscode.window.activeTextEditor;
+        if (editor && editor.document === event.document) {
+          syntaxHighlighter.applyHighlighting(editor);
+        }
+      }
+    })
+  );
+
+  // 监听主题变化
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveColorTheme(() => {
+      syntaxHighlighter.refreshHighlighting();
+    })
+  );
+
+  // 应用到当前活动的编辑器
+  if (vscode.window.activeTextEditor?.document.languageId === 'org') {
+    syntaxHighlighter.applyHighlighting(vscode.window.activeTextEditor);
+  }
 }
 
 export function deactivate() {
-  // 清理语法高亮器
-  const syntaxHighlighter = OrgSyntaxHighlighter.getInstance();
-  syntaxHighlighter.dispose();
+  console.log('VOrg extension is deactivated');
 } 
