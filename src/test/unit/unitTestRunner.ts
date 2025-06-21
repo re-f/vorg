@@ -78,8 +78,38 @@ const assert = {
     if (actual !== expected) {
       throw new Error(message || `Expected ${actual} to equal ${expected}`);
     }
+  },
+  
+  deepStrictEqual(actual: any, expected: any, message?: string) {
+    if (!deepEqual(actual, expected)) {
+      throw new Error(message || `Expected ${JSON.stringify(actual)} to deep equal ${JSON.stringify(expected)}`);
+    }
   }
 };
+
+// 深度比较函数
+function deepEqual(a: any, b: any): boolean {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  if (typeof a === 'object' && typeof b === 'object') {
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) return false;
+    for (const key of keysA) {
+      if (!keysB.includes(key)) return false;
+      if (!deepEqual(a[key], b[key])) return false;
+    }
+    return true;
+  }
+  return false;
+}
 
 // 全局设置
 const framework = new SimpleTestFramework();
@@ -105,16 +135,20 @@ async function runTests() {
       return originalRequire.apply(this, arguments);
     };
     
-    // 动态导入测试文件
-    const testFile = path.join(__dirname, '../suite/orgFoldingProvider.test.js');
+    // 动态导入所有测试文件
+    const testFiles = [
+      path.join(__dirname, '../suite/orgFoldingProvider.test.js'),
+      path.join(__dirname, 'orgHeadlineParser.test.js')
+    ];
     
-    if (!fs.existsSync(testFile)) {
-      console.log('❌ 测试文件不存在，请先编译 TypeScript 代码');
-      console.log('运行: npm run compile');
-      process.exit(1);
+    for (const testFile of testFiles) {
+      if (fs.existsSync(testFile)) {
+        console.log(`📁 加载测试文件: ${path.basename(testFile)}`);
+        require(testFile);
+      } else {
+        console.log(`⚠️  跳过不存在的测试文件: ${path.basename(testFile)}`);
+      }
     }
-    
-    require(testFile);
     await framework.run();
     
     // 恢复原始require

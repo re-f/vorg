@@ -70,6 +70,8 @@ export class OrgSyntaxHighlighter {
                 // 数学公式 - 使用字符串颜色
                 math: { color: '#CE9178', background: 'rgba(206, 145, 120, 0.15)' },
                 
+
+                
                 // 文本格式 - 新增
                 bold: { color: '#FFFFFF', fontWeight: 'bold' },
                 italic: { color: '#DCDCAA', fontStyle: 'italic' },
@@ -98,6 +100,8 @@ export class OrgSyntaxHighlighter {
                 quoteBlock: { background: 'rgba(0, 128, 0, 0.15)', border: '0 0 0 4px solid #008000' },
                 tableRow: { background: 'rgba(255, 215, 0, 0.15)' },
                 math: { color: '#A31515', background: 'rgba(163, 21, 21, 0.15)' },
+                
+
                 
                 // 文本格式 - 新增
                 bold: { color: '#000000', fontWeight: 'bold' },
@@ -149,7 +153,9 @@ export class OrgSyntaxHighlighter {
             color: colors.tags.color,
             fontStyle: 'italic',
             backgroundColor: colors.tags.background,
-            borderRadius: '3px'
+            borderRadius: '3px',
+            overviewRulerLane: vscode.OverviewRulerLane.Right,
+            overviewRulerColor: colors.tags.color
         }));
 
         // 时间戳高亮
@@ -256,6 +262,8 @@ export class OrgSyntaxHighlighter {
             backgroundColor: colors.monospace.background,
             borderRadius: '3px'
         }));
+
+
     }
 
     /**
@@ -284,9 +292,8 @@ export class OrgSyntaxHighlighter {
         // 清除之前的装饰
         this.clearDecorations(editor);
 
-        // 应用各种装饰 - 链接要最后应用，覆盖语法文件的样式
+        // 应用各种装饰
         this.applyTodoHighlighting(editor, lines);
-        this.applyTagHighlighting(editor, lines);
         this.applyTimestampHighlighting(editor, lines);
         this.applyTextFormattingHighlighting(editor, lines);  // 新增文本格式高亮
         this.applyCodeBlockHighlighting(editor, lines);
@@ -296,9 +303,10 @@ export class OrgSyntaxHighlighter {
         this.applyPropertiesHighlighting(editor, lines);
         this.applyBlockKeywordsHighlighting(editor, lines);
         this.applyDirectivesHighlighting(editor, lines);
-        
-        // 最后应用链接高亮，确保覆盖语法文件的样式
         this.applyLinkHighlighting(editor, lines);
+        
+        // 最后应用标签高亮，确保覆盖所有其他样式
+        this.applyTagHighlighting(editor, lines);
     }
 
     /**
@@ -310,6 +318,8 @@ export class OrgSyntaxHighlighter {
             editor.setDecorations(decorationType, []);
         });
     }
+
+
 
     /**
      * 应用 TODO 状态高亮
@@ -352,14 +362,44 @@ export class OrgSyntaxHighlighter {
         const tagRanges: vscode.Range[] = [];
 
         lines.forEach((line, lineIndex) => {
-            const tagMatches = line.matchAll(/:[a-zA-Z_][a-zA-Z0-9_]*:/g);
-            for (const match of tagMatches) {
-                const startPos = new vscode.Position(lineIndex, match.index!);
-                const endPos = new vscode.Position(lineIndex, match.index! + match[0].length);
-                tagRanges.push(new vscode.Range(startPos, endPos));
+            // Debug: 打印行内容
+            if (line.includes(':')) {
+                console.log(`Debug Tag Line ${lineIndex}: "${line}"`);
+            }
+            
+            // 修复连续标签匹配问题，处理共享冒号的情况
+            let index = 0;
+            while (index < line.length) {
+                const colonIndex = line.indexOf(':', index);
+                if (colonIndex === -1) break;
+                
+                // 寻找标签结束的冒号
+                const tagEndIndex = line.indexOf(':', colonIndex + 1);
+                if (tagEndIndex === -1) break;
+                
+                // 提取标签内容
+                const tagContent = line.substring(colonIndex + 1, tagEndIndex);
+                // 验证标签内容是否有效（只包含字母、数字、下划线）
+                if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(tagContent)) {
+                    const startPos = new vscode.Position(lineIndex, colonIndex);
+                    const endPos = new vscode.Position(lineIndex, tagEndIndex + 1);
+                    tagRanges.push(new vscode.Range(startPos, endPos));
+                    
+                    // Debug: 打印找到的标签
+                    const tagText = `:${tagContent}:`;
+                    console.log(`Debug Tag Found: "${tagText}" at line ${lineIndex}, cols ${colonIndex}-${tagEndIndex + 1}`);
+                    
+                    // 关键修复：从标签结束的冒号位置继续搜索，而不是跳过它
+                    // 这样可以处理 :tag1:tag2: 这种连续标签的情况
+                    index = tagEndIndex;
+                } else {
+                    // 如果不是有效标签，从下一个字符继续搜索
+                    index = colonIndex + 1;
+                }
             }
         });
 
+        console.log(`Debug Tag Total ranges found: ${tagRanges.length}`);
         const tagType = this.decorationTypes.get('tags')!;
         editor.setDecorations(tagType, tagRanges);
     }

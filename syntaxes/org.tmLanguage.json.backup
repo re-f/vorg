@@ -59,7 +59,7 @@
       "patterns": [
         {
           "name": "markup.heading.1",
-          "match": "^(\\*{1})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)(?:\\s+(?::[\\w]+:)+)?\\s*$",
+          "match": "^(\\*{1})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)\\s*((?::[\\w]+:)+)?\\s*$",
           "captures": {
             "1": {
               "name": "punctuation.definition.heading.org"
@@ -68,13 +68,27 @@
               "name": "keyword.other.todo.org"
             },
             "3": {
-              "name": "entity.name.section.org"
+              "patterns": [
+                {
+                  "include": "#inline-tags"
+                },
+                {
+                  "name": "entity.name.section.org"
+                }
+              ]
+            },
+            "4": {
+              "patterns": [
+                {
+                  "include": "#inline-tags"
+                }
+              ]
             }
           }
         },
         {
           "name": "markup.heading.2",
-          "match": "^(\\*{2})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)(?:\\s+(?::[\\w]+:)+)?\\s*$",
+          "match": "^(\\*{2})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)\\s*((?::[\\w]+:)+)?\\s*$",
           "captures": {
             "1": {
               "name": "punctuation.definition.heading.org"
@@ -83,13 +97,27 @@
               "name": "keyword.other.todo.org"
             },
             "3": {
-              "name": "entity.name.section.org"
+              "patterns": [
+                {
+                  "include": "#inline-tags"
+                },
+                {
+                  "name": "entity.name.section.org"
+                }
+              ]
+            },
+            "4": {
+              "patterns": [
+                {
+                  "include": "#inline-tags"
+                }
+              ]
             }
           }
         },
         {
           "name": "markup.heading.3",
-          "match": "^(\\*{3})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)(?:\\s+(?::[\\w]+:)+)?\\s*$",
+          "match": "^(\\*{3})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)\\s*((?::[\\w]+:)+)?\\s*$",
           "captures": {
             "1": {
               "name": "punctuation.definition.heading.org"
@@ -98,13 +126,27 @@
               "name": "keyword.other.todo.org"
             },
             "3": {
-              "name": "entity.name.section.org"
+              "patterns": [
+                {
+                  "include": "#inline-tags"
+                },
+                {
+                  "name": "entity.name.section.org"
+                }
+              ]
+            },
+            "4": {
+              "patterns": [
+                {
+                  "include": "#inline-tags"
+                }
+              ]
             }
           }
         },
         {
           "name": "markup.heading.4.org",
-          "match": "^(\\*{4})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)(?:\\s+(?::[\\w]+:)+)?\\s*$",
+          "match": "^(\\*{4})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)\\s*((?::[\\w]+:)+)?\\s*$",
           "captures": {
             "1": {
               "name": "punctuation.definition.heading.org"
@@ -113,13 +155,27 @@
               "name": "keyword.other.todo.org"
             },
             "3": {
-              "name": "entity.name.section.org"
+              "patterns": [
+                {
+                  "include": "#inline-tags"
+                },
+                {
+                  "name": "entity.name.section.org"
+                }
+              ]
+            },
+            "4": {
+              "patterns": [
+                {
+                  "include": "#inline-tags"
+                }
+              ]
             }
           }
         },
         {
           "name": "markup.heading.5.org",
-          "match": "^(\\*{5})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)(?:\\s+(?::[\\w]+:)+)?\\s*$",
+          "match": "^(\\*{5})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)\\s*((?::[\\w]+:)+)?\\s*$",
           "captures": {
             "1": {
               "name": "punctuation.definition.heading.org"
@@ -128,13 +184,27 @@
               "name": "keyword.other.todo.org"
             },
             "3": {
-              "name": "entity.name.section.org"
+              "patterns": [
+                {
+                  "include": "#inline-tags"
+                },
+                {
+                  "name": "entity.name.section.org"
+                }
+              ]
+            },
+            "4": {
+              "patterns": [
+                {
+                  "include": "#inline-tags"
+                }
+              ]
             }
           }
         },
         {
           "name": "markup.heading.6.org",
-          "match": "^(\\*{6,})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)(?:\\s+(?::[\\w]+:)+)?\\s*$",
+          "match": "^(\\*{6,})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)\\s*((?::[\\w]+:)+)?\\s*$",
           "captures": {
             "1": {
               "name": "punctuation.definition.heading.org"
@@ -143,7 +213,21 @@
               "name": "keyword.other.todo.org"
             },
             "3": {
-              "name": "entity.name.section.org"
+              "patterns": [
+                {
+                  "include": "#inline-tags"
+                },
+                {
+                  "name": "entity.name.section.org"
+                }
+              ]
+            },
+            "4": {
+              "patterns": [
+                {
+                  "include": "#inline-tags"
+                }
+              ]
             }
           }
         }
@@ -162,6 +246,14 @@
       ]
     },
     "tags": {
+      "patterns": [
+        {
+          "name": "entity.name.tag.org",
+          "match": ":[\\w]+:"
+        }
+      ]
+    },
+    "inline-tags": {
       "patterns": [
         {
           "name": "entity.name.tag.org",
