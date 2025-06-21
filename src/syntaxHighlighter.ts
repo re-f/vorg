@@ -68,7 +68,14 @@ export class OrgSyntaxHighlighter {
                 // 表格行
                 tableRow: { background: 'rgba(220, 220, 170, 0.15)' },
                 // 数学公式 - 使用字符串颜色
-                math: { color: '#CE9178', background: 'rgba(206, 145, 120, 0.15)' }
+                math: { color: '#CE9178', background: 'rgba(206, 145, 120, 0.15)' },
+                
+                // 文本格式 - 新增
+                bold: { color: '#FFFFFF', fontWeight: 'bold' },
+                italic: { color: '#DCDCAA', fontStyle: 'italic' },
+                underline: { color: '#9CDCFE', textDecoration: 'underline' },
+                strikethrough: { color: '#808080', textDecoration: 'line-through' },
+                monospace: { color: '#CE9178', background: 'rgba(206, 145, 120, 0.15)' }
             };
         } else {
             return {
@@ -90,7 +97,14 @@ export class OrgSyntaxHighlighter {
                 codeBlock: { background: 'rgba(245, 245, 245, 0.6)', border: '0 0 0 4px solid #A31515' },
                 quoteBlock: { background: 'rgba(0, 128, 0, 0.15)', border: '0 0 0 4px solid #008000' },
                 tableRow: { background: 'rgba(255, 215, 0, 0.15)' },
-                math: { color: '#A31515', background: 'rgba(163, 21, 21, 0.15)' }
+                math: { color: '#A31515', background: 'rgba(163, 21, 21, 0.15)' },
+                
+                // 文本格式 - 新增
+                bold: { color: '#000000', fontWeight: 'bold' },
+                italic: { color: '#8B4513', fontStyle: 'italic' },
+                underline: { color: '#0000EE', textDecoration: 'underline' },
+                strikethrough: { color: '#808080', textDecoration: 'line-through' },
+                monospace: { color: '#A31515', background: 'rgba(163, 21, 21, 0.15)' }
             };
         }
     }
@@ -215,6 +229,33 @@ export class OrgSyntaxHighlighter {
             backgroundColor: colors.directives.background,
             borderRadius: '3px'
         }));
+
+        // 文本格式高亮
+        this.decorationTypes.set('bold', vscode.window.createTextEditorDecorationType({
+            color: colors.bold.color,
+            fontWeight: colors.bold.fontWeight as any
+        }));
+
+        this.decorationTypes.set('italic', vscode.window.createTextEditorDecorationType({
+            color: colors.italic.color,
+            fontStyle: colors.italic.fontStyle as any
+        }));
+
+        this.decorationTypes.set('underline', vscode.window.createTextEditorDecorationType({
+            color: colors.underline.color,
+            textDecoration: colors.underline.textDecoration
+        }));
+
+        this.decorationTypes.set('strikethrough', vscode.window.createTextEditorDecorationType({
+            color: colors.strikethrough.color,
+            textDecoration: colors.strikethrough.textDecoration
+        }));
+
+        this.decorationTypes.set('monospace', vscode.window.createTextEditorDecorationType({
+            color: colors.monospace.color,
+            backgroundColor: colors.monospace.background,
+            borderRadius: '3px'
+        }));
     }
 
     /**
@@ -247,6 +288,7 @@ export class OrgSyntaxHighlighter {
         this.applyTodoHighlighting(editor, lines);
         this.applyTagHighlighting(editor, lines);
         this.applyTimestampHighlighting(editor, lines);
+        this.applyTextFormattingHighlighting(editor, lines);  // 新增文本格式高亮
         this.applyCodeBlockHighlighting(editor, lines);
         this.applyQuoteBlockHighlighting(editor, lines);
         this.applyTableHighlighting(editor, lines);
@@ -342,6 +384,74 @@ export class OrgSyntaxHighlighter {
 
         const timestampType = this.decorationTypes.get('timestamp')!;
         editor.setDecorations(timestampType, timestampRanges);
+    }
+
+    /**
+     * 应用文本格式高亮
+     * @param editor 文本编辑器
+     * @param lines 文档行数组
+     */
+    private applyTextFormattingHighlighting(editor: vscode.TextEditor, lines: string[]): void {
+        const boldRanges: vscode.Range[] = [];
+        const italicRanges: vscode.Range[] = [];
+        const underlineRanges: vscode.Range[] = [];
+        const strikethroughRanges: vscode.Range[] = [];
+        const monospaceRanges: vscode.Range[] = [];
+
+        lines.forEach((line, lineIndex) => {
+            // 粗体 *text*
+            const boldMatches = line.matchAll(/(?<!\w)\*([^*\s](?:[^*]*[^*\s])?)\*(?!\w)/g);
+            for (const match of boldMatches) {
+                const startPos = new vscode.Position(lineIndex, match.index! + 1); // 跳过*
+                const endPos = new vscode.Position(lineIndex, match.index! + match[0].length - 1); // 跳过*
+                boldRanges.push(new vscode.Range(startPos, endPos));
+            }
+
+            // 斜体 /text/
+            const italicMatches = line.matchAll(/(?<!\w)\/([^\/\s](?:[^\/]*[^\/\s])?)\/(?!\w)/g);
+            for (const match of italicMatches) {
+                const startPos = new vscode.Position(lineIndex, match.index! + 1); // 跳过/
+                const endPos = new vscode.Position(lineIndex, match.index! + match[0].length - 1); // 跳过/
+                italicRanges.push(new vscode.Range(startPos, endPos));
+            }
+
+            // 下划线 _text_
+            const underlineMatches = line.matchAll(/(?<!\w)_([^_\s](?:[^_]*[^_\s])?)_(?!\w)/g);
+            for (const match of underlineMatches) {
+                const startPos = new vscode.Position(lineIndex, match.index! + 1); // 跳过_
+                const endPos = new vscode.Position(lineIndex, match.index! + match[0].length - 1); // 跳过_
+                underlineRanges.push(new vscode.Range(startPos, endPos));
+            }
+
+            // 删除线 +text+
+            const strikethroughMatches = line.matchAll(/(?<!\w)\+([^+\s](?:[^+]*[^+\s])?)\+(?!\w)/g);
+            for (const match of strikethroughMatches) {
+                const startPos = new vscode.Position(lineIndex, match.index! + 1); // 跳过+
+                const endPos = new vscode.Position(lineIndex, match.index! + match[0].length - 1); // 跳过+
+                strikethroughRanges.push(new vscode.Range(startPos, endPos));
+            }
+
+            // 等宽字体 =text= 和 ~text~
+            const monospaceMatches = line.matchAll(/(?<!\w)([=~])([^=~\s](?:[^=~]*[^=~\s])?)\1(?!\w)/g);
+            for (const match of monospaceMatches) {
+                const startPos = new vscode.Position(lineIndex, match.index! + 1); // 跳过=或~
+                const endPos = new vscode.Position(lineIndex, match.index! + match[0].length - 1); // 跳过=或~
+                monospaceRanges.push(new vscode.Range(startPos, endPos));
+            }
+        });
+
+        // 应用装饰
+        const boldType = this.decorationTypes.get('bold')!;
+        const italicType = this.decorationTypes.get('italic')!;
+        const underlineType = this.decorationTypes.get('underline')!;
+        const strikethroughType = this.decorationTypes.get('strikethrough')!;
+        const monospaceType = this.decorationTypes.get('monospace')!;
+
+        editor.setDecorations(boldType, boldRanges);
+        editor.setDecorations(italicType, italicRanges);
+        editor.setDecorations(underlineType, underlineRanges);
+        editor.setDecorations(strikethroughType, strikethroughRanges);
+        editor.setDecorations(monospaceType, monospaceRanges);
     }
 
     /**
