@@ -32,7 +32,7 @@ export class SyntaxHighlighter {
                     link: { color: '#4FC1FF', background: 'rgba(79, 193, 255, 0.15)' },    // 亮蓝色
                     timestamp: { color: '#CE9178', background: 'rgba(206, 145, 120, 0.15)' }, // 橙色
                     property: { color: '#9CDCFE', background: 'rgba(156, 220, 254, 0.15)' },  // 浅蓝色
-                    keyword: { color: '#569CD6', background: 'rgba(86, 156, 214, 0.15)' },    // 蓝色
+                    keyword: { color: '#6A9955', background: 'transparent' },    // 低调的注释绿色
                     comment: { color: '#6A9955', background: 'transparent' },                   // 绿色注释
                     bold: { color: '#FFFFFF', background: 'rgba(255, 255, 255, 0.1)' },       // 白色加粗
                     italic: { color: '#D4D4D4', background: 'transparent' },                   // 斜体
@@ -49,7 +49,7 @@ export class SyntaxHighlighter {
                     link: { color: '#0066CC', background: 'rgba(0, 102, 204, 0.15)' },      // 蓝色链接
                     timestamp: { color: '#A31515', background: 'rgba(163, 21, 21, 0.15)' }, // 红色时间戳
                     property: { color: '#0451A5', background: 'rgba(4, 81, 165, 0.15)' },   // 深蓝色属性
-                    keyword: { color: '#0000FF', background: 'rgba(0, 0, 255, 0.15)' },     // 蓝色关键字
+                    keyword: { color: '#708090', background: 'transparent' },     // 低调的灰蓝色
                     comment: { color: '#008000', background: 'transparent' },                // 绿色注释
                     bold: { color: '#000000', background: 'rgba(0, 0, 0, 0.1)' },           // 黑色加粗
                     italic: { color: '#000000', background: 'transparent' },                 // 斜体
@@ -65,7 +65,7 @@ export class SyntaxHighlighter {
                     link: { color: '#4FC1FF', background: 'rgba(79, 193, 255, 0.15)' },
                     timestamp: { color: '#CE9178', background: 'rgba(206, 145, 120, 0.15)' },
                     property: { color: '#9CDCFE', background: 'rgba(156, 220, 254, 0.15)' },
-                    keyword: { color: '#569CD6', background: 'rgba(86, 156, 214, 0.15)' },
+                    keyword: { color: '#6A9955', background: 'transparent' },
                     comment: { color: '#6A9955', background: 'transparent' },
                     bold: { color: '#FFFFFF', background: 'rgba(255, 255, 255, 0.1)' },
                     italic: { color: '#D4D4D4', background: 'transparent' },
@@ -126,7 +126,6 @@ export class SyntaxHighlighter {
         // 关键字高亮
         this.decorationTypes.set('keyword', vscode.window.createTextEditorDecorationType({
             color: colors.keyword.color,
-            fontWeight: 'bold',
             backgroundColor: colors.keyword.background,
         }));
 
