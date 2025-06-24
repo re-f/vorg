@@ -26,6 +26,9 @@ export class HtmlGenerator {
       // 后处理：添加 checkbox 支持
       html = this.processCheckboxes(html, text);
 
+      // 后处理：修复示例块的换行
+      html = this.processExampleBlocks(html);
+
       // 获取当前 VS Code 主题信息
       const isDarkTheme = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
 
@@ -203,6 +206,38 @@ export class HtmlGenerator {
     return processedHtml;
   }
 
+  private static processExampleBlocks(html: string): string {
+    // 修复示例块中的换行问题
+    // uniorg-rehype 可能会将示例块转换为没有正确保持换行的格式
+    
+    // 处理所有的 pre 标签，确保保持换行
+    html = html.replace(/<pre([^>]*)>([\s\S]*?)<\/pre>/g, (match, attributes, content) => {
+      // 确保内容中的换行符被保持
+      const processedContent = content
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&'); // 解码HTML实体
+      
+      return `<pre${attributes} style="white-space: pre-wrap;">${processedContent}</pre>`;
+    });
+
+    // 处理可能的其他格式的示例块
+    html = html.replace(/<div([^>]*class[^>]*example[^>]*)>([\s\S]*?)<\/div>/gi, (match, attributes, content) => {
+      return `<div${attributes}><pre style="white-space: pre-wrap;">${content}</pre></div>`;
+    });
+
+    // 处理可能的代码块包装
+    html = html.replace(/<code([^>]*)>([\s\S]*?)<\/code>/g, (match, attributes, content) => {
+      // 如果是多行代码，应该使用 pre 包装
+      if (content.includes('\n')) {
+        return `<pre${attributes} style="white-space: pre-wrap;"><code>${content}</code></pre>`;
+      }
+      return match; // 保持单行代码不变
+    });
+
+    return html;
+  }
+
   private static generateStyledHtml(content: string, isDarkTheme: boolean): string {
     return `
       <!DOCTYPE html>
@@ -299,6 +334,7 @@ export class HtmlGenerator {
         font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
         font-size: 85%;
         line-height: 1.45;
+        white-space: pre-wrap;
       }
 
       pre code {
@@ -332,6 +368,19 @@ export class HtmlGenerator {
         display: block;
         overflow-x: auto;
         white-space: nowrap;
+      }
+
+      /* 确保示例块和代码块保持换行 */
+      .example, .src {
+        white-space: pre-wrap;
+      }
+
+      /* 针对不同的 org 导出元素 */
+      .org-src-container pre,
+      .example pre,
+      .verse,
+      div[class*="example"] {
+        white-space: pre-wrap;
       }
 
       th, td {

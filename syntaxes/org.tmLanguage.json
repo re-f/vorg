@@ -103,7 +103,7 @@
           }
         },
         {
-          "name": "markup.heading.4.org",
+          "name": "markup.heading.4",
           "match": "^(\\*{4})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)(?:\\s+(?::[\\w]+:)+)?\\s*$",
           "captures": {
             "1": {
@@ -118,7 +118,7 @@
           }
         },
         {
-          "name": "markup.heading.5.org",
+          "name": "markup.heading.5",
           "match": "^(\\*{5})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)(?:\\s+(?::[\\w]+:)+)?\\s*$",
           "captures": {
             "1": {
@@ -133,7 +133,7 @@
           }
         },
         {
-          "name": "markup.heading.6.org",
+          "name": "markup.heading.6",
           "match": "^(\\*{6,})\\s+((?:TODO|DONE|NEXT|WAITING|CANCELLED)?\\s*)?(.*)(?:\\s+(?::[\\w]+:)+)?\\s*$",
           "captures": {
             "1": {
