@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { TodoKeywordManager } from '../utils/todoKeywordManager';
 
-export class OrgLinkProvider implements vscode.DocumentLinkProvider {
+export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.DefinitionProvider {
   private todoKeywordManager: TodoKeywordManager;
 
   constructor() {
@@ -18,12 +18,88 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider {
     // http://example.com 或 https://example.com
     HTTP_LINK: /(https?:\/\/[^\s\]]+)/g,
     // id: links [[id:A4F1CD57-FE6E-478F-AACB-3660B4E68069][description]]
-    ID_LINK: /id:([A-F0-9-]+)/g,
+    ID_LINK: /id:([A-Fa-f0-9-]+)/g,
     // 内部标题链接 (heading)
     HEADING_PATTERN: /^\*+\s+(.+?)(?:\s+:[a-zA-Z0-9_@:]+:)?\s*$/gm,
     // 属性中的ID
-    PROPERTY_ID: /:ID:\s+([A-F0-9-]+)/gm
+    PROPERTY_ID: /:ID:\s+([A-Fa-f0-9-]+)/gm
   };
+
+  /**
+   * 提供定义跳转功能（用于Ctrl+Click和F12）
+   */
+  async provideDefinition(document: vscode.TextDocument, position: vscode.Position): Promise<vscode.Location | vscode.Location[] | undefined> {
+    const linkInfo = this.findLinkAtPosition(document, position);
+    if (!linkInfo) {
+      return undefined;
+    }
+
+    const location = await this.resolveLinkTarget(document, linkInfo.linkTarget, position);
+    return location || undefined;
+  }
+
+  /**
+   * 在指定位置查找链接
+   */
+  private findLinkAtPosition(document: vscode.TextDocument, position: vscode.Position): { linkTarget: string; range: vscode.Range } | null {
+    const line = document.lineAt(position);
+    const lineText = line.text;
+    
+    // 检查方括号链接 [[link][description]] 或 [[link]]
+    const bracketRegex = /\[\[([^\]]+)\](?:\[([^\]]*)\])?\]/g;
+    let match;
+    
+    while ((match = bracketRegex.exec(lineText)) !== null) {
+      const startCol = match.index;
+      const endCol = match.index + match[0].length;
+      
+      if (position.character >= startCol && position.character <= endCol) {
+        return { 
+          linkTarget: match[1], 
+          range: new vscode.Range(
+            new vscode.Position(position.line, startCol),
+            new vscode.Position(position.line, endCol)
+          )
+        };
+      }
+    }
+
+    // 检查HTTP链接
+    const httpRegex = /(https?:\/\/[^\s\]]+)/g;
+    while ((match = httpRegex.exec(lineText)) !== null) {
+      const startCol = match.index;
+      const endCol = match.index + match[1].length;
+      
+      if (position.character >= startCol && position.character <= endCol) {
+        return { 
+          linkTarget: match[1], 
+          range: new vscode.Range(
+            new vscode.Position(position.line, startCol),
+            new vscode.Position(position.line, endCol)
+          )
+        };
+      }
+    }
+
+    // 检查文件链接
+    const fileRegex = /file:([^\s\]]+)/g;
+    while ((match = fileRegex.exec(lineText)) !== null) {
+      const startCol = match.index;
+      const endCol = match.index + match[0].length;
+      
+      if (position.character >= startCol && position.character <= endCol) {
+        return { 
+          linkTarget: match[0], 
+          range: new vscode.Range(
+            new vscode.Position(position.line, startCol),
+            new vscode.Position(position.line, endCol)
+          )
+        };
+      }
+    }
+    
+    return null;
+  }
 
   /**
    * 提供文档链接功能
@@ -288,7 +364,9 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider {
    */
   private async findIdInDocument(document: vscode.TextDocument, id: string): Promise<vscode.Location | null> {
     const text = document.getText();
-    const idPattern = new RegExp(`:ID:\\s+${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'gm');
+    const escapedId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const idPattern = new RegExp(`:ID:\\s+${escapedId}`, 'gm');
+    
     const match = idPattern.exec(text);
     
     if (!match) {

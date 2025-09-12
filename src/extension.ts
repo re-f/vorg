@@ -30,6 +30,9 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.languages.registerDocumentLinkProvider('org', linkProvider)
   );
+  context.subscriptions.push(
+    vscode.languages.registerDefinitionProvider('org', linkProvider)
+  );
 
   // 注册折叠提供者
   const foldingProvider = new OrgFoldingProvider();
