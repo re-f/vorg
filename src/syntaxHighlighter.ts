@@ -209,20 +209,41 @@ export class SyntaxHighlighter {
         const doneRegex = new RegExp(`\\b(${doneKeywords.map(k => k.keyword).join('|')})\\b`, 'g');
 
         lines.forEach((line, lineIndex) => {
-            // 匹配TODO状态
-            let todoMatch;
-            while ((todoMatch = todoRegex.exec(line)) !== null) {
-                const startPos = new vscode.Position(lineIndex, todoMatch.index!);
-                const endPos = new vscode.Position(lineIndex, todoMatch.index! + todoMatch[0].length);
-                todoRanges.push(new vscode.Range(startPos, endPos));
+            // 获取当前行中所有链接的位置范围，用于排除链接内的TODO/DONE匹配
+            const linkRanges: { start: number; end: number }[] = [];
+            
+            // 查找所有链接 [[...]] 或 [[...][...]]
+            const allLinkMatches = Array.from(line.matchAll(/\[\[([^\]]+)\](?:\[([^\]]*)\])?\]/g));
+            for (const match of allLinkMatches) {
+                linkRanges.push({
+                    start: match.index!,
+                    end: match.index! + match[0].length
+                });
             }
             
-            // 匹配DONE状态
+            // 检查位置是否在链接内
+            const isInLink = (position: number): boolean => {
+                return linkRanges.some(range => position >= range.start && position < range.end);
+            };
+            
+            // 匹配TODO状态，排除链接内的匹配
+            let todoMatch;
+            while ((todoMatch = todoRegex.exec(line)) !== null) {
+                if (!isInLink(todoMatch.index!)) {
+                    const startPos = new vscode.Position(lineIndex, todoMatch.index!);
+                    const endPos = new vscode.Position(lineIndex, todoMatch.index! + todoMatch[0].length);
+                    todoRanges.push(new vscode.Range(startPos, endPos));
+                }
+            }
+            
+            // 匹配DONE状态，排除链接内的匹配
             let doneMatch;
             while ((doneMatch = doneRegex.exec(line)) !== null) {
-                const startPos = new vscode.Position(lineIndex, doneMatch.index!);
-                const endPos = new vscode.Position(lineIndex, doneMatch.index! + doneMatch[0].length);
-                doneRanges.push(new vscode.Range(startPos, endPos));
+                if (!isInLink(doneMatch.index!)) {
+                    const startPos = new vscode.Position(lineIndex, doneMatch.index!);
+                    const endPos = new vscode.Position(lineIndex, doneMatch.index! + doneMatch[0].length);
+                    doneRanges.push(new vscode.Range(startPos, endPos));
+                }
             }
         });
 

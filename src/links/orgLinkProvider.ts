@@ -203,9 +203,13 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
     // 处理ID链接
     if (linkTarget.startsWith('id:')) {
       const id = linkTarget.substring(3);
-      // 对于DocumentLinkProvider，我们不能返回异步结果，所以只能返回null
+      // 创建一个特殊的URI scheme来让VS Code识别为链接
       // 实际的跳转由DefinitionProvider处理
-      return null;
+      try {
+        return vscode.Uri.parse(`org-id:${id}`);
+      } catch (error) {
+        return null;
+      }
     }
 
     // 处理内部标题链接

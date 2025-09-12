@@ -258,8 +258,29 @@
           }
         },
         {
+          "name": "markup.link.with.description.org",
+          "match": "\\[\\[(id:[^\\]]+)\\]\\[([^\\]]+)\\]\\]",
+          "captures": {
+            "1": {
+              "name": "string.other.link.url.external.org"
+            },
+            "2": {
+              "name": "entity.name.function.link.description.org"
+            }
+          }
+        },
+        {
           "name": "markup.underline.link.external.org",
           "match": "\\[\\[(https?://[^\\]]+)\\]\\]",
+          "captures": {
+            "1": {
+              "name": "string.other.link.url.external.org"
+            }
+          }
+        },
+        {
+          "name": "markup.underline.link.external.org",
+          "match": "\\[\\[(id:[^\\]]+)\\]\\]",
           "captures": {
             "1": {
               "name": "string.other.link.url.external.org"
