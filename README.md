@@ -1,8 +1,8 @@
 # VOrg - Org-mode Preview for VS Code
 
-[![Version](https://img.shields.io/vscode-marketplace/v/vorg-dev.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg-dev.vorg)
-[![Downloads](https://img.shields.io/vscode-marketplace/d/vorg-dev.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg-dev.vorg)
-[![Rating](https://img.shields.io/vscode-marketplace/r/vorg-dev.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg-dev.vorg)
+[![Version](https://img.shields.io/vscode-marketplace/v/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
+[![Downloads](https://img.shields.io/vscode-marketplace/d/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
+[![Rating](https://img.shields.io/vscode-marketplace/r/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
 
 VOrg 是一个功能强大的 VS Code 扩展，为 Org-mode 文档提供完整的编辑和预览体验，类似于 Markdown Preview Enhanced。它将 Emacs Org-mode 的强大功能带到 VS Code 中，让您可以在现代化的编辑环境中享受 Org-mode 的所有优势。
 
@@ -96,8 +96,8 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 
 如果您在使用过程中遇到问题或有改进建议：
 
-- 🐛 **问题反馈**：[创建 GitHub Issue](https://github.com/vorg-dev/vorg/issues)
-- 💡 **功能建议**：[参与 GitHub Discussions](https://github.com/vorg-dev/vorg/discussions)
+- 🐛 **问题反馈**：[创建 GitHub Issue](https://github.com/vorg/vorg/issues)
+- 💡 **功能建议**：[参与 GitHub Discussions](https://github.com/vorg/vorg/discussions)
 
 
 ## 🔮 路线图
