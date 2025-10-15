@@ -4,6 +4,8 @@
 [![Downloads](https://img.shields.io/vscode-marketplace/d/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
 [![Rating](https://img.shields.io/vscode-marketplace/r/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
 
+**Language / 语言**: [中文](README.md) | [English](README-EN.md)
+
 VOrg 是一个简单的 VS Code 扩展，为在 VS code 中实现基本可用 Org-mode 功能而开发，并不考虑完全迁移 Emacs 上的 Org-mode 使用体验，因此很多功能并不会在组件中实现。 相比于 Emacs 的 Org-mode 能称得上优势的功能就是预览体验。 
 
 ## ✨ 核心特性

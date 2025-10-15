@@ -1,8 +1,8 @@
 {
   "name": "vorg",
   "displayName": "VOrg - Org-mode Preview",
-  "description": "功能强大的 Org-mode 扩展：实时预览、智能编辑、链接跳转、TODO 管理。将 Emacs Org-mode 的强大功能带到 VS Code 中。",
-  "version": "0.0.1",
+  "description": "基础 Org-mode 支持的扩展：实时预览、智能编辑、链接跳转、TODO 管理。在 VS Code 中实现基础的 Org-mode 编辑功能。",
+  "version": "0.0.2",
   "publisher": "vorg-dev",
   "license": "MIT",
   "engines": {
