@@ -542,6 +542,12 @@ export class EditingCommands {
       return;
     }
 
+    // 如果有文字被选中，执行缩进操作而不是智能折叠
+    if (!editor.selection.isEmpty) {
+      await vscode.commands.executeCommand('editor.action.indentLines');
+      return;
+    }
+
     const position = editor.selection.active;
     const document = editor.document;
     const context = EditingCommands.analyzeContext(document, position);
@@ -553,7 +559,7 @@ export class EditingCommands {
         break;
       case 'list-item':
       case 'checkbox':
-        // 在列表项上：切换折叠状态（如果有子项）
+        // 在列表项上：智能判断 - 有子项时折叠，无子项时缩进
         await EditingCommands.toggleListFold(editor, position);
         break;
       case 'table':
@@ -587,6 +593,12 @@ export class EditingCommands {
       return;
     }
 
+    // 如果有文字被选中，执行反向缩进操作而不是智能折叠
+    if (!editor.selection.isEmpty) {
+      await vscode.commands.executeCommand('editor.action.outdentLines');
+      return;
+    }
+
     const position = editor.selection.active;
     const document = editor.document;
     const context = EditingCommands.analyzeContext(document, position);
@@ -612,36 +624,28 @@ export class EditingCommands {
    * 切换标题折叠状态
    */
   private static async toggleHeadingFold(editor: vscode.TextEditor, position: vscode.Position) {
+    // 保存当前光标位置，确保折叠后光标不会跳转
+    const savedPosition = editor.selection.active;
+    
     // 使用 VS Code 的折叠命令
     await vscode.commands.executeCommand('editor.toggleFold');
+    
+    // 恢复光标位置
+    editor.selection = new vscode.Selection(savedPosition, savedPosition);
   }
 
   /**
    * 切换列表折叠状态
+   * 智能判断：有子项时折叠，无子项时缩进
    */
   private static async toggleListFold(editor: vscode.TextEditor, position: vscode.Position) {
-    // 首先尝试使用 VS Code 的折叠命令
-    // 如果当前位置有可折叠的内容，这个命令会生效
-    try {
-      await vscode.commands.executeCommand('editor.toggleFold');
-      
-      // 检查折叠命令是否生效
-      // 如果光标位置没有发生变化且没有错误，说明折叠命令执行了
-      // VS Code 会自动处理折叠范围的切换
-      return;
-    } catch (error) {
-      // 如果折叠命令失败，说明没有可折叠的内容
-      console.log('折叠命令失败，执行缩进操作:', error);
-    }
-    
-    // 检查当前列表项是否有子项的逻辑作为备用
     const document = editor.document;
     const currentLine = document.lineAt(position.line);
     const currentLineText = currentLine.text;
     const currentIndentMatch = currentLineText.match(/^(\s*)/);
     const currentIndent = currentIndentMatch ? currentIndentMatch[1].length : 0;
     
-    // 查找是否有子项
+    // 先检查当前列表项是否有子项
     let hasSubItems = false;
     for (let i = position.line + 1; i < document.lineCount; i++) {
       const line = document.lineAt(i);
@@ -671,19 +675,25 @@ export class EditingCommands {
       }
     }
     
-    // 如果确实有子项但折叠命令没有生效，可能是折叠范围还没有注册
-    // 这时我们再次尝试折叠命令
+    // 根据是否有子项决定行为
     if (hasSubItems) {
+      // 有子项：执行折叠操作
+      // 保存当前光标位置，确保折叠后光标不会跳转
+      const savedPosition = editor.selection.active;
+      
       try {
         await vscode.commands.executeCommand('editor.toggleFold');
+        
+        // 恢复光标位置
+        editor.selection = new vscode.Selection(savedPosition, savedPosition);
       } catch (error) {
-        // 如果还是失败，说明 VS Code 还没有识别到这个折叠范围
-        // 执行增加缩进作为备用行为
-        await EditingCommands.increaseListIndent(editor, position);
+        // 如果折叠失败（例如VS Code还没识别到折叠范围），不做任何操作
+        console.log('折叠命令失败:', error);
       }
     } else {
-      // 没有子项时，增加缩进
-      await EditingCommands.increaseListIndent(editor, position);
+      // 没有子项：执行默认TAB行为（插入TAB字符）
+      // 注意：整行缩进只在选中文字时执行（已在executeSmartTab中处理）
+      await vscode.commands.executeCommand('tab');
     }
   }
 
@@ -691,8 +701,14 @@ export class EditingCommands {
    * 切换代码块折叠状态
    */
   private static async toggleCodeBlockFold(editor: vscode.TextEditor, position: vscode.Position) {
+    // 保存当前光标位置，确保折叠后光标不会跳转
+    const savedPosition = editor.selection.active;
+    
     // 使用 VS Code 的折叠命令切换代码块折叠状态
     await vscode.commands.executeCommand('editor.toggleFold');
+    
+    // 恢复光标位置
+    editor.selection = new vscode.Selection(savedPosition, savedPosition);
   }
 
   /**
@@ -713,10 +729,18 @@ export class EditingCommands {
     const marker = listMatch[2];
     const content = listMatch[3];
     const newIndent = currentIndent + '  '; // 增加 2 个空格缩进
+    
+    // 计算光标的相对位置，缩进后需要相应调整
+    const cursorCharInLine = position.character;
+    const newCursorChar = cursorCharInLine + 2; // 增加了2个空格的缩进
 
     await editor.edit(editBuilder => {
       editBuilder.replace(line.range, `${newIndent}${marker} ${content}`);
     });
+    
+    // 重新设置光标位置，保持在相对位置
+    const newPosition = new vscode.Position(position.line, newCursorChar);
+    editor.selection = new vscode.Selection(newPosition, newPosition);
   }
 
   /**
@@ -740,10 +764,19 @@ export class EditingCommands {
     // 减少 2 个空格缩进，但不能少于 0
     const newIndentLength = Math.max(0, currentIndent.length - 2);
     const newIndent = ' '.repeat(newIndentLength);
+    
+    // 计算光标的相对位置，反向缩进后需要相应调整
+    const cursorCharInLine  = position.character;
+    const indentReduction = currentIndent.length - newIndentLength;
+    const newCursorChar = Math.max(0, cursorCharInLine - indentReduction);
 
     await editor.edit(editBuilder => {
       editBuilder.replace(line.range, `${newIndent}${marker} ${content}`);
     });
+    
+    // 重新设置光标位置，保持在相对位置
+    const newPosition = new vscode.Position(position.line, newCursorChar);
+    editor.selection = new vscode.Selection(newPosition, newPosition);
   }
 
   /**

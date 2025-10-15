@@ -4,14 +4,13 @@
 [![Downloads](https://img.shields.io/vscode-marketplace/d/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
 [![Rating](https://img.shields.io/vscode-marketplace/r/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
 
-VOrg 是一个功能强大的 VS Code 扩展，为 Org-mode 文档提供完整的编辑和预览体验，类似于 Markdown Preview Enhanced。它将 Emacs Org-mode 的强大功能带到 VS Code 中，让您可以在现代化的编辑环境中享受 Org-mode 的所有优势。
+VOrg 是一个简单的 VS Code 扩展，为在 VS code 中实现基本可用 Org-mode 功能而开发，并不考虑完全迁移 Emacs 上的 Org-mode 使用体验，因此很多功能并不会在组件中实现。 相比于 Emacs 的 Org-mode 能称得上优势的功能就是预览体验。 
 
 ## ✨ 核心特性
 
 ### 🔄 实时预览
-- **并排预览**：在编辑的同时实时查看渲染效果
+- **实时预览**：在编辑的同时实时查看渲染效果
 - **滚动同步**：编辑器和预览窗口自动同步滚动
-- **主题适配**：自动适应 VS Code 的明暗主题
 
 ### 🎨 语法高亮
 VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、文本格式、列表、代码块、表格、链接、数学公式、时间戳等。详细的语法高亮说明请参考 [语法高亮文档](docs/SYNTAX_HIGHLIGHTING.md)。
@@ -20,7 +19,7 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 - **文档大纲**：自动解析文档结构，提供完整的 Outline 导航
 - **快速跳转**：使用 `Ctrl+Shift+O` (Windows/Linux) 或 `Cmd+Shift+O` (Mac) 快速跳转到标题
 
-### 🔗 智能链接跳转
+### 🔗 链接跳转
 支持多种链接类型的智能跳转：
 - `[[link][description]]` - 带描述的链接
 - `[[link]]` - 简单链接  
@@ -29,7 +28,7 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 - `[[*heading]]` - 内部链接到同文件的标题
 - `[[id:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX][description]]` - 全局ID跳转（支持跨文件）
 
-### ⚡ 智能编辑功能
+### ⚡ org-like 编辑功能
 **类似 Emacs org-meta-return 的上下文感知编辑：**
 - 自动识别当前上下文（标题、列表、表格等）
 - 智能插入新元素（标题、列表项、表格行等）
@@ -56,8 +55,7 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 | **插入链接** | `Ctrl+C Ctrl+L` | `VOrg: Insert Link` | 类似 Emacs `C-c C-l` |
 | **智能插入新元素** | `Alt+Enter` | `VOrg: Smart Insert` | 类似 Emacs `M-RET`，上下文感知编辑 |
 | **子树末尾插入同级元素** | `Ctrl+Alt+Enter` | `VOrg: Insert Sibling at End` | 类似 Emacs `C-M-RET` |
-| **智能TAB折叠** | `Tab` | - | 主要用于可见性控制（折叠/展开切换） |
-| **智能反向TAB** | `Shift+Tab` | - | 在列表中减少缩进，在表格中反向导航 |
+| **智能TAB折叠** | `Tab`/`Shift+Tab` | - | 主要用于可见性控制（折叠/展开切换） |
 | **文档大纲跳转** | `Ctrl+Shift+O` (Windows/Linux)<br>`Cmd+Shift+O` (Mac) | `Go to Symbol in Workspace` | 快速跳转到标题，查看侧边栏 "Outline" 面板 |
 
 
@@ -89,7 +87,7 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 | 滚动同步 | ✅ | ❌ |
 | 文档大纲 | ✅ | ❌ |
 | 链接跳转 | ✅ | ⚠️ |
-| 智能编辑 | ✅ | ❌ |
+| org-like 编辑 | ✅ | ❌ |
 | TODO 管理 | ✅ | ✅ |
 
 ## 🐛 问题反馈
@@ -104,10 +102,6 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 
 - [ ] 添加图表支持（Mermaid）
 - [ ] 支持 refile 功能
-- [ ] 简单的 headline 搜索功能
-- [ ] 缓存工作区中 org 文件元数据
-
-
 
 ---
 
