@@ -345,8 +345,8 @@ VOrg 的语法高亮会自动适应 VS Code 的主题：
 
 - [Org-mode 官方文档](https://orgmode.org/manual/)
 - [VS Code 主题定制指南](https://code.visualstudio.com/api/extension-guides/color-theme)
-- [VOrg 项目主页](https://github.com/vorg/vorg)
+- [VOrg 项目主页](https://github.com/re-f/vorg)
 
 ---
 
-*如果您发现任何语法高亮问题或有改进建议，请通过 [GitHub Issues](https://github.com/vorg/vorg/issues) 反馈给我们。* 
+*如果您发现任何语法高亮问题或有改进建议，请通过 [GitHub Issues](https://github.com/re-f/vorg/issues) 反馈给我们。* 

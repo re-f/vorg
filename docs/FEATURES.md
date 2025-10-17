@@ -67,6 +67,7 @@
 - **代码块支持**：支持 `#+BEGIN_SRC`/`#+END_SRC` 代码块的折叠
 - **引用块支持**：支持 `#+BEGIN_QUOTE`/`#+END_QUOTE` 引用块的折叠
 - **示例块支持**：支持 `#+BEGIN_EXAMPLE`/`#+END_EXAMPLE` 示例块的折叠
+- **Property 抽屉支持**：支持 `:PROPERTIES:`/`:END:` Property 抽屉的折叠
 
 ### 使用方法
 - **键盘快捷键**：
@@ -113,4 +114,53 @@
 - **增量更新**：只重新渲染变化的部分
 - **内存管理**：智能清理未使用的预览窗口
 - **渲染缓存**：避免重复计算，提升大文档性能
-- **大纲缓存**：智能缓存文档结构，避免重复解析 
+- **大纲缓存**：智能缓存文档结构，避免重复解析
+
+## 🏷️ Property 属性管理 ⭐
+
+### 核心功能
+- **智能属性设置**：类似 Emacs `org-set-property` 的完整实现
+- **自动抽屉管理**：智能创建和管理 Property 抽屉
+- **属性更新**：支持添加、更新、删除属性
+- **缩进对齐**：自动保持属性缩进的一致性
+
+### 使用方法
+
+#### 设置属性
+1. **快捷键**：`Ctrl+C Ctrl+X P` (类似 Emacs `C-c C-x p`)
+2. **命令面板**：`VOrg: Set Property`
+3. **操作流程**：
+   - 将光标放在标题或其内容区域
+   - 执行设置属性命令
+   - 输入属性名（如：CATEGORY, PRIORITY, CREATED）
+   - 输入属性值（如：work, high, [2023-10-20]）
+
+#### 智能行为
+- **新标题**：自动创建 Property 抽屉并添加属性
+- **已有抽屉**：
+  - 属性存在 → 更新其值
+  - 属性不存在 → 在 `:END:` 前添加新属性
+- **缩进对齐**：新属性自动与现有属性保持一致的缩进
+
+#### Property 抽屉格式
+```org
+* 标题
+  :PROPERTIES:
+  :CATEGORY: work
+  :PRIORITY: high
+  :CREATED: [2023-10-20]
+  :END:
+```
+
+### 智能编辑支持
+
+#### 在 Property 抽屉内编辑
+- **Alt+Enter**：在 Property 抽屉内插入新的属性行
+- **自动缩进**：新属性行自动与现有属性保持缩进一致
+- **上下文识别**：系统自动识别 Property 抽屉上下文
+
+#### 支持的上下文类型
+- `property-drawer`：Property 抽屉内部
+- `property-drawer-header`：`:PROPERTIES:` 行
+- `property-drawer-end`：`:END:` 行
+- `property-item`：具体属性行

@@ -41,7 +41,12 @@ export class EditingCommands {
       EditingCommands.executeSmartShiftTab();
     });
 
-    context.subscriptions.push(metaReturnCommand, smartReturnCommand, insertTodoCommand, setTodoStateCommand, smartTabCommand, smartShiftTabCommand);
+    // 设置Property命令（类似org-set-property）
+    const setPropertyCommand = vscode.commands.registerCommand('vorg.setProperty', () => {
+      EditingCommands.orgSetProperty();
+    });
+
+    context.subscriptions.push(metaReturnCommand, smartReturnCommand, insertTodoCommand, setTodoStateCommand, smartTabCommand, smartShiftTabCommand, setPropertyCommand);
   }
 
   /**
@@ -77,12 +82,22 @@ export class EditingCommands {
          case 'code-block':
            EditingCommands.insertCodeBlockLine(editBuilder, editor, context);
            break;
-         case 'checkbox':
-           EditingCommands.insertCheckboxItem(editBuilder, editor, context);
-           break;
-         default:
-           EditingCommands.insertDefaultNewline(editBuilder, editor, position, isAtBeginning);
-           break;
+        case 'checkbox':
+          EditingCommands.insertCheckboxItem(editBuilder, editor, context);
+          break;
+        case 'property-drawer':
+        case 'property-item':
+          EditingCommands.insertPropertyItem(editBuilder, editor, context);
+          break;
+        case 'property-drawer-header':
+          EditingCommands.insertPropertyItem(editBuilder, editor, context);
+          break;
+        case 'property-drawer-end':
+          EditingCommands.insertDefaultNewline(editBuilder, editor, position, isAtBeginning);
+          break;
+        default:
+          EditingCommands.insertDefaultNewline(editBuilder, editor, position, isAtBeginning);
+          break;
        }
     });
   }
@@ -156,6 +171,185 @@ export class EditingCommands {
   }
 
 
+
+  /**
+   * 设置Property（模拟org-set-property行为）
+   * 在当前标题下设置或更新属性
+   */
+  private static async orgSetProperty() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'org') {
+      return;
+    }
+
+    const position = editor.selection.active;
+    const document = editor.document;
+    
+    // 查找当前位置所属的标题
+    const headingLineInfo = this.findCurrentHeading(document, position);
+    if (!headingLineInfo) {
+      vscode.window.showInformationMessage('请将光标放在标题或其内容区域内');
+      return;
+    }
+
+    const { line } = headingLineInfo;
+    const headingLineNumber = line.lineNumber;
+
+    // 提示用户输入属性名
+    const propertyKey = await vscode.window.showInputBox({
+      prompt: '请输入属性名',
+      placeHolder: '例如：CATEGORY, PRIORITY, CREATED 等'
+    });
+
+    if (!propertyKey) {
+      return;
+    }
+
+    const propertyKeyUpper = propertyKey.toUpperCase();
+
+    // 提示用户输入属性值
+    const propertyValue = await vscode.window.showInputBox({
+      prompt: `请输入属性 "${propertyKeyUpper}" 的值`,
+      placeHolder: '例如：work, high, [2023-10-20] 等'
+    });
+
+    if (propertyValue === undefined) {  // 允许空值
+      return;
+    }
+
+    // 检查标题下是否已经存在Property抽屉
+    const drawerInfo = this.findPropertyDrawer(document, headingLineNumber);
+    
+    if (drawerInfo) {
+      // 已存在property抽屉，检查属性是否存在
+      const existingPropertyLine = this.findPropertyInDrawer(document, drawerInfo, propertyKeyUpper);
+      
+      if (existingPropertyLine !== null) {
+        // 属性已存在，更新其值
+        const line = document.lineAt(existingPropertyLine);
+        const lineText = line.text;
+        const propertyMatch = lineText.match(/^(\s*:\w+:)\s*(.*)$/);
+        
+        if (propertyMatch) {
+          const indent = lineText.match(/^(\s*)/)?.[1] || '  ';
+          const newLineText = `${indent}:${propertyKeyUpper}: ${propertyValue}`;
+          
+          await editor.edit(editBuilder => {
+            editBuilder.replace(line.range, newLineText);
+          });
+          
+          vscode.window.showInformationMessage(`已更新属性 ${propertyKeyUpper}`);
+        }
+      } else {
+        // 属性不存在，在:END:之前添加新属性
+        // 首先找到现有属性的缩进作为参考
+        let referenceIndent = '  '; // 默认缩进
+        for (let i = drawerInfo.startLine + 1; i < drawerInfo.endLine; i++) {
+          const line = document.lineAt(i);
+          const lineText = line.text;
+          const propertyMatch = lineText.match(/^(\s*):\w+:/);
+          if (propertyMatch) {
+            referenceIndent = propertyMatch[1];
+            break;
+          }
+        }
+        
+        const insertLine = drawerInfo.endLine;
+        const insertPosition = new vscode.Position(insertLine, 0);
+        
+        await editor.edit(editBuilder => {
+          editBuilder.insert(insertPosition, `${referenceIndent}:${propertyKeyUpper}: ${propertyValue}\n`);
+        });
+        
+        vscode.window.showInformationMessage(`已添加属性 ${propertyKeyUpper}`);
+      }
+    } else {
+      // 不存在property抽屉，创建新的
+      const insertPosition = new vscode.Position(headingLineNumber + 1, 0);
+      
+      // 生成唯一的 ID
+      const uniqueId = this.generateUniqueId();
+      
+      // 创建包含 ID 和用户输入属性的 Property 抽屉
+      const propertyDrawer = `  :PROPERTIES:
+  :ID: ${uniqueId}
+  :${propertyKeyUpper}: ${propertyValue}
+  :END:
+`;
+
+      await editor.edit(editBuilder => {
+        editBuilder.insert(insertPosition, propertyDrawer);
+      });
+      
+      vscode.window.showInformationMessage(`已创建Property抽屉并添加属性 ${propertyKeyUpper}`);
+    }
+  }
+
+  /**
+   * 查找指定标题下的Property抽屉
+   * 返回抽屉的起始行和结束行，如果不存在则返回null
+   */
+  private static findPropertyDrawer(document: vscode.TextDocument, headingLineNumber: number): { startLine: number; endLine: number } | null {
+    let startLine: number | null = null;
+    let endLine: number | null = null;
+    
+    // 查看标题下的几行，查找 :PROPERTIES: 和 :END: 标记
+    for (let i = headingLineNumber + 1; i < Math.min(headingLineNumber + 50, document.lineCount); i++) {
+      const line = document.lineAt(i);
+      const lineText = line.text.trim();
+      
+      // 如果遇到了另一个标题，停止查找
+      if (lineText.match(/^\*+\s+/)) {
+        break;
+      }
+      
+      // 如果找到了 :PROPERTIES: 标记
+      if (lineText === ':PROPERTIES:') {
+        startLine = i;
+        continue;
+      }
+      
+      // 如果找到了 :END: 标记
+      if (lineText === ':END:' && startLine !== null) {
+        endLine = i;
+        break;
+      }
+    }
+    
+    if (startLine !== null && endLine !== null) {
+      return { startLine, endLine };
+    }
+    
+    return null;
+  }
+
+  /**
+   * 在Property抽屉中查找指定的属性
+   * 返回属性所在的行号，如果不存在则返回null
+   */
+  private static findPropertyInDrawer(document: vscode.TextDocument, drawerInfo: { startLine: number; endLine: number }, propertyKey: string): number | null {
+    const propertyKeyUpper = propertyKey.toUpperCase();
+    
+    for (let i = drawerInfo.startLine + 1; i < drawerInfo.endLine; i++) {
+      const line = document.lineAt(i);
+      const lineText = line.text.trim();
+      
+      // 匹配属性行 :KEY: value
+      const match = lineText.match(/^:(\w+):/);
+      if (match && match[1].toUpperCase() === propertyKeyUpper) {
+        return i;
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * 检查指定标题下是否已经存在Property抽屉（兼容性方法）
+   */
+  private static hasPropertyDrawer(document: vscode.TextDocument, headingLineNumber: number): boolean {
+    return this.findPropertyDrawer(document, headingLineNumber) !== null;
+  }
 
   /**
    * 设置特定的TODO状态
@@ -354,6 +548,29 @@ export class EditingCommands {
       return { type: 'table' };
     }
 
+    // 检查是否在property抽屉中
+    if (lineText.match(/^\s*:PROPERTIES:\s*$/)) {
+      return { type: 'property-drawer-header' };
+    }
+    
+    if (lineText.match(/^\s*:END:\s*$/)) {
+      return { type: 'property-drawer-end' };
+    }
+    
+    if (lineText.match(/^\s*:\w+:\s*.*$/)) {
+      const propertyMatch = lineText.match(/^\s*:(\w+):\s*(.*)$/);
+      return { 
+        type: 'property-item',
+        propertyKey: propertyMatch ? propertyMatch[1] : '',
+        propertyValue: propertyMatch ? propertyMatch[2] : ''
+      };
+    }
+
+    // 检查是否在property抽屉内部
+    if (EditingCommands.isInPropertyDrawer(document, position)) {
+      return { type: 'property-drawer' };
+    }
+
          // 检查是否在代码块中
      if (EditingCommands.isInCodeBlock(document, position)) {
        return { type: 'code-block' };
@@ -457,6 +674,23 @@ export class EditingCommands {
   }
 
   /**
+   * 插入property项
+   */
+  private static insertPropertyItem(editBuilder: vscode.TextEditorEdit, editor: vscode.TextEditor, context: ContextInfo) {
+    const position = editor.selection.active;
+    const document = editor.document;
+    const line = document.lineAt(position.line);
+    const lineEnd = line.range.end;
+    const lineText = line.text;
+    
+    // 检测当前行的缩进
+    const indentMatch = lineText.match(/^(\s*)/);
+    const indent = indentMatch ? indentMatch[1] : '  ';
+    
+    editBuilder.insert(lineEnd, `\n${indent}:`);
+  }
+
+  /**
    * 在代码块中插入行
    */
   private static insertCodeBlockLine(editBuilder: vscode.TextEditorEdit, editor: vscode.TextEditor, context: ContextInfo) {
@@ -483,6 +717,24 @@ export class EditingCommands {
       // 普通换行
       editBuilder.insert(position, '\n');
     }
+  }
+
+  /**
+   * 检查是否在property抽屉中
+   */
+  private static isInPropertyDrawer(document: vscode.TextDocument, position: vscode.Position): boolean {
+    let inPropertyDrawer = false;
+    
+    for (let i = 0; i <= position.line; i++) {
+      const line = document.lineAt(i).text.trim();
+      if (line === ':PROPERTIES:') {
+        inPropertyDrawer = true;
+      } else if (line === ':END:' && inPropertyDrawer) {
+        inPropertyDrawer = false;
+      }
+    }
+    
+    return inPropertyDrawer;
   }
 
   /**
@@ -573,6 +825,10 @@ export class EditingCommands {
       case 'code-block-header':
         // 在代码块标题上：切换代码块的折叠状态
         await EditingCommands.toggleCodeBlockFold(editor, position);
+        break;
+      case 'property-drawer-header':
+        // 在 Property 抽屉标题上：切换折叠状态
+        await EditingCommands.togglePropertyDrawerFold(editor, position);
         break;
       default:
         // 在普通文本中：执行正常缩进
@@ -705,6 +961,20 @@ export class EditingCommands {
     const savedPosition = editor.selection.active;
     
     // 使用 VS Code 的折叠命令切换代码块折叠状态
+    await vscode.commands.executeCommand('editor.toggleFold');
+    
+    // 恢复光标位置
+    editor.selection = new vscode.Selection(savedPosition, savedPosition);
+  }
+
+  /**
+   * 切换 Property 抽屉折叠状态
+   */
+  private static async togglePropertyDrawerFold(editor: vscode.TextEditor, position: vscode.Position) {
+    // 保存当前光标位置，确保折叠后光标不会跳转
+    const savedPosition = editor.selection.active;
+    
+    // 使用 VS Code 的折叠命令切换 Property 抽屉折叠状态
     await vscode.commands.executeCommand('editor.toggleFold');
     
     // 恢复光标位置
@@ -968,19 +1238,33 @@ export class EditingCommands {
     
     return -1; // 没有找到下一个同级或更高级标题
   }
+
+  /**
+   * 生成唯一的 ID（UUID v4 格式）
+   */
+  private static generateUniqueId(): string {
+    // 生成符合 UUID v4 格式的随机 ID
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
 }
 
 /**
  * 上下文信息接口
  */
 interface ContextInfo {
-  type: 'heading' | 'list-item' | 'checkbox' | 'table' | 'code-block' | 'text' | 'code-block-header';
+  type: 'heading' | 'list-item' | 'checkbox' | 'table' | 'code-block' | 'text' | 'code-block-header' | 'property-drawer' | 'property-drawer-header' | 'property-drawer-end' | 'property-item';
   level?: number;
   todoState?: string | null;
   content?: string;
   indent?: number;
   marker?: string;
   checkboxState?: string | null;
+  propertyKey?: string;
+  propertyValue?: string;
 } 
 
 /**

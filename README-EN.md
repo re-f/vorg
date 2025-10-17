@@ -95,8 +95,8 @@ You can customize TODO keywords in VS Code settings:
 
 If you encounter problems or have improvement suggestions:
 
-- 🐛 **Issue Reporting**: [Create GitHub Issue](https://github.com/vorg/vorg/issues)
-- 💡 **Feature Suggestions**: [Join GitHub Discussions](https://github.com/vorg/vorg/discussions)
+- 🐛 **Issue Reporting**: [Create GitHub Issue](https://github.com/re-f/vorg/issues)
+- 💡 **Feature Suggestions**: [Join GitHub Discussions](https://github.com/re-f/vorg/discussions)
 
 ## 🔮 Roadmap
 

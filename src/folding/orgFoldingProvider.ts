@@ -70,6 +70,9 @@ export class OrgFoldingProvider implements vscode.FoldingRangeProvider {
     // 为代码块和其他块元素添加折叠
     this.addBlockFolding(lines, ranges);
     
+    // 为 Property 抽屉添加折叠
+    this.addPropertyDrawerFolding(lines, ranges);
+    
     // 为列表项添加折叠
     this.addListFolding(lines, ranges);
     
@@ -103,6 +106,35 @@ export class OrgFoldingProvider implements vscode.FoldingRangeProvider {
         }
         blockStart = -1;
         blockType = '';
+      }
+    }
+  }
+
+  /**
+   * 为 Property 抽屉添加折叠功能
+   */
+  private addPropertyDrawerFolding(lines: string[], ranges: vscode.FoldingRange[]): void {
+    let drawerStart = -1;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // 检测 Property 抽屉开始
+      if (line === ':PROPERTIES:' && drawerStart === -1) {
+        drawerStart = i;
+        continue;
+      }
+      
+      // 检测 Property 抽屉结束
+      if (line === ':END:' && drawerStart !== -1) {
+        if (i > drawerStart) {
+          ranges.push(new vscode.FoldingRange(
+            drawerStart,
+            i,
+            vscode.FoldingRangeKind.Region
+          ));
+        }
+        drawerStart = -1;
       }
     }
   }

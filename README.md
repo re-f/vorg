@@ -32,16 +32,22 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 
 ### ⚡ org-like 编辑功能
 **类似 Emacs org-meta-return 的上下文感知编辑：**
-- 自动识别当前上下文（标题、列表、表格等）
-- 智能插入新元素（标题、列表项、表格行等）
+- 自动识别当前上下文（标题、列表、表格、Property 抽屉等）
+- 智能插入新元素（标题、列表项、表格行、Property 项等）
 - 保持正确的层级和格式
 
 **TAB 智能折叠（类似 Emacs org-mode TAB 行为）：**
 - 在标题上：切换折叠/展开状态
 - 在列表项上：切换折叠状态或增加缩进
 - 在代码块标题上：切换代码块的折叠/展开状态
+- 在 Property 抽屉上：切换 Property 抽屉的折叠/展开状态
 - 在表格中：移动到下一个单元格
 - 在代码块内：正常代码缩进
+
+**Property 管理：**
+- 智能设置/更新标题属性
+- 自动创建 Property 抽屉（含唯一 ID）
+- Property 抽屉折叠支持
 
 ## 🚀 快速开始
 
@@ -51,13 +57,18 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 |------|--------|----------|------|
 | **打开预览** | `Ctrl+C Ctrl+E` | `VOrg: Open Preview` | 类似 Emacs `C-c C-e`，点击编辑器右上角预览图标 |
 | **并排预览** | `Ctrl+C Ctrl+K` | `VOrg: Open Preview to the Side` | 在侧边打开预览窗口 |
-| **TODO 状态切换** | `Ctrl+C Ctrl+T` | `VOrg: Toggle TODO` | 类似 Emacs `C-c C-t` |
+| **TODO 状态切换** | `Ctrl+C Ctrl+T` | `VOrg: Set TODO State` | 类似 Emacs `C-c C-t` |
 | **插入TODO标题** | `Shift+Alt+Enter` | `VOrg: Insert TODO Heading` | 快速插入新的TODO标题 |
+| **设置属性** | `Ctrl+C Ctrl+X P` | `VOrg: Set Property` | 类似 Emacs `C-c C-x p`，设置/更新标题属性 |
 | **跟随链接** | `Ctrl+C Ctrl+O` | `VOrg: Follow Link` | 类似 Emacs `C-c C-o`，或使用 `Ctrl+Click` (Windows/Linux) / `Cmd+Click` (Mac) |
 | **插入链接** | `Ctrl+C Ctrl+L` | `VOrg: Insert Link` | 类似 Emacs `C-c C-l` |
-| **智能插入新元素** | `Alt+Enter` | `VOrg: Smart Insert` | 类似 Emacs `M-RET`，上下文感知编辑 |
-| **子树末尾插入同级元素** | `Ctrl+Alt+Enter` | `VOrg: Insert Sibling at End` | 类似 Emacs `C-M-RET` |
+| **智能插入新元素** | `Alt+Enter` | `VOrg: Insert New Item` | 类似 Emacs `M-RET`，上下文感知编辑 |
+| **子树末尾插入同级元素** | `Ctrl+Alt+Enter` | `VOrg: Insert New Item at End` | 类似 Emacs `C-M-RET` |
 | **智能TAB折叠** | `Tab`/`Shift+Tab` | - | 主要用于可见性控制（折叠/展开切换） |
+| **折叠标题** | `Ctrl+C Ctrl+Tab` | `Editor: Fold` | 折叠当前标题 |
+| **展开标题** | `Ctrl+C Ctrl+Shift+Tab` | `Editor: Unfold` | 展开当前标题 |
+| **切换侧边栏** | `Ctrl+C Ctrl+X Ctrl+B` | `Toggle Sidebar` | 切换侧边栏显示 |
+| **添加注释** | `Ctrl+C Ctrl+;` | `Add Line Comment` | 添加行注释 |
 | **文档大纲跳转** | `Ctrl+Shift+O` (Windows/Linux)<br>`Cmd+Shift+O` (Mac) | `Go to Symbol in Workspace` | 快速跳转到标题，查看侧边栏 "Outline" 面板 |
 
 
@@ -96,14 +107,27 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 
 如果您在使用过程中遇到问题或有改进建议：
 
-- 🐛 **问题反馈**：[创建 GitHub Issue](https://github.com/vorg/vorg/issues)
-- 💡 **功能建议**：[参与 GitHub Discussions](https://github.com/vorg/vorg/discussions)
+- 🐛 **问题反馈**：[创建 GitHub Issue](https://github.com/re-f/vorg/issues)
+- 💡 **功能建议**：[参与 GitHub Discussions](https://github.com/re-f/vorg/discussions)
 
+
+## 📝 更新日志
+
+### v0.0.3 (最新)
+- ✨ **新增 Property 属性管理**：完整的 `org-set-property` 功能实现
+
+### v0.0.2
+- ✨ 基础 Org-mode 功能实现
+- 🔄 实时预览和滚动同步
+- 📋 文档大纲和智能导航
+- ⚡ 智能编辑和折叠功能
 
 ## 🔮 路线图
 
 - [ ] 添加图表支持（Mermaid）
 - [ ] 支持 refile 功能
+- [ ] 支持 org-pro/demote-subtree
+- [ ] 支持插件或自定义代码
 
 ---
 

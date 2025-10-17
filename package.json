@@ -2,7 +2,7 @@
   "name": "vorg",
   "displayName": "VOrg - Org-mode Preview",
   "description": "基础 Org-mode 支持的扩展：实时预览、智能编辑、链接跳转、TODO 管理。在 VS Code 中实现基础的 Org-mode 编辑功能。",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "vorg",
   "license": "MIT",
   "engines": {
@@ -17,17 +17,21 @@
     "org-mode",
     "org",
     "emacs",
-    "preview",
     "todo",
     "outline",
     "notes",
-    "documentation",
+    "orgmode",
     "plain text"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/vorg/vorg"
+    "url": "https://github.com/re-f/vorg"
   },
+  "bugs": {
+    "url": "https://github.com/re-f/vorg/issues"
+  },
+  "homepage": "https://github.com/re-f/vorg#readme",
+  "qna": "marketplace",
   "activationEvents": [
     "onLanguage:org",
     "onCommand:vorg.preview",
@@ -41,6 +45,7 @@
     "onCommand:vorg.setTodoState",
     "onCommand:vorg.smartTab",
     "onCommand:vorg.smartShiftTab",
+    "onCommand:vorg.setProperty",
     "onCommand:vorg.debug.refreshHighlighting"
   ],
   "main": "./out/extension.js",
@@ -136,6 +141,11 @@
         "command": "vorg.smartShiftTab",
         "title": "VOrg: Smart Shift+Tab (Reverse Indentation)",
         "icon": "$(outdent)"
+      },
+      {
+        "command": "vorg.setProperty",
+        "title": "vorg: Set Property (org-set-property)",
+        "icon": "$(symbol-property)"
       }
     ],
     "menus": {
@@ -239,6 +249,12 @@
         "command": "editor.unfold",
         "key": "ctrl+c ctrl+shift+tab",
         "mac": "ctrl+c ctrl+shift+tab",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "vorg.setProperty",
+        "key": "ctrl+c ctrl+x p",
+        "mac": "ctrl+c ctrl+x p",
         "when": "editorLangId == org"
       }
     ]
