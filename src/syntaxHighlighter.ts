@@ -299,60 +299,23 @@ export class SyntaxHighlighter {
      * 应用链接高亮
      */
     private applyLinkHighlighting(editor: vscode.TextEditor, lines: string[]): void {
-        const linkUrlRanges: vscode.Range[] = [];
-        const linkDescRanges: vscode.Range[] = [];
-        const linkFullRanges: vscode.Range[] = [];
+        const linkRanges: vscode.Range[] = [];
 
         lines.forEach((line, lineIndex) => {
-            // 匹配带描述的链接 [[url][description]]
-            const linkWithDescMatches = Array.from(line.matchAll(/\[\[([^\]]+)\]\[([^\]]+)\]\]/g));
-            for (const match of linkWithDescMatches) {
-                const fullMatch = match[0];
-                const url = match[1];
-                const description = match[2];
-                
-                // URL部分
-                const urlStart = match.index! + 2; // 跳过 [[
-                const urlEnd = urlStart + url.length;
-                linkUrlRanges.push(new vscode.Range(
-                    new vscode.Position(lineIndex, urlStart),
-                    new vscode.Position(lineIndex, urlEnd)
-                ));
-                
-                // 描述部分
-                const descStart = urlEnd + 2; // 跳过 ][
-                const descEnd = descStart + description.length;
-                linkDescRanges.push(new vscode.Range(
-                    new vscode.Position(lineIndex, descStart),
-                    new vscode.Position(lineIndex, descEnd)
-                ));
-            }
-
-            // 匹配简单链接 [[url]]
-            const simpleLinkMatches = Array.from(line.matchAll(/\[\[([^\]]+)\]\]/g));
-            for (const match of simpleLinkMatches) {
-                // 跳过已经匹配的带描述链接
-                const isDescriptionLink = linkWithDescMatches.some(descMatch => 
-                    descMatch.index! <= match.index! && 
-                    match.index! < descMatch.index! + descMatch[0].length
-                );
-                
-                if (!isDescriptionLink) {
-                    const startPos = new vscode.Position(lineIndex, match.index!);
-                    const endPos = new vscode.Position(lineIndex, match.index! + match[0].length);
-                    linkFullRanges.push(new vscode.Range(startPos, endPos));
-                }
+            // 匹配所有链接格式：[[url][description]] 或 [[url]]
+            const allLinkMatches = Array.from(line.matchAll(/\[\[([^\]]+)\](?:\[([^\]]*)\])?\]/g));
+            
+            for (const match of allLinkMatches) {
+                // 高亮整个链接
+                const startPos = new vscode.Position(lineIndex, match.index!);
+                const endPos = new vscode.Position(lineIndex, match.index! + match[0].length);
+                linkRanges.push(new vscode.Range(startPos, endPos));
             }
         });
 
-        // 应用新的装饰
-        const linkUrlType = this.decorationTypes.get('link')!;
-        const linkDescType = this.decorationTypes.get('comment')!;
-        const linkFullType = this.decorationTypes.get('link')!;
-        
-        editor.setDecorations(linkUrlType, linkUrlRanges);
-        editor.setDecorations(linkDescType, linkDescRanges);
-        editor.setDecorations(linkFullType, linkFullRanges);
+        // 应用链接装饰
+        const linkType = this.decorationTypes.get('link')!;
+        editor.setDecorations(linkType, linkRanges);
     }
 
     /**
