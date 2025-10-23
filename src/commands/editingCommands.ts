@@ -53,6 +53,11 @@ export class EditingCommands {
       EditingCommands.orgSetProperty();
     });
 
+    // org-ctrl-return 命令 (Ctrl+Enter)
+    const ctrlReturnCommand = vscode.commands.registerCommand('vorg.ctrlReturn', () => {
+      EditingCommands.executeCtrlReturn();
+    });
+
     context.subscriptions.push(
       metaReturnCommand,
       smartReturnCommand,
@@ -60,7 +65,8 @@ export class EditingCommands {
       setTodoStateCommand,
       smartTabCommand,
       smartShiftTabCommand,
-      setPropertyCommand
+      setPropertyCommand,
+      ctrlReturnCommand
     );
   }
 
@@ -80,25 +86,27 @@ export class EditingCommands {
     const lineText = line.text;
     const isAtBeginning = position.character === 0 || lineText.slice(0, position.character).trim() === '';
     
-         // 检查当前位置的上下文
+    // 检查当前位置的上下文
     const context = ContextAnalyzer.analyzeContext(document, position);
     
+    let newCursorPosition: vscode.Position | null = null;
+    
     await editor.edit(editBuilder => {
-             switch (context.type) {
-         case 'heading':
-          HeadingCommands.insertHeading(editBuilder, editor, context, isAtBeginning);
-           break;
-         case 'list-item':
-          ListCommands.insertListItem(editBuilder, editor, context, isAtBeginning);
-           break;
-         case 'table':
+      switch (context.type) {
+        case 'heading':
+          newCursorPosition = HeadingCommands.insertHeadingAfterSubtree(editBuilder, editor, context);
+          break;
+        case 'list-item':
+          newCursorPosition = ListCommands.insertListItem(editBuilder, editor, context, isAtBeginning);
+          break;
+        case 'table':
           TableCommands.insertTableRow(editBuilder, editor, context);
-           break;
-         case 'code-block':
+          break;
+        case 'code-block':
           CodeBlockCommands.insertCodeBlockLine(editBuilder, editor, context);
-           break;
+          break;
         case 'checkbox':
-          ListCommands.insertCheckboxItem(editBuilder, editor, context);
+          newCursorPosition = ListCommands.insertCheckboxItem(editBuilder, editor, context);
           break;
         case 'property-drawer':
         case 'property-item':
@@ -111,10 +119,16 @@ export class EditingCommands {
           EditingCommands.insertDefaultNewline(editBuilder, editor, position, isAtBeginning);
           break;
         default:
-          EditingCommands.insertDefaultNewline(editBuilder, editor, position, isAtBeginning);
+          // 普通文本：插入新标题
+          EditingCommands.insertHeadingInText(editBuilder, editor, position);
           break;
-       }
+      }
     });
+    
+    // 在 edit 完成后设置光标位置
+    if (newCursorPosition) {
+      editor.selection = new vscode.Selection(newCursorPosition, newCursorPosition);
+    }
   }
 
   /**
@@ -160,6 +174,48 @@ export class EditingCommands {
     }
 
     await HeadingCommands.insertTodoHeading(editor);
+  }
+
+  /**
+   * 执行 org-ctrl-return 功能 (C-RET)
+   * 在光标处分割当前结构元素
+   */
+  private static async executeCtrlReturn() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'org') {
+      return;
+    }
+
+    const position = editor.selection.active;
+    const document = editor.document;
+    const context = ContextAnalyzer.analyzeContext(document, position);
+    
+    let newCursorPosition: vscode.Position | null = null;
+    
+    await editor.edit(editBuilder => {
+      switch (context.type) {
+        case 'heading':
+          newCursorPosition = HeadingCommands.splitHeading(editBuilder, editor, context, position);
+          break;
+        case 'list-item':
+          newCursorPosition = ListCommands.splitListItem(editBuilder, editor, context, position);
+          break;
+        case 'checkbox':
+          newCursorPosition = ListCommands.splitCheckboxItem(editBuilder, editor, context, position);
+          break;
+        case 'table':
+          TableCommands.insertTableRow(editBuilder, editor, context);
+          break;
+        default:
+          newCursorPosition = EditingCommands.splitTextIntoHeading(editBuilder, editor, position);
+          break;
+      }
+    });
+    
+    // 在 edit 完成后设置光标位置
+    if (newCursorPosition) {
+      editor.selection = new vscode.Selection(newCursorPosition, newCursorPosition);
+    }
   }
 
   /**
@@ -278,6 +334,56 @@ export class EditingCommands {
         await vscode.commands.executeCommand('outdent');
         break;
     }
+  }
+
+  /**
+   * 在普通文本中插入新标题
+   */
+  private static insertHeadingInText(
+    editBuilder: vscode.TextEditorEdit,
+    editor: vscode.TextEditor,
+    position: vscode.Position
+  ) {
+    const document = editor.document;
+    
+    // 查找所属标题以确定级别
+    const currentHeading = HeadingCommands.findCurrentHeading(document, position);
+    const level = currentHeading ? currentHeading.headingInfo.level : 1;
+    const stars = '*'.repeat(level);
+    
+    // 在当前行末尾插入新标题
+    const line = document.lineAt(position.line);
+    editBuilder.insert(line.range.end, `\n${stars} \n`);
+    
+    // 移动光标到新标题的标题文本位置（插入换行后，新标题在当前行的下一行）
+    const newCursorPosition = new vscode.Position(position.line + 1, stars.length + 1);
+    editor.selection = new vscode.Selection(newCursorPosition, newCursorPosition);
+  }
+
+  /**
+   * 分割普通文本并创建新标题
+   * 返回光标应该移动到的位置
+   */
+  private static splitTextIntoHeading(
+    editBuilder: vscode.TextEditorEdit,
+    editor: vscode.TextEditor,
+    position: vscode.Position
+  ): vscode.Position {
+    const document = editor.document;
+    const line = document.lineAt(position.line);
+    
+    // 查找所属标题以确定级别
+    const currentHeading = HeadingCommands.findCurrentHeading(document, position);
+    const level = currentHeading ? currentHeading.headingInfo.level : 1;
+    const stars = '*'.repeat(level);
+    
+    // 在光标处分割，将后半部分移入新标题
+    const restOfLine = line.text.substring(position.character);
+    editBuilder.delete(new vscode.Range(position, line.range.end));
+    editBuilder.insert(position, `\n${stars} ${restOfLine.trim()}`);
+    
+    // 返回光标应该移动到的位置（插入换行后，新标题在当前行的下一行）
+    return new vscode.Position(position.line + 1, stars.length + 1);
   }
 
   /**

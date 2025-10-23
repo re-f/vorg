@@ -41,6 +41,7 @@
     "onCommand:vorg.jumpToId",
     "onCommand:vorg.metaReturn",
     "onCommand:vorg.smartReturn",
+    "onCommand:vorg.ctrlReturn",
     "onCommand:vorg.insertTodoHeading",
     "onCommand:vorg.setTodoState",
     "onCommand:vorg.smartTab",
@@ -123,6 +124,11 @@
         "icon": "$(insert)"
       },
       {
+        "command": "vorg.ctrlReturn",
+        "title": "VOrg: Ctrl Return (Split)",
+        "icon": "$(split-horizontal)"
+      },
+      {
         "command": "vorg.insertTodoHeading",
         "title": "VOrg: Insert TODO Heading",
         "icon": "$(tasklist)"
@@ -201,6 +207,12 @@
         "command": "vorg.smartReturn",
         "key": "ctrl+alt+enter",
         "mac": "ctrl+alt+enter",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "vorg.ctrlReturn",
+        "key": "ctrl+enter",
+        "mac": "ctrl+enter",
         "when": "editorLangId == org"
       },
       {

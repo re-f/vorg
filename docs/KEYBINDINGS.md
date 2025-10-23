@@ -12,6 +12,7 @@
 | 打开预览 | `Ctrl+C Ctrl+E` | `C-c C-e` |
 | 添加注释 | `Ctrl+C Ctrl+;` | `C-c C-;` |
 | Meta Return | `Alt+Enter` | `M-RET` |
+| Ctrl Return | `Ctrl+Enter` | `C-RET` |
 | Smart Return | `Ctrl+Alt+Enter` | `C-M-RET` |
 
 ## 基本快捷键（类似 Emacs Org-mode）
@@ -29,7 +30,8 @@
 - `Ctrl+C Ctrl+K` - 在侧边打开预览
 
 ### 编辑和导航
-- `Alt+Enter` - Meta Return（智能插入新项目）
+- `Alt+Enter` - Meta Return（在当前元素外部插入同级元素）
+- `Ctrl+Enter` - Ctrl Return（在光标处分割当前元素）
 - `Ctrl+Alt+Enter` - Smart Return（在子树末尾插入）
 - `Tab` - 智能Tab（折叠/展开、缩进）
 - `Shift+Tab` - 智能Shift+Tab（反向缩进、全局折叠）
@@ -50,6 +52,7 @@
 | `C-c C-e` | `Ctrl+C Ctrl+E` | 导出/预览 |
 | `C-c C-;` | `Ctrl+C Ctrl+;` | 添加注释 |
 | `M-RET` | `Alt+Enter` | Meta Return |
+| `C-RET` | `Ctrl+Enter` | Ctrl Return |
 | `C-M-RET` | `Ctrl+Alt+Enter` | Smart Return |
 | `TAB` | `Tab` | 智能Tab |
 | `S-TAB` | `Shift+Tab` | 智能Shift+Tab |

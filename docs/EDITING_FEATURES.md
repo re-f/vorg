@@ -17,20 +17,32 @@ VOrg 扩展现在支持类似 Emacs `org-meta-return` 的智能编辑功能，�
 
 | 功能 | Windows/Linux | Mac | 说明 |
 |------|---------------|-----|------|
-| 智能插入 | Alt+Enter | Alt+Enter | 根据上下文插入新元素 |
+| 智能插入 | Alt+Enter | Alt+Enter | 在当前元素外部插入同级元素 |
+| 分割元素 | Ctrl+Enter | Ctrl+Enter | 在光标处分割当前元素 |
 | 智能回车 | Ctrl+Alt+Enter | Cmd+Ctrl+Enter | 在子树末尾插入同级元素 |
 | TODO标题 | Shift+Alt+Enter | Shift+Alt+Enter | 插入TODO标题 |
 
 ## 使用示例
 
 ### 标题编辑
-在标题行使用 Alt+Enter 会插入同级新标题。
+- **Alt+Enter (M-RET)**：在标题行使用会插入同级新标题，光标定位在新标题的 `* ` 后
+- **Ctrl+Enter (C-RET)**：在标题行使用会分割当前标题，将光标后的内容移入新标题，光标定位在新标题的末尾
 
 ### 列表编辑  
-在列表项使用 Alt+Enter 会插入新的列表项，自动处理编号。
+- **Alt+Enter (M-RET)**：在列表项使用会插入新的列表项，自动处理编号，光标定位在新列表项的末尾
+- **Ctrl+Enter (C-RET)**：在列表项使用会分割当前项，将光标后的内容移入新项，光标定位在新列表项的 `- ` 后
+
+### 复选框编辑
+- **Alt+Enter (M-RET)**：插入新的复选框项，光标定位在新复选框的末尾
+- **Ctrl+Enter (C-RET)**：分割当前复选框项，光标定位在新复选框的 `- ` 后
 
 ### 表格编辑
-在表格行使用 Alt+Enter 会插入新的表格行。
+- **Alt+Enter**：在表格行使用会插入新的表格行
+- **Ctrl+Enter**：在表格行使用会插入新的表格行（行为相同）
+
+### 普通文本
+- **Alt+Enter (M-RET)**：插入新标题，光标定位在新标题的 `* ` 后
+- **Ctrl+Enter (C-RET)**：插入新标题并将光标后的内容移入新标题，光标定位在新标题的末尾
 
 ### TODO插入
 使用 Shift+Alt+Enter 可以快速插入TODO标题。

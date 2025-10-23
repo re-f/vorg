@@ -9,29 +9,56 @@ export class HeadingCommands {
   private static todoKeywordManager = TodoKeywordManager.getInstance();
 
   /**
-   * 插入标题
+   * 在标题子树之后插入同级标题 (M-RET 语义)
+   * 返回光标应该移动到的位置
    */
-  static insertHeading(
+  static insertHeadingAfterSubtree(
+    editBuilder: vscode.TextEditorEdit,
+    editor: vscode.TextEditor,
+    context: ContextInfo
+  ): vscode.Position {
+    const position = editor.selection.active;
+    const document = editor.document;
+    const stars = '*'.repeat(context.level || 1);
+    
+    // 找到子树结束位置
+    const subtreeEnd = HeadingCommands.findSubtreeEnd(document, position);
+    
+    // 在子树末尾插入新标题
+    editBuilder.insert(subtreeEnd, `\n${stars} `);
+    
+    // 返回光标应该移动到的位置
+    return new vscode.Position(subtreeEnd.line + 1, stars.length + 1);
+  }
+
+  /**
+   * 分割标题 (C-RET 语义)
+   * 返回光标应该移动到的位置
+   */
+  static splitHeading(
     editBuilder: vscode.TextEditorEdit,
     editor: vscode.TextEditor,
     context: ContextInfo,
-    isAtBeginning: boolean
-  ) {
-    const position = editor.selection.active;
+    position: vscode.Position
+  ): vscode.Position {
     const document = editor.document;
     const line = document.lineAt(position.line);
     const stars = '*'.repeat(context.level || 1);
-
-    if (isAtBeginning) {
-      // 在当前行之前插入新标题
-      editBuilder.insert(line.range.start, `${stars} \n`);
-    } else {
-      // 分割当前行，后半部分作为新标题
-      const lineEnd = line.range.end;
-      const restOfLine = line.text.substring(position.character);
-      editBuilder.delete(new vscode.Range(position, lineEnd));
-      editBuilder.insert(position, `\n${stars} ${restOfLine}`);
-    }
+    
+    // 获取光标后的内容
+    const restOfLine = line.text.substring(position.character).trim();
+    
+    // 删除光标后的内容
+    editBuilder.delete(new vscode.Range(position, line.range.end));
+    
+    // 找到子树结束位置
+    const subtreeEnd = HeadingCommands.findSubtreeEnd(document, position);
+    
+    // 在子树末尾插入新标题
+    editBuilder.insert(subtreeEnd, `\n${stars} ${restOfLine}`);
+    
+    // 返回光标应该移动到的位置（新标题的内容开始位置）
+    return new vscode.Position(subtreeEnd.line + 1, stars.length + 1);
   }
 
   /**

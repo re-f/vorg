@@ -6,14 +6,15 @@ import { ContextInfo } from '../types/editingTypes';
  */
 export class ListCommands {
   /**
-   * 插入列表项
+   * 插入列表项 (M-RET 语义)
+   * 返回光标应该移动到的位置
    */
   static insertListItem(
     editBuilder: vscode.TextEditorEdit,
     editor: vscode.TextEditor,
     context: ContextInfo,
     isAtBeginning: boolean
-  ) {
+  ): vscode.Position | null {
     const position = editor.selection.active;
     const document = editor.document;
     const line = document.lineAt(position.line);
@@ -36,21 +37,26 @@ export class ListCommands {
       // 空行，删除当前行的列表标记
       editBuilder.delete(line.range);
       editBuilder.insert(line.range.start, '\n');
+      return null;
     } else {
-      // 插入新列表项
-      const lineEnd = line.range.end;
-      editBuilder.insert(lineEnd, `\n${indent}${marker} `);
+      // M-RET: 在当前列表项（包括其子内容）之后插入新项
+      const itemEnd = ListCommands.findListItemEnd(document, position, context.indent || 0);
+      editBuilder.insert(itemEnd, `\n${indent}${marker} `);
+      
+      // 返回光标应该移动到的位置
+      return new vscode.Position(itemEnd.line + 1, indent.length + marker.length + 1);
     }
   }
 
   /**
    * 插入复选框项
+   * 返回光标应该移动到的位置
    */
   static insertCheckboxItem(
     editBuilder: vscode.TextEditorEdit,
     editor: vscode.TextEditor,
     context: ContextInfo
-  ) {
+  ): vscode.Position {
     const position = editor.selection.active;
     const document = editor.document;
     const line = document.lineAt(position.line);
@@ -66,8 +72,74 @@ export class ListCommands {
       }
     }
 
-    const lineEnd = line.range.end;
-    editBuilder.insert(lineEnd, `\n${indent}${marker} [ ] `);
+    // M-RET: 在当前列表项（包括其子内容）之后插入新项
+    const itemEnd = ListCommands.findListItemEnd(document, position, context.indent || 0);
+    editBuilder.insert(itemEnd, `\n${indent}${marker} [ ] `);
+    
+    // 返回光标应该移动到的位置
+    return new vscode.Position(itemEnd.line + 1, indent.length + marker.length + 5);
+  }
+
+  /**
+   * 分割列表项 (C-RET 语义)
+   * 返回光标应该移动到的位置
+   */
+  static splitListItem(
+    editBuilder: vscode.TextEditorEdit,
+    editor: vscode.TextEditor,
+    context: ContextInfo,
+    position: vscode.Position
+  ): vscode.Position {
+    const document = editor.document;
+    const line = document.lineAt(position.line);
+    const indent = ' '.repeat(context.indent || 0);
+    
+    // 确定列表标记
+    let marker = context.marker || '-';
+    if (marker.match(/^\d+\.$/)) {
+      const num = parseInt(marker) + 1;
+      marker = `${num}.`;
+    }
+    
+    // 获取光标后的内容
+    const restOfLine = line.text.substring(position.character).trim();
+    
+    // 删除光标后的内容
+    editBuilder.delete(new vscode.Range(position, line.range.end));
+    
+    // 在当前行末尾插入新列表项
+    editBuilder.insert(line.range.end, `\n${indent}${marker} ${restOfLine}`);
+    
+    // 返回光标应该移动到的位置（新列表项的内容开始位置）
+    return new vscode.Position(position.line + 1, indent.length + marker.length + 1);
+  }
+
+  /**
+   * 分割复选框项 (C-RET 语义)
+   * 返回光标应该移动到的位置
+   */
+  static splitCheckboxItem(
+    editBuilder: vscode.TextEditorEdit,
+    editor: vscode.TextEditor,
+    context: ContextInfo,
+    position: vscode.Position
+  ): vscode.Position {
+    const document = editor.document;
+    const line = document.lineAt(position.line);
+    const indent = ' '.repeat(context.indent || 0);
+    
+    let marker = context.marker || '-';
+    if (marker.match(/^\d+\.$/)) {
+      const num = parseInt(marker) + 1;
+      marker = `${num}.`;
+    }
+    
+    const restOfLine = line.text.substring(position.character).trim();
+    editBuilder.delete(new vscode.Range(position, line.range.end));
+    editBuilder.insert(line.range.end, `\n${indent}${marker} [ ] ${restOfLine}`);
+    
+    // 返回光标应该移动到的位置（插入换行后，新项在当前行的下一行）
+    return new vscode.Position(position.line + 1, indent.length + marker.length + 5);
   }
 
   /**
@@ -199,6 +271,48 @@ export class ListCommands {
     // 重新设置光标位置，保持在相对位置
     const newPosition = new vscode.Position(position.line, newCursorChar);
     editor.selection = new vscode.Selection(newPosition, newPosition);
+  }
+
+  /**
+   * 查找列表项的结束位置（包括其所有子内容）
+   */
+  static findListItemEnd(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    currentIndent: number
+  ): vscode.Position {
+    let lastNonEmptyLine = position.line;
+    
+    // 从当前行的下一行开始查找
+    for (let i = position.line + 1; i < document.lineCount; i++) {
+      const line = document.lineAt(i);
+      const lineText = line.text;
+      
+      // 跳过空行，但记录上一个非空行
+      if (lineText.trim() === '') {
+        continue;
+      }
+      
+      // 检查缩进
+      const lineIndentMatch = lineText.match(/^(\s*)/);
+      const lineIndent = lineIndentMatch ? lineIndentMatch[1].length : 0;
+      
+      // 检查是否是列表项
+      const listMatch = lineText.match(/^(\s*)([-+*]|\d+\.)\s+/);
+      // 检查是否是标题
+      const headingMatch = lineText.match(/^(\*+)\s+/);
+      
+      // 如果遇到同级或更高级的列表项，或者遇到标题，说明当前列表项结束
+      if ((listMatch && lineIndent <= currentIndent) || headingMatch) {
+        return new vscode.Position(lastNonEmptyLine, document.lineAt(lastNonEmptyLine).text.length);
+      }
+      
+      // 更新最后一个非空行
+      lastNonEmptyLine = i;
+    }
+    
+    // 如果没找到，返回文档末尾
+    return new vscode.Position(document.lineCount - 1, document.lineAt(document.lineCount - 1).text.length);
   }
 }
 
