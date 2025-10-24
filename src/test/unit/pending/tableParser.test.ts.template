@@ -1,0 +1,358 @@
+import * as assert from 'assert';
+import { TableCommands } from '../../commands/editing/tableCommands';
+
+/**
+ * TableCommands 表格解析单元测试
+ * 测试表格结构解析、单元格定位等核心功能
+ */
+suite('TableCommands 表格解析测试', () => {
+  
+  // 辅助函数：创建 mock document
+  function createMockDocument(content: string) {
+    const lines = content.split('\n');
+    return {
+      lineCount: lines.length,
+      lineAt: (line: number) => ({
+        text: lines[line] || '',
+        lineNumber: line,
+        range: {
+          start: { line: line, character: 0 },
+          end: { line: line, character: lines[line]?.length || 0 }
+        }
+      }),
+      getText: () => content
+    } as any;
+  }
+
+  // 辅助函数：创建 Position
+  function createPosition(line: number, character: number) {
+    return { line, character } as any;
+  }
+
+  suite('isTableRow 测试', () => {
+    
+    test('应该识别简单的表格行', () => {
+      const line = '| 列1 | 列2 | 列3 |';
+      const isTable = TableCommands.isTableRow(line);
+      
+      assert.strictEqual(isTable, true);
+    });
+
+    test('应该识别表格分隔符', () => {
+      const line = '|---+---+---|';
+      const isTable = TableCommands.isTableRow(line);
+      
+      assert.strictEqual(isTable, true);
+    });
+
+    test('应该识别缩进的表格', () => {
+      const line = '  | 列1 | 列2 |';
+      const isTable = TableCommands.isTableRow(line);
+      
+      assert.strictEqual(isTable, true);
+    });
+
+    test('应该识别单列表格', () => {
+      const line = '| 单列 |';
+      const isTable = TableCommands.isTableRow(line);
+      
+      assert.strictEqual(isTable, true);
+    });
+
+    test('应该识别空单元格', () => {
+      const line = '| | | |';
+      const isTable = TableCommands.isTableRow(line);
+      
+      assert.strictEqual(isTable, true);
+    });
+
+    test('非表格行应返回 false', () => {
+      const line = '这不是表格';
+      const isTable = TableCommands.isTableRow(line);
+      
+      assert.strictEqual(isTable, false);
+    });
+
+    test('单个竖线不应识别为表格', () => {
+      const line = '这是 | 分隔符';
+      const isTable = TableCommands.isTableRow(line);
+      
+      assert.strictEqual(isTable, false);
+    });
+  });
+
+  suite('parseTableCells 测试', () => {
+    
+    test('应该解析简单的表格单元格', () => {
+      const line = '| 列1 | 列2 | 列3 |';
+      const cells = TableCommands.parseTableCells(line);
+      
+      assert.strictEqual(cells.length, 3);
+      assert.strictEqual(cells[0], '列1');
+      assert.strictEqual(cells[1], '列2');
+      assert.strictEqual(cells[2], '列3');
+    });
+
+    test('应该去除单元格前后空格', () => {
+      const line = '|  空格  |   多空格   |';
+      const cells = TableCommands.parseTableCells(line);
+      
+      assert.strictEqual(cells[0], '空格');
+      assert.strictEqual(cells[1], '多空格');
+    });
+
+    test('应该处理空单元格', () => {
+      const line = '| | 列2 | |';
+      const cells = TableCommands.parseTableCells(line);
+      
+      assert.strictEqual(cells.length, 3);
+      assert.strictEqual(cells[0], '');
+      assert.strictEqual(cells[2], '');
+    });
+
+    test('应该处理单列表格', () => {
+      const line = '| 单列 |';
+      const cells = TableCommands.parseTableCells(line);
+      
+      assert.strictEqual(cells.length, 1);
+      assert.strictEqual(cells[0], '单列');
+    });
+
+    test('应该处理表格分隔符', () => {
+      const line = '|---+---+---|';
+      const cells = TableCommands.parseTableCells(line);
+      
+      // 分隔符应该被解析为单元格
+      assert.ok(cells.length > 0);
+    });
+
+    test('应该处理单元格中的特殊字符', () => {
+      const line = '| 特殊@字符 | 符号#￥% |';
+      const cells = TableCommands.parseTableCells(line);
+      
+      assert.strictEqual(cells[0], '特殊@字符');
+      assert.strictEqual(cells[1], '符号#￥%');
+    });
+  });
+
+  suite('findCurrentCell 测试', () => {
+    
+    test('应该找到光标所在的单元格', () => {
+      const line = '| 列1 | 列2 | 列3 |';
+      const pos = createPosition(0, 3);  // 在"列1"中
+      const cellIndex = TableCommands.findCurrentCell(line, pos.character);
+      
+      assert.strictEqual(cellIndex, 0);
+    });
+
+    test('应该找到第二个单元格', () => {
+      const line = '| 列1 | 列2 | 列3 |';
+      const pos = createPosition(0, 9);  // 在"列2"中
+      const cellIndex = TableCommands.findCurrentCell(line, pos.character);
+      
+      assert.strictEqual(cellIndex, 1);
+    });
+
+    test('应该找到第三个单元格', () => {
+      const line = '| 列1 | 列2 | 列3 |';
+      const pos = createPosition(0, 15);  // 在"列3"中
+      const cellIndex = TableCommands.findCurrentCell(line, pos.character);
+      
+      assert.strictEqual(cellIndex, 2);
+    });
+
+    test('光标在分隔符上应返回正确的单元格', () => {
+      const line = '| 列1 | 列2 | 列3 |';
+      const pos = createPosition(0, 6);  // 在第一个"|"分隔符上
+      const cellIndex = TableCommands.findCurrentCell(line, pos.character);
+      
+      // 应该返回分隔符前或后的单元格
+      assert.ok(cellIndex >= 0 && cellIndex <= 2);
+    });
+  });
+
+  suite('findNextCell 测试', () => {
+    
+    test('应该找到下一个单元格的位置', () => {
+      const line = '| 列1 | 列2 | 列3 |';
+      const currentCell = 0;
+      const nextPos = TableCommands.findNextCell(line, currentCell);
+      
+      assert.ok(nextPos);
+      assert.ok(nextPos.character > 0);
+      // 应该在"列2"的位置
+    });
+
+    test('从第二个单元格移动到第三个', () => {
+      const line = '| 列1 | 列2 | 列3 |';
+      const currentCell = 1;
+      const nextPos = TableCommands.findNextCell(line, currentCell);
+      
+      assert.ok(nextPos);
+      // 应该在"列3"的位置
+    });
+
+    test('最后一个单元格应返回 null 或循环到第一个', () => {
+      const line = '| 列1 | 列2 | 列3 |';
+      const currentCell = 2;
+      const nextPos = TableCommands.findNextCell(line, currentCell);
+      
+      // 根据实现，可能返回 null 或循环到第一个单元格
+      assert.ok(nextPos === null || nextPos.character === 2);
+    });
+  });
+
+  suite('findPreviousCell 测试', () => {
+    
+    test('应该找到上一个单元格的位置', () => {
+      const line = '| 列1 | 列2 | 列3 |';
+      const currentCell = 1;
+      const prevPos = TableCommands.findPreviousCell(line, currentCell);
+      
+      assert.ok(prevPos);
+      // 应该在"列1"的位置
+    });
+
+    test('从第三个单元格移动到第二个', () => {
+      const line = '| 列1 | 列2 | 列3 |';
+      const currentCell = 2;
+      const prevPos = TableCommands.findPreviousCell(line, currentCell);
+      
+      assert.ok(prevPos);
+      // 应该在"列2"的位置
+    });
+
+    test('第一个单元格应返回 null 或循环到最后一个', () => {
+      const line = '| 列1 | 列2 | 列3 |';
+      const currentCell = 0;
+      const prevPos = TableCommands.findPreviousCell(line, currentCell);
+      
+      // 根据实现，可能返回 null 或循环到最后一个单元格
+      assert.ok(prevPos === null || prevPos.character > 10);
+    });
+  });
+
+  suite('findTableBounds 测试', () => {
+    
+    test('应该找到表格的开始和结束', () => {
+      const content = [
+        '普通文本',
+        '| 列1 | 列2 |',  // line 1 - 表格开始
+        '| 值1 | 值2 |',  // line 2
+        '| 值3 | 值4 |',  // line 3 - 表格结束
+        '普通文本'
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(2, 0);  // 在表格中间
+      const bounds = TableCommands.findTableBounds(doc, pos);
+      
+      assert.ok(bounds);
+      assert.strictEqual(bounds.start, 1);
+      assert.strictEqual(bounds.end, 3);
+    });
+
+    test('应该处理带分隔符的表格', () => {
+      const content = [
+        '| 标题1 | 标题2 |',  // line 0
+        '|-------+-------|',  // line 1 - 分隔符
+        '| 值1   | 值2   |'   // line 2
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(1, 0);
+      const bounds = TableCommands.findTableBounds(doc, pos);
+      
+      assert.ok(bounds);
+      assert.strictEqual(bounds.start, 0);
+      assert.strictEqual(bounds.end, 2);
+    });
+
+    test('应该处理单行表格', () => {
+      const content = [
+        '普通文本',
+        '| 单行表格 |',
+        '普通文本'
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(1, 0);
+      const bounds = TableCommands.findTableBounds(doc, pos);
+      
+      assert.ok(bounds);
+      assert.strictEqual(bounds.start, 1);
+      assert.strictEqual(bounds.end, 1);
+    });
+
+    test('非表格位置应返回 null', () => {
+      const content = [
+        '普通文本',
+        '更多文本'
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(0, 0);
+      const bounds = TableCommands.findTableBounds(doc, pos);
+      
+      assert.strictEqual(bounds, null);
+    });
+  });
+
+  suite('边界情况测试', () => {
+    
+    test('应该处理非常长的单元格内容', () => {
+      const longText = 'a'.repeat(100);
+      const line = `| ${longText} | 列2 |`;
+      const cells = TableCommands.parseTableCells(line);
+      
+      assert.strictEqual(cells[0], longText);
+    });
+
+    test('应该处理空表格行', () => {
+      const line = '||';
+      const isTable = TableCommands.isTableRow(line);
+      
+      // 根据实现，可能识别或不识别为表格
+      assert.ok(typeof isTable === 'boolean');
+    });
+
+    test('应该处理不规则的表格', () => {
+      const content = [
+        '| 列1 | 列2 |',
+        '| 值1 | 值2 | 值3 |',  // 列数不同
+        '| 值4 |'               // 列数更少
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      
+      // 应该都能识别为表格行
+      for (let i = 0; i < 3; i++) {
+        assert.strictEqual(TableCommands.isTableRow(doc.lineAt(i).text), true);
+      }
+    });
+
+    test('应该处理单元格中的竖线', () => {
+      const line = '| a\\|b | 列2 |';  // 转义的竖线
+      const isTable = TableCommands.isTableRow(line);
+      
+      assert.strictEqual(isTable, true);
+    });
+
+    test('应该处理中文内容', () => {
+      const line = '| 中文列1 | 中文列2 | 中文列3 |';
+      const cells = TableCommands.parseTableCells(line);
+      
+      assert.strictEqual(cells[0], '中文列1');
+      assert.strictEqual(cells[1], '中文列2');
+      assert.strictEqual(cells[2], '中文列3');
+    });
+
+    test('应该处理混合宽度字符', () => {
+      const line = '| ABCabc | 中文字符 | 123 |';
+      const cells = TableCommands.parseTableCells(line);
+      
+      assert.strictEqual(cells.length, 3);
+    });
+  });
+});
+

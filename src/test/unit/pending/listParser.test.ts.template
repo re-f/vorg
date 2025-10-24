@@ -1,0 +1,464 @@
+import * as assert from 'assert';
+import { ListCommands } from '../../commands/editing/listCommands';
+
+/**
+ * ListCommands 列表解析单元测试
+ * 测试列表结构解析、缩进检测等核心功能
+ */
+suite('ListCommands 列表解析测试', () => {
+  
+  // 辅助函数：创建 mock document
+  function createMockDocument(content: string) {
+    const lines = content.split('\n');
+    return {
+      lineCount: lines.length,
+      lineAt: (line: number) => ({
+        text: lines[line] || '',
+        lineNumber: line,
+        range: {
+          start: { line: line, character: 0 },
+          end: { line: line, character: lines[line]?.length || 0 }
+        }
+      }),
+      getText: () => content
+    } as any;
+  }
+
+  // 辅助函数：创建 Position
+  function createPosition(line: number, character: number = 0) {
+    return { line, character } as any;
+  }
+
+  suite('parseListItem 测试', () => {
+    
+    test('应该解析简单的列表项', () => {
+      const line = '- 列表项';
+      const result = ListCommands.parseListItem(line);
+      
+      assert.ok(result);
+      assert.strictEqual(result!.indent, 0);
+      assert.strictEqual(result!.marker, '-');
+      assert.strictEqual(result!.content, '列表项');
+      assert.strictEqual(result!.hasCheckbox, false);
+    });
+
+    test('应该解析缩进的列表项', () => {
+      const line = '  - 缩进列表项';
+      const result = ListCommands.parseListItem(line);
+      
+      assert.ok(result);
+      assert.strictEqual(result!.indent, 2);
+      assert.strictEqual(result!.marker, '-');
+    });
+
+    test('应该解析四空格缩进的列表项', () => {
+      const line = '    - 四空格缩进';
+      const result = ListCommands.parseListItem(line);
+      
+      assert.strictEqual(result!.indent, 4);
+    });
+
+    test('应该解析有序列表项', () => {
+      const line = '1. 第一项';
+      const result = ListCommands.parseListItem(line);
+      
+      assert.ok(result);
+      assert.strictEqual(result!.marker, '1.');
+      assert.strictEqual(result!.content, '第一项');
+    });
+
+    test('应该解析多位数有序列表项', () => {
+      const line = '123. 第123项';
+      const result = ListCommands.parseListItem(line);
+      
+      assert.strictEqual(result!.marker, '123.');
+    });
+
+    test('应该解析 + 标记的列表项', () => {
+      const line = '+ 列表项';
+      const result = ListCommands.parseListItem(line);
+      
+      assert.strictEqual(result!.marker, '+');
+    });
+
+    test('应该解析带复选框的列表项', () => {
+      const line = '- [ ] 未完成任务';
+      const result = ListCommands.parseListItem(line);
+      
+      assert.ok(result);
+      assert.strictEqual(result!.hasCheckbox, true);
+      assert.strictEqual(result!.checkboxState, ' ');
+      assert.strictEqual(result!.content, '未完成任务');
+    });
+
+    test('应该解析已完成的复选框', () => {
+      const line = '- [X] 已完成任务';
+      const result = ListCommands.parseListItem(line);
+      
+      assert.strictEqual(result!.hasCheckbox, true);
+      assert.strictEqual(result!.checkboxState, 'X');
+    });
+
+    test('应该解析部分完成的复选框', () => {
+      const line = '- [-] 部分完成';
+      const result = ListCommands.parseListItem(line);
+      
+      assert.strictEqual(result!.checkboxState, '-');
+    });
+
+    test('非列表项应返回 null', () => {
+      const line = '这不是列表项';
+      const result = ListCommands.parseListItem(line);
+      
+      assert.strictEqual(result, null);
+    });
+
+    test('应该处理空内容的列表项', () => {
+      const line = '- ';
+      const result = ListCommands.parseListItem(line);
+      
+      assert.ok(result);
+      assert.strictEqual(result!.content, '');
+    });
+
+    test('应该处理只有复选框的列表项', () => {
+      const line = '- [ ]';
+      const result = ListCommands.parseListItem(line);
+      
+      assert.ok(result);
+      assert.strictEqual(result!.hasCheckbox, true);
+      assert.strictEqual(result!.content, '');
+    });
+  });
+
+  suite('findListEnd 测试', () => {
+    
+    test('应该找到简单列表的结束', () => {
+      const content = [
+        '- 项1',      // line 0
+        '- 项2',      // line 1
+        '- 项3',      // line 2
+        '',           // line 3
+        '普通文本'    // line 4
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(0);
+      const end = ListCommands.findListEnd(doc, pos);
+      
+      assert.strictEqual(end, 2);  // 应该在最后一个列表项
+    });
+
+    test('应该处理嵌套列表', () => {
+      const content = [
+        '- 项1',       // line 0
+        '  - 子项1',   // line 1
+        '  - 子项2',   // line 2
+        '- 项2',       // line 3
+        '',
+        '文本'
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(0);
+      const end = ListCommands.findListEnd(doc, pos);
+      
+      assert.strictEqual(end, 3);  // 包含所有列表项
+    });
+
+    test('应该在空行停止', () => {
+      const content = [
+        '- 项1',
+        '- 项2',
+        '',          // 空行
+        '- 项3'
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(0);
+      const end = ListCommands.findListEnd(doc, pos);
+      
+      assert.strictEqual(end, 1);  // 应该在空行前停止
+    });
+
+    test('应该在非列表内容停止', () => {
+      const content = [
+        '- 项1',
+        '- 项2',
+        '普通文本'
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(0);
+      const end = ListCommands.findListEnd(doc, pos);
+      
+      assert.strictEqual(end, 1);
+    });
+
+    test('列表到文档结尾', () => {
+      const content = [
+        '- 项1',
+        '- 项2',
+        '- 项3'
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(0);
+      const end = ListCommands.findListEnd(doc, pos);
+      
+      assert.strictEqual(end, 2);  // 文档最后一行
+    });
+  });
+
+  suite('findParentListItem 测试', () => {
+    
+    test('应该找到父列表项', () => {
+      const content = [
+        '- 父项',      // line 0
+        '  - 子项'     // line 1
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(1);
+      const parent = ListCommands.findParentListItem(doc, pos);
+      
+      assert.ok(parent);
+      assert.strictEqual(parent!.lineNumber, 0);
+    });
+
+    test('应该找到正确的缩进级别父项', () => {
+      const content = [
+        '- L1',          // line 0, indent 0
+        '  - L2',        // line 1, indent 2
+        '    - L3'       // line 2, indent 4 - 测试这一行
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(2);
+      const parent = ListCommands.findParentListItem(doc, pos);
+      
+      assert.ok(parent);
+      assert.strictEqual(parent!.lineNumber, 1);  // 应该是 L2
+    });
+
+    test('顶级列表项应返回 null', () => {
+      const content = [
+        '- 顶级项',
+        '  - 子项'
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(0);
+      const parent = ListCommands.findParentListItem(doc, pos);
+      
+      assert.strictEqual(parent, null);
+    });
+
+    test('应该跳过同级项查找父级', () => {
+      const content = [
+        '- 父项',        // line 0
+        '  - 子项1',     // line 1
+        '  - 子项2'      // line 2 - 测试这一行
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(2);
+      const parent = ListCommands.findParentListItem(doc, pos);
+      
+      assert.ok(parent);
+      assert.strictEqual(parent!.lineNumber, 0);  // 应该跳过子项1
+    });
+  });
+
+  suite('findChildListItems 测试', () => {
+    
+    test('应该找到直接子项', () => {
+      const content = [
+        '- 父项',       // line 0
+        '  - 子项1',    // line 1
+        '  - 子项2',    // line 2
+        '- 另一个父项'  // line 3
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(0);
+      const children = ListCommands.findChildListItems(doc, pos);
+      
+      assert.strictEqual(children.length, 2);
+      assert.strictEqual(children[0], 1);
+      assert.strictEqual(children[1], 2);
+    });
+
+    test('应该只找到直接子项，不包括孙子项', () => {
+      const content = [
+        '- 父项',        // line 0
+        '  - 子项',      // line 1
+        '    - 孙子项'   // line 2
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(0);
+      const children = ListCommands.findChildListItems(doc, pos);
+      
+      assert.strictEqual(children.length, 1);
+      assert.strictEqual(children[0], 1);  // 只有直接子项
+    });
+
+    test('没有子项应返回空数组', () => {
+      const content = [
+        '- 项1',
+        '- 项2'
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(0);
+      const children = ListCommands.findChildListItems(doc, pos);
+      
+      assert.strictEqual(children.length, 0);
+    });
+
+    test('应该在非列表内容处停止', () => {
+      const content = [
+        '- 父项',
+        '  - 子项',
+        '普通文本'
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      const pos = createPosition(0);
+      const children = ListCommands.findChildListItems(doc, pos);
+      
+      assert.strictEqual(children.length, 1);
+    });
+  });
+
+  suite('calculateListIndent 测试', () => {
+    
+    test('应该计算正确的缩进增量', () => {
+      const baseIndent = 0;
+      const nextIndent = ListCommands.calculateListIndent(baseIndent);
+      
+      assert.strictEqual(nextIndent, 2);  // 默认增加2个空格
+    });
+
+    test('应该基于当前缩进计算', () => {
+      const baseIndent = 2;
+      const nextIndent = ListCommands.calculateListIndent(baseIndent);
+      
+      assert.strictEqual(nextIndent, 4);  // 2 + 2
+    });
+
+    test('应该支持多级缩进', () => {
+      let indent = 0;
+      indent = ListCommands.calculateListIndent(indent);  // 2
+      indent = ListCommands.calculateListIndent(indent);  // 4
+      indent = ListCommands.calculateListIndent(indent);  // 6
+      
+      assert.strictEqual(indent, 6);
+    });
+  });
+
+  suite('isListItemEmpty 测试', () => {
+    
+    test('空的列表项应返回 true', () => {
+      const line = '- ';
+      const isEmpty = ListCommands.isListItemEmpty(line);
+      
+      assert.strictEqual(isEmpty, true);
+    });
+
+    test('只有空格的列表项应返回 true', () => {
+      const line = '-    ';
+      const isEmpty = ListCommands.isListItemEmpty(line);
+      
+      assert.strictEqual(isEmpty, true);
+    });
+
+    test('有内容的列表项应返回 false', () => {
+      const line = '- 有内容';
+      const isEmpty = ListCommands.isListItemEmpty(line);
+      
+      assert.strictEqual(isEmpty, false);
+    });
+
+    test('空的复选框应返回 true', () => {
+      const line = '- [ ] ';
+      const isEmpty = ListCommands.isListItemEmpty(line);
+      
+      assert.strictEqual(isEmpty, true);
+    });
+
+    test('有内容的复选框应返回 false', () => {
+      const line = '- [ ] 任务';
+      const isEmpty = ListCommands.isListItemEmpty(line);
+      
+      assert.strictEqual(isEmpty, false);
+    });
+  });
+
+  suite('边界情况测试', () => {
+    
+    test('应该处理混合标记的列表', () => {
+      const content = [
+        '- 项1',
+        '+ 项2',
+        '* 项3'
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      
+      const item1 = ListCommands.parseListItem(doc.lineAt(0).text);
+      const item2 = ListCommands.parseListItem(doc.lineAt(1).text);
+      
+      assert.strictEqual(item1!.marker, '-');
+      assert.strictEqual(item2!.marker, '+');
+      // 注意：* 会被识别为标题
+    });
+
+    test('应该处理有序和无序列表混合', () => {
+      const line1 = '- 无序项';
+      const line2 = '1. 有序项';
+      
+      const result1 = ListCommands.parseListItem(line1);
+      const result2 = ListCommands.parseListItem(line2);
+      
+      assert.strictEqual(result1!.marker, '-');
+      assert.strictEqual(result2!.marker, '1.');
+    });
+
+    test('应该处理极深的嵌套', () => {
+      const content = [
+        '- L1',
+        '  - L2',
+        '    - L3',
+        '      - L4',
+        '        - L5'
+      ].join('\n');
+      
+      const doc = createMockDocument(content);
+      
+      for (let i = 0; i < 5; i++) {
+        const item = ListCommands.parseListItem(doc.lineAt(i).text);
+        assert.ok(item);
+        assert.strictEqual(item!.indent, i * 2);
+      }
+    });
+
+    test('应该处理列表项中的特殊字符', () => {
+      const line = '- 列表项：包含【特殊】字符！@#￥%';
+      const result = ListCommands.parseListItem(line);
+      
+      assert.ok(result);
+      assert.strictEqual(result!.content, '列表项：包含【特殊】字符！@#￥%');
+    });
+
+    test('应该处理列表项中的链接', () => {
+      const line = '- 查看 [[file:test.org][链接]]';
+      const result = ListCommands.parseListItem(line);
+      
+      assert.ok(result);
+      assert.strictEqual(result!.content, '查看 [[file:test.org][链接]]');
+    });
+  });
+});
+

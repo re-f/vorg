@@ -15,7 +15,6 @@
 - 🔄 智能TAB折叠
 - 🎨 主题自适应
 - 📱 实时预览与滚动同步
-
   
 ** 🚀 快速测试指南
 
@@ -24,6 +23,7 @@
 2. 按 =Ctrl+K V= (Win/Linux) 或 =Cmd+K V= (Mac) 并排预览
 3. 在编辑器中滚动，观察预览窗口同步滚动
 4. 切换VS Code主题，观察预览窗口自动适配
+
 
 *** 大纲导航测试
 1. 查看侧边栏 "Outline" 面板
@@ -111,6 +111,7 @@ file:../src/links/orgLinkProvider.ts
 :PRIORITY: A
 :END:
 
+
 这是一个待完成的高优先级任务。
 
 *** 子任务列表
@@ -143,6 +144,8 @@ file:../src/links/orgLinkProvider.ts
 :CANCELLED: [2024-01-01 Mon 15:00]
 :REASON: 需求变更
 :END:
+
+
 
 这个任务因为需求变更被取消了。
 
@@ -182,6 +185,7 @@ file:../src/links/orgLinkProvider.ts
 - [ ] 任务列表项1（按 Alt+Enter 插入新任务）
 - [X] 任务列表项2（已完成）
 - [-] 任务列表项3（进行中）
+  
 
 *** 表格编辑测试
 | 列1 | 列2 | 列3 |
@@ -194,6 +198,7 @@ file:../src/links/orgLinkProvider.ts
 - *Ctrl+Alt+Enter* (Win/Linux) 或 *Cmd+Ctrl+Enter* (Mac) - 在子树末尾插入同级元素
 - *Shift+Alt+Enter* - 插入TODO标题
 
+***  任务列表测试
 * 🔄 智能TAB折叠测试
 
 ** 标题折叠测试
@@ -344,3 +349,1722 @@ $$
 ---
 
 *🎉 这个测试套件涵盖了VOrg扩展的所有功能！请逐一测试每个功能模块。* 
+
+
+后续部分是长文件测试
+
+
+* 常温检测室
+  * WAITING 🎯 VOrg 扩展功能测试总览
+
+    这个文件包含了VOrg扩展所有功能的完整测试用例，包括：
+    - 🔗 链接跳转功能（内部、外部、跨文件）
+    - 🌈 智能语法高亮
+    - 📋 文档大纲导航
+    - ⚡ 智能编辑命令 (Meta-Return)
+    - 🔄 智能TAB折叠
+    - 🎨 主题自适应
+    - 📱 实时预览与滚动同步
+    
+      
+    ** 🚀 快速测试指南
+    
+    *** 预览功能测试
+    1. 按 =Ctrl+Shift+V= (Win/Linux) 或 =Cmd+Shift+V= (Mac) 打开预览
+    2. 按 =Ctrl+K V= (Win/Linux) 或 =Cmd+K V= (Mac) 并排预览
+    3. 在编辑器中滚动，观察预览窗口同步滚动
+    4. 切换VS Code主题，观察预览窗口自动适配
+    
+    *** 大纲导航测试
+    1. 查看侧边栏 "Outline" 面板
+    2. 使用 =Ctrl+Shift+O= (Win/Linux) 或 =Cmd+Shift+O= (Mac) 快速跳转
+    3. 点击大纲中的项目，观察编辑器跳转
+    
+    * 🔗 链接跳转功能测试
+    
+    ** 内部链接测试
+    
+    *** 基本内部链接（org-mode标准格式）
+    - 带星号前缀的内部链接：[[*🌐 跨文件链接测试]]
+    - 跳转到语法规则部分：[[*📝 所有TODO状态测试]]
+    - 跳转到编辑功能：[[*⚡ 智能编辑功能测试]]
+    
+    *** ID链接测试（同文件）
+    这是一个带ID的标题，用于测试同文件ID链接：
+    
+    **** 🎯 测试标题A
+    :PROPERTIES:
+    :ID: MAIN-TEST-A123-4567-8901-BCDEF0123456
+    :CREATED: [2024-01-01 Mon 10:00]
+    :CATEGORY: test
+    :END:
+    
+    这是用于测试同文件ID链接的标题。
+    
+    - 同文件ID链接：[[id:MAIN-TEST-A123-4567-8901-BCDEF0123456][跳转到测试标题A]]
+    
+    **** 🔬 测试标题B  
+    :PROPERTIES:
+    :ID: MAIN-TEST-B789-0123-4567-890ABCDEF123
+    :CREATED: [2024-01-01 Mon 10:15]
+    :TAGS: testing example
+    :END:
+    
+    另一个测试标题，用于测试多个ID链接。
+    
+    ** 🌐 跨文件链接测试
+    
+    
+    *** 跨文件ID链接
+    - 跳转到项目文件的VOrg项目：[[id:PROJ-VORG-2024-1234-5678-9ABCDEF01234][VOrg扩展项目]]
+    - 跳转到笔记文件的重要笔记：[[id:NOTE-IMPORTANT-ABCD-1234-EFGH-567890AB][重要开发笔记]]
+    - 跳转到深层目录的标题：[[id:DEEP-SECTION-9876-5432-1098-FEDCBA654321][深层目录测试]]
+    
+    *** 跨文件普通链接
+    - 链接到项目文件：[[file:projects.org][项目管理文档]]
+    - 链接到笔记文件：[[file:notes.org][开发笔记]]
+    - 链接到子目录文件：[[file:subdir/deep.org][深层目录文档]]
+    
+    ** 🔗 HTTP链接测试
+    
+    *** 外部网站链接
+    - 带描述的HTTP链接：[[https://orgmode.org][Org Mode 官方网站]]
+    - 简单HTTP链接：[[https://github.com]]
+    - HTTPS链接：[[https://code.visualstudio.com][VS Code官网]]
+    
+    *** 直接链接（无方括号）
+    直接HTTP链接：https://www.example.com
+    HTTPS链接：https://developer.mozilla.org
+    
+    ** 📁 文件链接测试
+    
+    *** 项目文件链接
+    - 项目根目录文件：[[file:../README.md][项目说明文档]]
+    - 配置文件：[[file:../package.json][Package配置]]
+    - 源码文件：[[file:../src/extension.ts][扩展主文件]]
+    
+    *** 测试数据文件链接
+    - 带描述的文件链接：[[file:projects.org][项目管理]]
+    - 简单文件链接：[[file:notes.org]]
+    - 相对路径文件：[[file:./subdir/deep.org][子目录文件]]
+    
+    *** 直接文件链接（无方括号）
+    file:projects.org
+    file:../src/links/orgLinkProvider.ts
+    
+    * 📝 所有TODO状态测试
+    
+    ** TODO 待完成的任务 :urgent:
+    :PROPERTIES:
+    :ID: TODO-TASK-1111-2222-3333-444444444444
+    :CREATED: [2024-01-01 Mon 08:00]
+    :PRIORITY: A
+    :END:
+    
+    
+    这是一个待完成的高优先级任务。
+    
+    *** 子任务列表
+    - [ ] 子任务1：设计方案
+    - [ ] 子任务2：编写代码
+    - [ ] 子任务3：测试验证
+    
+    ** NEXT 下一步要做的任务 :active:
+    :PROPERTIES:
+    :ID: NEXT-TASK-5555-6666-7777-888888888888
+    :CREATED: [2024-01-01 Mon 09:00]
+    :PRIORITY: B
+    :END:
+    
+    这是下一步要执行的任务。
+    
+    ** WAITING 等待中的任务 :blocked:
+    :PROPERTIES:
+    :ID: WAIT-TASK-9999-AAAA-BBBB-CCCCCCCCCCCC
+    :CREATED: [2024-01-01 Mon 09:30]
+    :WAITING_FOR: 外部依赖
+    :END:
+    
+    这个任务在等待外部条件满足。
+    
+    ** CANCELLED 已取消的任务 :cancelled:
+    :PROPERTIES:
+    :ID: CANCEL-TASK-DDDD-EEEE-FFFF-000000000000
+    :CREATED: [2024-01-01 Mon 10:00]
+    :CANCELLED: [2024-01-01 Mon 15:00]
+    :REASON: 需求变更
+    :END:
+    
+    
+    
+    这个任务因为需求变更被取消了。
+    
+    ** DONE 已完成的任务 :completed:
+    :PROPERTIES:
+    :ID: DONE-TASK-1234-5678-9ABC-DEF012345678
+    :COMPLETED: [2024-01-01 Mon 16:00]
+    :CLOCK: [2024-01-01 Mon 14:00]--[2024-01-01 Mon 16:00] =>  2:00
+    :END:
+    
+    这是一个已完成的任务，包含了时间追踪信息。
+    
+    ** 状态链接测试
+    - 链接到TODO任务：[[*TODO 待完成的任务]]
+    - 链接到NEXT任务：[[*NEXT 下一步要做的任务]]
+    - 链接到WAITING任务：[[*WAITING 等待中的任务]]
+    - 链接到CANCELLED任务：[[*CANCELLED 已取消的任务]]
+    - 链接到DONE任务：[[*DONE 已完成的任务]]
+    - 通过ID链接到TODO：[[id:TODO-TASK-1111-2222-3333-444444444444][待办任务]]
+    
+    * ⚡ 智能编辑功能测试
+    
+    ** Meta-Return 功能测试区域
+    
+    *** 标题编辑测试
+    光标放在这个标题上，按 =Alt+Enter= 应该插入同级新标题。
+    
+    *** 列表编辑测试
+    - 第一项（光标在此按 Alt+Enter 应该插入新列表项）
+    - 第二项
+      - 子项1
+      - 子项2（光标在此按 Alt+Enter 应该插入同级子项）
+    
+    1. 有序列表第一项（按 Alt+Enter 插入下一项）
+    2. 有序列表第二项
+    
+    - [ ] 任务列表项1（按 Alt+Enter 插入新任务）
+    - [X] 任务列表项2（已完成）
+    - [-] 任务列表项3（进行中）
+    
+    *** 表格编辑测试
+    | 列1 | 列2 | 列3 |
+    |-----|-----|-----|
+    | A   | B   | C   |
+    | 光标在此按 Alt+Enter 应该插入新行 |  |  |
+    
+    *** 快捷键说明
+    - *Alt+Enter* - 智能插入新元素（标题、列表项、表格行等）
+    - *Ctrl+Alt+Enter* (Win/Linux) 或 *Cmd+Ctrl+Enter* (Mac) - 在子树末尾插入同级元素
+    - *Shift+Alt+Enter* - 插入TODO标题
+    
+    * 🔄 智能TAB折叠测试
+    
+    ** 标题折叠测试
+    光标放在此标题上按 TAB 键应该切换折叠状态。
+    
+    这是标题下的内容，应该可以被折叠隐藏。
+    
+    *** 子标题也支持折叠
+    子标题的内容同样支持折叠功能。
+    
+    ** 列表智能TAB测试
+    
+    *** 有子项的列表（应该切换折叠）
+    - 主要话题（光标在此按 TAB 应该切换折叠状态）
+      - 子话题 1
+      - 子话题 2
+        - 详细内容
+      - 子话题 3
+    
+    *** 无子项的列表（应该增加缩进）
+    - 独立项目（光标在此按 TAB 应该增加缩进）
+    - 另一个独立项目
+    
+    *** 任务列表TAB测试
+    - [ ] 主要任务（有子项，按 TAB 切换折叠）
+      - [ ] 子任务 1
+      - [X] 子任务 2
+      - [-] 子任务 3
+    - [ ] 独立任务（无子项，按 TAB 增加缩进）
+    
+    ** 表格TAB导航测试
+    | 列1 | 列2 | 列3 |
+    |-----|-----|-----|
+    | A   | B   | C   |
+    | D   | E   | F   |
+    
+    在表格中按 TAB 应该在单元格间移动，按 Shift+TAB 反向移动。
+    
+** 代码块折叠测试
+    
+    #+BEGIN_SRC python
+    # 光标在 #+BEGIN_SRC 行按 TAB 应该折叠/展开整个代码块
+    def test_function():
+        print("Hello World")
+        if True:
+            print("Nested content")
+            return "success"
+    #+END_SRC
+    
+    * 🌈 语法高亮测试
+    
+    ** 文本格式化
+    这段文本包含了所有支持的格式：
+    - *粗体文本* - 重要内容
+    - /斜体文本/ - 强调内容  
+    - _下划线文本_ - 突出显示
+    - +删除线文本+ - 已删除内容
+    - =代码文本= - 内联代码
+    - ~等宽字体~ - 等宽显示
+    
+    ** 时间戳格式
+    - 活动时间戳：<2024-01-01 Mon 10:00>
+    - 非活动时间戳：[2024-01-01 Mon 10:00]
+    - 时间范围：<2024-01-01 Mon 09:00-17:00>
+    - 重复时间：<2024-01-01 Mon +1w>
+    - 计划时间：SCHEDULED: <2024-01-02 Tue>
+    - 截止时间：DEADLINE: <2024-01-05 Fri 18:00>
+    
+    ** 标签和属性
+    *** 标题标签 :work:project:urgent:
+    *** 全局标签
+    #+TAGS: work(w) home(h) project(p) urgent(u)
+    #+FILETAGS: testing vscode extension
+    
+    ** 数学公式
+    行内公式：$E = mc^2$ 和 $\sum_{i=1}^{n} x_i$
+    
+    块级公式：
+    $$
+    \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+    $$
+    
+    ** 注释和分隔线
+    # 这是单行注释
+    # 多行注释
+    # 都会被高亮显示
+    
+    ---
+    
+    水平分隔线测试
+    
+    * 🧪 基本语法规则总结
+    
+    ** 链接语法说明
+    1. =[[link][description]]= - 带描述的链接
+    2. =[[link]]= - 简单链接  
+    3. =[[*heading]]= - 内部标题链接（org-mode标准）
+    4. =[[id:UUID][description]]= - ID链接（可跨文件）
+    5. =file:path/to/file= - 文件链接
+    6. =http://example.com= - HTTP链接
+    
+    *注意：只有 =[[*heading]]= 格式的内部链接是org-mode标准，=[[heading]]= 格式不被支持。*
+    
+    ** 快捷键说明
+    - *Ctrl+Click* (Win/Linux) 或 *Cmd+Click* (Mac) - 跟随链接
+    - *Ctrl+Enter* (Win/Linux) 或 *Cmd+Enter* (Mac) - 跟随光标处链接
+    - *Ctrl+L* (Win/Linux) 或 *Cmd+L* (Mac) - 插入新链接
+    - *Alt+Enter* - 智能插入新元素
+    - *Tab* - 智能折叠/缩进
+    - *Shift+Tab* - 反向缩进/导航
+    
+    ** 文档结构
+    - 使用 1-6 级标题组织内容
+    - 支持标题标签和属性
+    - 自动生成文档大纲
+    - 支持标题折叠
+    
+    * 🎯 完整测试流程
+    
+    ** 1. 预览功能测试
+    1. 打开预览窗口
+    2. 测试实时更新
+    3. 测试滚动同步
+    4. 测试主题适配
+    
+    ** 2. 链接功能测试
+    1. 测试内部链接跳转
+    2. 测试跨文件链接
+    3. 测试外部链接打开
+    4. 测试ID链接搜索
+    
+    ** 3. 编辑功能测试
+    1. 测试Meta-Return命令
+    2. 测试TAB智能折叠
+    3. 测试快捷键功能
+    
+    ** 4. 语法高亮测试
+    1. 检查所有文本格式
+    2. 检查代码块高亮
+    3. 检查时间戳格式
+    4. 检查标签和属性
+    
+    ** 5. 大纲导航测试
+    1. 检查大纲面板
+    2. 测试快速跳转
+    3. 测试标题折叠
+    
+    ---
+    
+    *🎉 这个测试套件涵盖了VOrg扩展的所有功能！请逐一测试每个功能模块。*   
+    * WAITING 🎯 VOrg 扩展功能测试总览
+
+      这个文件包含了VOrg扩展所有功能的完整测试用例，包括：
+      - 🔗 链接跳转功能（内部、外部、跨文件）
+      - 🌈 智能语法高亮
+      - 📋 文档大纲导航
+      - ⚡ 智能编辑命令 (Meta-Return)
+      - 🔄 智能TAB折叠
+      - 🎨 主题自适应
+      - 📱 实时预览与滚动同步
+      
+        
+      ** 🚀 快速测试指南
+      
+      *** 预览功能测试
+      1. 按 =Ctrl+Shift+V= (Win/Linux) 或 =Cmd+Shift+V= (Mac) 打开预览
+      2. 按 =Ctrl+K V= (Win/Linux) 或 =Cmd+K V= (Mac) 并排预览
+      3. 在编辑器中滚动，观察预览窗口同步滚动
+      4. 切换VS Code主题，观察预览窗口自动适配
+      
+      *** 大纲导航测试
+      1. 查看侧边栏 "Outline" 面板
+      2. 使用 =Ctrl+Shift+O= (Win/Linux) 或 =Cmd+Shift+O= (Mac) 快速跳转
+      3. 点击大纲中的项目，观察编辑器跳转
+      
+      * 🔗 链接跳转功能测试
+      
+      ** 内部链接测试
+      
+      *** 基本内部链接（org-mode标准格式）
+      - 带星号前缀的内部链接：[[*🌐 跨文件链接测试]]
+      - 跳转到语法规则部分：[[*📝 所有TODO状态测试]]
+      - 跳转到编辑功能：[[*⚡ 智能编辑功能测试]]
+      
+      *** ID链接测试（同文件）
+      这是一个带ID的标题，用于测试同文件ID链接：
+      
+      **** 🎯 测试标题A
+      :PROPERTIES:
+      :ID: MAIN-TEST-A123-4567-8901-BCDEF0123456
+      :CREATED: [2024-01-01 Mon 10:00]
+      :CATEGORY: test
+      :END:
+      
+      这是用于测试同文件ID链接的标题。
+      
+      - 同文件ID链接：[[id:MAIN-TEST-A123-4567-8901-BCDEF0123456][跳转到测试标题A]]
+      
+      **** 🔬 测试标题B  
+      :PROPERTIES:
+      :ID: MAIN-TEST-B789-0123-4567-890ABCDEF123
+      :CREATED: [2024-01-01 Mon 10:15]
+      :TAGS: testing example
+      :END:
+      
+      另一个测试标题，用于测试多个ID链接。
+      
+      ** 🌐 跨文件链接测试
+      
+      
+      *** 跨文件ID链接
+      - 跳转到项目文件的VOrg项目：[[id:PROJ-VORG-2024-1234-5678-9ABCDEF01234][VOrg扩展项目]]
+      - 跳转到笔记文件的重要笔记：[[id:NOTE-IMPORTANT-ABCD-1234-EFGH-567890AB][重要开发笔记]]
+      - 跳转到深层目录的标题：[[id:DEEP-SECTION-9876-5432-1098-FEDCBA654321][深层目录测试]]
+      
+      *** 跨文件普通链接
+      - 链接到项目文件：[[file:projects.org][项目管理文档]]
+      - 链接到笔记文件：[[file:notes.org][开发笔记]]
+      - 链接到子目录文件：[[file:subdir/deep.org][深层目录文档]]
+      
+      ** 🔗 HTTP链接测试
+      
+      *** 外部网站链接
+      - 带描述的HTTP链接：[[https://orgmode.org][Org Mode 官方网站]]
+      - 简单HTTP链接：[[https://github.com]]
+      - HTTPS链接：[[https://code.visualstudio.com][VS Code官网]]
+      
+      *** 直接链接（无方括号）
+      直接HTTP链接：https://www.example.com
+      HTTPS链接：https://developer.mozilla.org
+      
+      ** 📁 文件链接测试
+      
+      *** 项目文件链接
+      - 项目根目录文件：[[file:../README.md][项目说明文档]]
+      - 配置文件：[[file:../package.json][Package配置]]
+      - 源码文件：[[file:../src/extension.ts][扩展主文件]]
+      
+      *** 测试数据文件链接
+      - 带描述的文件链接：[[file:projects.org][项目管理]]
+      - 简单文件链接：[[file:notes.org]]
+      - 相对路径文件：[[file:./subdir/deep.org][子目录文件]]
+      
+      *** 直接文件链接（无方括号）
+      file:projects.org
+      file:../src/links/orgLinkProvider.ts
+      
+      * 📝 所有TODO状态测试
+      
+      ** TODO 待完成的任务 :urgent:
+      :PROPERTIES:
+      :ID: TODO-TASK-1111-2222-3333-444444444444
+      :CREATED: [2024-01-01 Mon 08:00]
+      :PRIORITY: A
+      :END:
+      
+      
+      这是一个待完成的高优先级任务。
+      
+      *** 子任务列表
+      - [ ] 子任务1：设计方案
+      - [ ] 子任务2：编写代码
+      - [ ] 子任务3：测试验证
+      
+      ** NEXT 下一步要做的任务 :active:
+      :PROPERTIES:
+      :ID: NEXT-TASK-5555-6666-7777-888888888888
+      :CREATED: [2024-01-01 Mon 09:00]
+      :PRIORITY: B
+      :END:
+      
+      这是下一步要执行的任务。
+      
+      ** WAITING 等待中的任务 :blocked:
+      :PROPERTIES:
+      :ID: WAIT-TASK-9999-AAAA-BBBB-CCCCCCCCCCCC
+      :CREATED: [2024-01-01 Mon 09:30]
+      :WAITING_FOR: 外部依赖
+      :END:
+      
+      这个任务在等待外部条件满足。
+      
+      ** CANCELLED 已取消的任务 :cancelled:
+      :PROPERTIES:
+      :ID: CANCEL-TASK-DDDD-EEEE-FFFF-000000000000
+      :CREATED: [2024-01-01 Mon 10:00]
+      :CANCELLED: [2024-01-01 Mon 15:00]
+      :REASON: 需求变更
+      :END:
+      
+      
+      
+      这个任务因为需求变更被取消了。
+      
+      ** DONE 已完成的任务 :completed:
+      :PROPERTIES:
+      :ID: DONE-TASK-1234-5678-9ABC-DEF012345678
+      :COMPLETED: [2024-01-01 Mon 16:00]
+      :CLOCK: [2024-01-01 Mon 14:00]--[2024-01-01 Mon 16:00] =>  2:00
+      :END:
+      
+      这是一个已完成的任务，包含了时间追踪信息。
+      
+      ** 状态链接测试
+      - 链接到TODO任务：[[*TODO 待完成的任务]]
+      - 链接到NEXT任务：[[*NEXT 下一步要做的任务]]
+      - 链接到WAITING任务：[[*WAITING 等待中的任务]]
+      - 链接到CANCELLED任务：[[*CANCELLED 已取消的任务]]
+      - 链接到DONE任务：[[*DONE 已完成的任务]]
+      - 通过ID链接到TODO：[[id:TODO-TASK-1111-2222-3333-444444444444][待办任务]]
+      
+      * ⚡ 智能编辑功能测试
+      
+      ** Meta-Return 功能测试区域
+      
+      *** 标题编辑测试
+      光标放在这个标题上，按 =Alt+Enter= 应该插入同级新标题。
+      
+      *** 列表编辑测试
+      - 第一项（光标在此按 Alt+Enter 应该插入新列表项）
+      - 第二项
+        - 子项1
+        - 子项2（光标在此按 Alt+Enter 应该插入同级子项）
+      
+      1. 有序列表第一项（按 Alt+Enter 插入下一项）
+      2. 有序列表第二项
+      
+      - [ ] 任务列表项1（按 Alt+Enter 插入新任务）
+      - [X] 任务列表项2（已完成）
+      - [-] 任务列表项3（进行中）
+      
+      *** 表格编辑测试
+      | 列1 | 列2 | 列3 |
+      |-----|-----|-----|
+      | A   | B   | C   |
+      | 光标在此按 Alt+Enter 应该插入新行 |  |  |
+      
+      *** 快捷键说明
+      - *Alt+Enter* - 智能插入新元素（标题、列表项、表格行等）
+      - *Ctrl+Alt+Enter* (Win/Linux) 或 *Cmd+Ctrl+Enter* (Mac) - 在子树末尾插入同级元素
+      - *Shift+Alt+Enter* - 插入TODO标题
+      
+      * 🔄 智能TAB折叠测试
+      
+      ** 标题折叠测试
+      光标放在此标题上按 TAB 键应该切换折叠状态。
+      
+      这是标题下的内容，应该可以被折叠隐藏。
+      
+      *** 子标题也支持折叠
+      子标题的内容同样支持折叠功能。
+      
+      ** 列表智能TAB测试
+      
+      *** 有子项的列表（应该切换折叠）
+      - 主要话题（光标在此按 TAB 应该切换折叠状态）
+        - 子话题 1
+        - 子话题 2
+          - 详细内容
+        - 子话题 3
+      
+      *** 无子项的列表（应该增加缩进）
+      - 独立项目（光标在此按 TAB 应该增加缩进）
+      - 另一个独立项目
+      
+      *** 任务列表TAB测试
+      - [ ] 主要任务（有子项，按 TAB 切换折叠）
+        - [ ] 子任务 1
+        - [X] 子任务 2
+        - [-] 子任务 3
+      - [ ] 独立任务（无子项，按 TAB 增加缩进）
+      
+      ** 表格TAB导航测试
+      | 列1 | 列2 | 列3 |
+      |-----|-----|-----|
+      | A   | B   | C   |
+      | D   | E   | F   |
+      
+      在表格中按 TAB 应该在单元格间移动，按 Shift+TAB 反向移动。
+      
+      ** 代码块折叠测试
+      
+      #+BEGIN_SRC python
+      # 光标在 #+BEGIN_SRC 行按 TAB 应该折叠/展开整个代码块
+      def test_function():
+          print("Hello World")
+          if True:
+              print("Nested content")
+              return "success"
+      #+END_SRC
+      
+      * 🌈 语法高亮测试
+      
+      ** 文本格式化
+      这段文本包含了所有支持的格式：
+      - *粗体文本* - 重要内容
+      - /斜体文本/ - 强调内容  
+      - _下划线文本_ - 突出显示
+      - +删除线文本+ - 已删除内容
+      - =代码文本= - 内联代码
+      - ~等宽字体~ - 等宽显示
+      
+      ** 时间戳格式
+      - 活动时间戳：<2024-01-01 Mon 10:00>
+      - 非活动时间戳：[2024-01-01 Mon 10:00]
+      - 时间范围：<2024-01-01 Mon 09:00-17:00>
+      - 重复时间：<2024-01-01 Mon +1w>
+      - 计划时间：SCHEDULED: <2024-01-02 Tue>
+      - 截止时间：DEADLINE: <2024-01-05 Fri 18:00>
+      
+      ** 标签和属性
+      *** 标题标签 :work:project:urgent:
+      *** 全局标签
+      #+TAGS: work(w) home(h) project(p) urgent(u)
+      #+FILETAGS: testing vscode extension
+      
+      ** 数学公式
+      行内公式：$E = mc^2$ 和 $\sum_{i=1}^{n} x_i$
+      
+      块级公式：
+      $$
+      \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+      $$
+      
+      ** 注释和分隔线
+      # 这是单行注释
+      # 多行注释
+      # 都会被高亮显示
+      
+      ---
+      
+      水平分隔线测试
+      
+      * 🧪 基本语法规则总结
+      
+      ** 链接语法说明
+      1. =[[link][description]]= - 带描述的链接
+      2. =[[link]]= - 简单链接  
+      3. =[[*heading]]= - 内部标题链接（org-mode标准）
+      4. =[[id:UUID][description]]= - ID链接（可跨文件）
+      5. =file:path/to/file= - 文件链接
+      6. =http://example.com= - HTTP链接
+      
+      *注意：只有 =[[*heading]]= 格式的内部链接是org-mode标准，=[[heading]]= 格式不被支持。*
+      
+      ** 快捷键说明
+      - *Ctrl+Click* (Win/Linux) 或 *Cmd+Click* (Mac) - 跟随链接
+      - *Ctrl+Enter* (Win/Linux) 或 *Cmd+Enter* (Mac) - 跟随光标处链接
+      - *Ctrl+L* (Win/Linux) 或 *Cmd+L* (Mac) - 插入新链接
+      - *Alt+Enter* - 智能插入新元素
+      - *Tab* - 智能折叠/缩进
+      - *Shift+Tab* - 反向缩进/导航
+      
+      ** 文档结构
+      - 使用 1-6 级标题组织内容
+      - 支持标题标签和属性
+      - 自动生成文档大纲
+      - 支持标题折叠
+      
+      * 🎯 完整测试流程
+      
+      ** 1. 预览功能测试
+      1. 打开预览窗口
+      2. 测试实时更新
+      3. 测试滚动同步
+      4. 测试主题适配
+      
+      ** 2. 链接功能测试
+      1. 测试内部链接跳转
+      2. 测试跨文件链接
+      3. 测试外部链接打开
+      4. 测试ID链接搜索
+      
+      ** 3. 编辑功能测试
+      1. 测试Meta-Return命令
+      2. 测试TAB智能折叠
+      3. 测试快捷键功能
+      
+      ** 4. 语法高亮测试
+      1. 检查所有文本格式
+      2. 检查代码块高亮
+      3. 检查时间戳格式
+      4. 检查标签和属性
+      
+      ** 5. 大纲导航测试
+      1. 检查大纲面板
+      2. 测试快速跳转
+      3. 测试标题折叠
+      
+      ---
+      
+      *🎉 这个测试套件涵盖了VOrg扩展的所有功能！请逐一测试每个功能模块。* 
+      * WAITING 🎯 VOrg 扩展功能测试总览
+
+        这个文件包含了VOrg扩展所有功能的完整测试用例，包括：
+        - 🔗 链接跳转功能（内部、外部、跨文件）
+        - 🌈 智能语法高亮
+        - 📋 文档大纲导航
+        - ⚡ 智能编辑命令 (Meta-Return)
+        - 🔄 智能TAB折叠
+        - 🎨 主题自适应
+        - 📱 实时预览与滚动同步
+        
+          
+        ** 🚀 快速测试指南
+        
+        *** 预览功能测试
+        1. 按 =Ctrl+Shift+V= (Win/Linux) 或 =Cmd+Shift+V= (Mac) 打开预览
+        2. 按 =Ctrl+K V= (Win/Linux) 或 =Cmd+K V= (Mac) 并排预览
+        3. 在编辑器中滚动，观察预览窗口同步滚动
+        4. 切换VS Code主题，观察预览窗口自动适配
+        
+        *** 大纲导航测试
+        1. 查看侧边栏 "Outline" 面板
+        2. 使用 =Ctrl+Shift+O= (Win/Linux) 或 =Cmd+Shift+O= (Mac) 快速跳转
+        3. 点击大纲中的项目，观察编辑器跳转
+        
+        * 🔗 链接跳转功能测试
+        
+        ** 内部链接测试
+        
+        *** 基本内部链接（org-mode标准格式）
+        - 带星号前缀的内部链接：[[*🌐 跨文件链接测试]]
+        - 跳转到语法规则部分：[[*📝 所有TODO状态测试]]
+        - 跳转到编辑功能：[[*⚡ 智能编辑功能测试]]
+        
+        *** ID链接测试（同文件）
+        这是一个带ID的标题，用于测试同文件ID链接：
+        
+        **** 🎯 测试标题A
+        :PROPERTIES:
+        :ID: MAIN-TEST-A123-4567-8901-BCDEF0123456
+        :CREATED: [2024-01-01 Mon 10:00]
+        :CATEGORY: test
+        :END:
+        
+        这是用于测试同文件ID链接的标题。
+        
+        - 同文件ID链接：[[id:MAIN-TEST-A123-4567-8901-BCDEF0123456][跳转到测试标题A]]
+        
+        **** 🔬 测试标题B  
+        :PROPERTIES:
+        :ID: MAIN-TEST-B789-0123-4567-890ABCDEF123
+        :CREATED: [2024-01-01 Mon 10:15]
+        :TAGS: testing example
+        :END:
+        
+        另一个测试标题，用于测试多个ID链接。
+        
+        ** 🌐 跨文件链接测试
+        
+        
+        *** 跨文件ID链接
+        - 跳转到项目文件的VOrg项目：[[id:PROJ-VORG-2024-1234-5678-9ABCDEF01234][VOrg扩展项目]]
+        - 跳转到笔记文件的重要笔记：[[id:NOTE-IMPORTANT-ABCD-1234-EFGH-567890AB][重要开发笔记]]
+        - 跳转到深层目录的标题：[[id:DEEP-SECTION-9876-5432-1098-FEDCBA654321][深层目录测试]]
+        
+        *** 跨文件普通链接
+        - 链接到项目文件：[[file:projects.org][项目管理文档]]
+        - 链接到笔记文件：[[file:notes.org][开发笔记]]
+        - 链接到子目录文件：[[file:subdir/deep.org][深层目录文档]]
+        
+        ** 🔗 HTTP链接测试
+        
+        *** 外部网站链接
+        - 带描述的HTTP链接：[[https://orgmode.org][Org Mode 官方网站]]
+        - 简单HTTP链接：[[https://github.com]]
+        - HTTPS链接：[[https://code.visualstudio.com][VS Code官网]]
+        
+        *** 直接链接（无方括号）
+        直接HTTP链接：https://www.example.com
+        HTTPS链接：https://developer.mozilla.org
+        
+        ** 📁 文件链接测试
+        
+        *** 项目文件链接
+        - 项目根目录文件：[[file:../README.md][项目说明文档]]
+        - 配置文件：[[file:../package.json][Package配置]]
+        - 源码文件：[[file:../src/extension.ts][扩展主文件]]
+        
+        *** 测试数据文件链接
+        - 带描述的文件链接：[[file:projects.org][项目管理]]
+        - 简单文件链接：[[file:notes.org]]
+        - 相对路径文件：[[file:./subdir/deep.org][子目录文件]]
+        
+        *** 直接文件链接（无方括号）
+        file:projects.org
+        file:../src/links/orgLinkProvider.ts
+        
+        * 📝 所有TODO状态测试
+        
+        ** TODO 待完成的任务 :urgent:
+        :PROPERTIES:
+        :ID: TODO-TASK-1111-2222-3333-444444444444
+        :CREATED: [2024-01-01 Mon 08:00]
+        :PRIORITY: A
+        :END:
+        
+        
+        这是一个待完成的高优先级任务。
+        
+        *** 子任务列表
+        - [ ] 子任务1：设计方案
+        - [ ] 子任务2：编写代码
+        - [ ] 子任务3：测试验证
+        
+        ** NEXT 下一步要做的任务 :active:
+        :PROPERTIES:
+        :ID: NEXT-TASK-5555-6666-7777-888888888888
+        :CREATED: [2024-01-01 Mon 09:00]
+        :PRIORITY: B
+        :END:
+        
+        这是下一步要执行的任务。
+        
+        ** WAITING 等待中的任务 :blocked:
+        :PROPERTIES:
+        :ID: WAIT-TASK-9999-AAAA-BBBB-CCCCCCCCCCCC
+        :CREATED: [2024-01-01 Mon 09:30]
+        :WAITING_FOR: 外部依赖
+        :END:
+        
+        这个任务在等待外部条件满足。
+        
+        ** CANCELLED 已取消的任务 :cancelled:
+        :PROPERTIES:
+        :ID: CANCEL-TASK-DDDD-EEEE-FFFF-000000000000
+        :CREATED: [2024-01-01 Mon 10:00]
+        :CANCELLED: [2024-01-01 Mon 15:00]
+        :REASON: 需求变更
+        :END:
+        
+        
+        
+        这个任务因为需求变更被取消了。
+        
+        ** DONE 已完成的任务 :completed:
+        :PROPERTIES:
+        :ID: DONE-TASK-1234-5678-9ABC-DEF012345678
+        :COMPLETED: [2024-01-01 Mon 16:00]
+        :CLOCK: [2024-01-01 Mon 14:00]--[2024-01-01 Mon 16:00] =>  2:00
+        :END:
+        
+        这是一个已完成的任务，包含了时间追踪信息。
+        
+        ** 状态链接测试
+        - 链接到TODO任务：[[*TODO 待完成的任务]]
+        - 链接到NEXT任务：[[*NEXT 下一步要做的任务]]
+        - 链接到WAITING任务：[[*WAITING 等待中的任务]]
+        - 链接到CANCELLED任务：[[*CANCELLED 已取消的任务]]
+        - 链接到DONE任务：[[*DONE 已完成的任务]]
+        - 通过ID链接到TODO：[[id:TODO-TASK-1111-2222-3333-444444444444][待办任务]]
+        
+        * ⚡ 智能编辑功能测试
+        
+        ** Meta-Return 功能测试区域
+        
+        *** 标题编辑测试
+        光标放在这个标题上，按 =Alt+Enter= 应该插入同级新标题。
+        
+        *** 列表编辑测试
+        - 第一项（光标在此按 Alt+Enter 应该插入新列表项）
+        - 第二项
+          - 子项1
+          - 子项2（光标在此按 Alt+Enter 应该插入同级子项）
+        
+        1. 有序列表第一项（按 Alt+Enter 插入下一项）
+        2. 有序列表第二项
+        
+        - [ ] 任务列表项1（按 Alt+Enter 插入新任务）
+        - [X] 任务列表项2（已完成）
+        - [-] 任务列表项3（进行中）
+        
+        *** 表格编辑测试
+        | 列1 | 列2 | 列3 |
+        |-----|-----|-----|
+        | A   | B   | C   |
+        | 光标在此按 Alt+Enter 应该插入新行 |  |  |
+        
+        *** 快捷键说明
+        - *Alt+Enter* - 智能插入新元素（标题、列表项、表格行等）
+        - *Ctrl+Alt+Enter* (Win/Linux) 或 *Cmd+Ctrl+Enter* (Mac) - 在子树末尾插入同级元素
+        - *Shift+Alt+Enter* - 插入TODO标题
+        
+        * 🔄 智能TAB折叠测试
+        
+        ** 标题折叠测试
+        光标放在此标题上按 TAB 键应该切换折叠状态。
+        
+        这是标题下的内容，应该可以被折叠隐藏。
+        
+        *** 子标题也支持折叠
+        子标题的内容同样支持折叠功能。
+        
+        ** 列表智能TAB测试
+        
+        *** 有子项的列表（应该切换折叠）
+        - 主要话题（光标在此按 TAB 应该切换折叠状态）
+          - 子话题 1
+          - 子话题 2
+            - 详细内容
+          - 子话题 3
+        
+        *** 无子项的列表（应该增加缩进）
+        - 独立项目（光标在此按 TAB 应该增加缩进）
+        - 另一个独立项目
+        
+        *** 任务列表TAB测试
+        - [ ] 主要任务（有子项，按 TAB 切换折叠）
+          - [ ] 子任务 1
+          - [X] 子任务 2
+          - [-] 子任务 3
+        - [ ] 独立任务（无子项，按 TAB 增加缩进）
+        
+        ** 表格TAB导航测试
+        | 列1 | 列2 | 列3 |
+        |-----|-----|-----|
+        | A   | B   | C   |
+        | D   | E   | F   |
+        
+        在表格中按 TAB 应该在单元格间移动，按 Shift+TAB 反向移动。
+        
+        ** 代码块折叠测试
+        
+        #+BEGIN_SRC python
+        # 光标在 #+BEGIN_SRC 行按 TAB 应该折叠/展开整个代码块
+        def test_function():
+            print("Hello World")
+            if True:
+                print("Nested content")
+                return "success"
+        #+END_SRC
+        
+        * 🌈 语法高亮测试
+        
+        ** 文本格式化
+        这段文本包含了所有支持的格式：
+        - *粗体文本* - 重要内容
+        - /斜体文本/ - 强调内容  
+        - _下划线文本_ - 突出显示
+        - +删除线文本+ - 已删除内容
+        - =代码文本= - 内联代码
+        - ~等宽字体~ - 等宽显示
+        
+        ** 时间戳格式
+        - 活动时间戳：<2024-01-01 Mon 10:00>
+        - 非活动时间戳：[2024-01-01 Mon 10:00]
+        - 时间范围：<2024-01-01 Mon 09:00-17:00>
+        - 重复时间：<2024-01-01 Mon +1w>
+        - 计划时间：SCHEDULED: <2024-01-02 Tue>
+        - 截止时间：DEADLINE: <2024-01-05 Fri 18:00>
+        
+        ** 标签和属性
+        *** 标题标签 :work:project:urgent:
+        *** 全局标签
+        #+TAGS: work(w) home(h) project(p) urgent(u)
+        #+FILETAGS: testing vscode extension
+        
+        ** 数学公式
+        行内公式：$E = mc^2$ 和 $\sum_{i=1}^{n} x_i$
+        
+        块级公式：
+        $$
+        \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+        $$
+        
+        ** 注释和分隔线
+        # 这是单行注释
+        # 多行注释
+        # 都会被高亮显示
+        
+        ---
+        
+        水平分隔线测试
+        
+        * 🧪 基本语法规则总结
+        
+        ** 链接语法说明
+        1. =[[link][description]]= - 带描述的链接
+        2. =[[link]]= - 简单链接  
+        3. =[[*heading]]= - 内部标题链接（org-mode标准）
+        4. =[[id:UUID][description]]= - ID链接（可跨文件）
+        5. =file:path/to/file= - 文件链接
+        6. =http://example.com= - HTTP链接
+        
+        *注意：只有 =[[*heading]]= 格式的内部链接是org-mode标准，=[[heading]]= 格式不被支持。*
+        
+        ** 快捷键说明
+        - *Ctrl+Click* (Win/Linux) 或 *Cmd+Click* (Mac) - 跟随链接
+        - *Ctrl+Enter* (Win/Linux) 或 *Cmd+Enter* (Mac) - 跟随光标处链接
+        - *Ctrl+L* (Win/Linux) 或 *Cmd+L* (Mac) - 插入新链接
+        - *Alt+Enter* - 智能插入新元素
+        - *Tab* - 智能折叠/缩进
+        - *Shift+Tab* - 反向缩进/导航
+        
+        ** 文档结构
+        - 使用 1-6 级标题组织内容
+        - 支持标题标签和属性
+        - 自动生成文档大纲
+        - 支持标题折叠
+        
+        * 🎯 完整测试流程
+        
+        ** 1. 预览功能测试
+        1. 打开预览窗口
+        2. 测试实时更新
+        3. 测试滚动同步
+        4. 测试主题适配
+        
+        ** 2. 链接功能测试
+        1. 测试内部链接跳转
+        2. 测试跨文件链接
+        3. 测试外部链接打开
+        4. 测试ID链接搜索
+        
+        ** 3. 编辑功能测试
+        1. 测试Meta-Return命令
+        2. 测试TAB智能折叠
+        3. 测试快捷键功能
+        
+        ** 4. 语法高亮测试
+        1. 检查所有文本格式
+        2. 检查代码块高亮
+        3. 检查时间戳格式
+        4. 检查标签和属性
+        
+        ** 5. 大纲导航测试
+        1. 检查大纲面板
+        2. 测试快速跳转
+        3. 测试标题折叠
+        
+        ---
+        
+        *🎉 这个测试套件涵盖了VOrg扩展的所有功能！请逐一测试每个功能模块。* 
+        * WAITING 🎯 VOrg 扩展功能测试总览
+
+          这个文件包含了VOrg扩展所有功能的完整测试用例，包括：
+          - 🔗 链接跳转功能（内部、外部、跨文件）
+          - 🌈 智能语法高亮
+          - 📋 文档大纲导航
+          - ⚡ 智能编辑命令 (Meta-Return)
+          - 🔄 智能TAB折叠
+          - 🎨 主题自适应
+          - 📱 实时预览与滚动同步
+          
+            
+          ** 🚀 快速测试指南
+          
+          *** 预览功能测试
+          1. 按 =Ctrl+Shift+V= (Win/Linux) 或 =Cmd+Shift+V= (Mac) 打开预览
+          2. 按 =Ctrl+K V= (Win/Linux) 或 =Cmd+K V= (Mac) 并排预览
+          3. 在编辑器中滚动，观察预览窗口同步滚动
+          4. 切换VS Code主题，观察预览窗口自动适配
+          
+          *** 大纲导航测试
+          1. 查看侧边栏 "Outline" 面板
+          2. 使用 =Ctrl+Shift+O= (Win/Linux) 或 =Cmd+Shift+O= (Mac) 快速跳转
+          3. 点击大纲中的项目，观察编辑器跳转
+          
+          * 🔗 链接跳转功能测试
+          
+          ** 内部链接测试
+          
+          *** 基本内部链接（org-mode标准格式）
+          - 带星号前缀的内部链接：[[*🌐 跨文件链接测试]]
+          - 跳转到语法规则部分：[[*📝 所有TODO状态测试]]
+          - 跳转到编辑功能：[[*⚡ 智能编辑功能测试]]
+          
+          *** ID链接测试（同文件）
+          这是一个带ID的标题，用于测试同文件ID链接：
+          
+          **** 🎯 测试标题A
+          :PROPERTIES:
+          :ID: MAIN-TEST-A123-4567-8901-BCDEF0123456
+          :CREATED: [2024-01-01 Mon 10:00]
+          :CATEGORY: test
+          :END:
+          
+          这是用于测试同文件ID链接的标题。
+          
+          - 同文件ID链接：[[id:MAIN-TEST-A123-4567-8901-BCDEF0123456][跳转到测试标题A]]
+          
+          **** 🔬 测试标题B  
+          :PROPERTIES:
+          :ID: MAIN-TEST-B789-0123-4567-890ABCDEF123
+          :CREATED: [2024-01-01 Mon 10:15]
+          :TAGS: testing example
+          :END:
+          
+          另一个测试标题，用于测试多个ID链接。
+          
+          ** 🌐 跨文件链接测试
+          
+          
+          *** 跨文件ID链接
+          - 跳转到项目文件的VOrg项目：[[id:PROJ-VORG-2024-1234-5678-9ABCDEF01234][VOrg扩展项目]]
+          - 跳转到笔记文件的重要笔记：[[id:NOTE-IMPORTANT-ABCD-1234-EFGH-567890AB][重要开发笔记]]
+          - 跳转到深层目录的标题：[[id:DEEP-SECTION-9876-5432-1098-FEDCBA654321][深层目录测试]]
+          
+          *** 跨文件普通链接
+          - 链接到项目文件：[[file:projects.org][项目管理文档]]
+          - 链接到笔记文件：[[file:notes.org][开发笔记]]
+          - 链接到子目录文件：[[file:subdir/deep.org][深层目录文档]]
+          
+          ** 🔗 HTTP链接测试
+          
+          *** 外部网站链接
+          - 带描述的HTTP链接：[[https://orgmode.org][Org Mode 官方网站]]
+          - 简单HTTP链接：[[https://github.com]]
+          - HTTPS链接：[[https://code.visualstudio.com][VS Code官网]]
+          
+          *** 直接链接（无方括号）
+          直接HTTP链接：https://www.example.com
+          HTTPS链接：https://developer.mozilla.org
+          
+          ** 📁 文件链接测试
+          
+          *** 项目文件链接
+          - 项目根目录文件：[[file:../README.md][项目说明文档]]
+          - 配置文件：[[file:../package.json][Package配置]]
+          - 源码文件：[[file:../src/extension.ts][扩展主文件]]
+          
+          *** 测试数据文件链接
+          - 带描述的文件链接：[[file:projects.org][项目管理]]
+          - 简单文件链接：[[file:notes.org]]
+          - 相对路径文件：[[file:./subdir/deep.org][子目录文件]]
+          
+          *** 直接文件链接（无方括号）
+          file:projects.org
+          file:../src/links/orgLinkProvider.ts
+          
+          * 📝 所有TODO状态测试
+          
+          ** TODO 待完成的任务 :urgent:
+          :PROPERTIES:
+          :ID: TODO-TASK-1111-2222-3333-444444444444
+          :CREATED: [2024-01-01 Mon 08:00]
+          :PRIORITY: A
+          :END:
+          
+          
+          这是一个待完成的高优先级任务。
+          
+          *** 子任务列表
+          - [ ] 子任务1：设计方案
+          - [ ] 子任务2：编写代码
+          - [ ] 子任务3：测试验证
+          
+          ** NEXT 下一步要做的任务 :active:
+          :PROPERTIES:
+          :ID: NEXT-TASK-5555-6666-7777-888888888888
+          :CREATED: [2024-01-01 Mon 09:00]
+          :PRIORITY: B
+          :END:
+          
+          这是下一步要执行的任务。
+          
+          ** WAITING 等待中的任务 :blocked:
+          :PROPERTIES:
+          :ID: WAIT-TASK-9999-AAAA-BBBB-CCCCCCCCCCCC
+          :CREATED: [2024-01-01 Mon 09:30]
+          :WAITING_FOR: 外部依赖
+          :END:
+          
+          这个任务在等待外部条件满足。
+          
+          ** CANCELLED 已取消的任务 :cancelled:
+          :PROPERTIES:
+          :ID: CANCEL-TASK-DDDD-EEEE-FFFF-000000000000
+          :CREATED: [2024-01-01 Mon 10:00]
+          :CANCELLED: [2024-01-01 Mon 15:00]
+          :REASON: 需求变更
+          :END:
+          
+          
+          
+          这个任务因为需求变更被取消了。
+          
+          ** DONE 已完成的任务 :completed:
+          :PROPERTIES:
+          :ID: DONE-TASK-1234-5678-9ABC-DEF012345678
+          :COMPLETED: [2024-01-01 Mon 16:00]
+          :CLOCK: [2024-01-01 Mon 14:00]--[2024-01-01 Mon 16:00] =>  2:00
+          :END:
+          
+          这是一个已完成的任务，包含了时间追踪信息。
+          
+          ** 状态链接测试
+          - 链接到TODO任务：[[*TODO 待完成的任务]]
+          - 链接到NEXT任务：[[*NEXT 下一步要做的任务]]
+          - 链接到WAITING任务：[[*WAITING 等待中的任务]]
+          - 链接到CANCELLED任务：[[*CANCELLED 已取消的任务]]
+          - 链接到DONE任务：[[*DONE 已完成的任务]]
+          - 通过ID链接到TODO：[[id:TODO-TASK-1111-2222-3333-444444444444][待办任务]]
+          
+          * ⚡ 智能编辑功能测试
+          
+          ** Meta-Return 功能测试区域
+          
+          *** 标题编辑测试
+          光标放在这个标题上，按 =Alt+Enter= 应该插入同级新标题。
+          
+          *** 列表编辑测试
+          - 第一项（光标在此按 Alt+Enter 应该插入新列表项）
+          - 第二项
+            - 子项1
+            - 子项2（光标在此按 Alt+Enter 应该插入同级子项）
+          
+          1. 有序列表第一项（按 Alt+Enter 插入下一项）
+          2. 有序列表第二项
+          
+          - [ ] 任务列表项1（按 Alt+Enter 插入新任务）
+          - [X] 任务列表项2（已完成）
+          - [-] 任务列表项3（进行中）
+          
+          *** 表格编辑测试
+          | 列1 | 列2 | 列3 |
+          |-----|-----|-----|
+          | A   | B   | C   |
+          | 光标在此按 Alt+Enter 应该插入新行 |  |  |
+          
+          *** 快捷键说明
+          - *Alt+Enter* - 智能插入新元素（标题、列表项、表格行等）
+          - *Ctrl+Alt+Enter* (Win/Linux) 或 *Cmd+Ctrl+Enter* (Mac) - 在子树末尾插入同级元素
+          - *Shift+Alt+Enter* - 插入TODO标题
+          
+          * 🔄 智能TAB折叠测试
+          
+          ** 标题折叠测试
+          光标放在此标题上按 TAB 键应该切换折叠状态。
+          
+          这是标题下的内容，应该可以被折叠隐藏。
+          
+          *** 子标题也支持折叠
+          子标题的内容同样支持折叠功能。
+          
+          ** 列表智能TAB测试
+          
+          *** 有子项的列表（应该切换折叠）
+          - 主要话题（光标在此按 TAB 应该切换折叠状态）
+            - 子话题 1
+            - 子话题 2
+              - 详细内容
+            - 子话题 3
+          
+          *** 无子项的列表（应该增加缩进）
+          - 独立项目（光标在此按 TAB 应该增加缩进）
+          - 另一个独立项目
+          
+          *** 任务列表TAB测试
+          - [ ] 主要任务（有子项，按 TAB 切换折叠）
+            - [ ] 子任务 1
+            - [X] 子任务 2
+            - [-] 子任务 3
+          - [ ] 独立任务（无子项，按 TAB 增加缩进）
+          
+          ** 表格TAB导航测试
+          | 列1 | 列2 | 列3 |
+          |-----|-----|-----|
+          | A   | B   | C   |
+          | D   | E   | F   |
+          
+          在表格中按 TAB 应该在单元格间移动，按 Shift+TAB 反向移动。
+          
+          ** 代码块折叠测试
+          
+          #+BEGIN_SRC python
+          # 光标在 #+BEGIN_SRC 行按 TAB 应该折叠/展开整个代码块
+          def test_function():
+              print("Hello World")
+              if True:
+                  print("Nested content")
+                  return "success"
+          #+END_SRC
+          
+          * 🌈 语法高亮测试
+          
+          ** 文本格式化
+          这段文本包含了所有支持的格式：
+          - *粗体文本* - 重要内容
+          - /斜体文本/ - 强调内容  
+          - _下划线文本_ - 突出显示
+          - +删除线文本+ - 已删除内容
+          - =代码文本= - 内联代码
+          - ~等宽字体~ - 等宽显示
+          
+          ** 时间戳格式
+          - 活动时间戳：<2024-01-01 Mon 10:00>
+          - 非活动时间戳：[2024-01-01 Mon 10:00]
+          - 时间范围：<2024-01-01 Mon 09:00-17:00>
+          - 重复时间：<2024-01-01 Mon +1w>
+          - 计划时间：SCHEDULED: <2024-01-02 Tue>
+          - 截止时间：DEADLINE: <2024-01-05 Fri 18:00>
+          
+          ** 标签和属性
+          *** 标题标签 :work:project:urgent:
+          *** 全局标签
+          #+TAGS: work(w) home(h) project(p) urgent(u)
+          #+FILETAGS: testing vscode extension
+          
+          ** 数学公式
+          行内公式：$E = mc^2$ 和 $\sum_{i=1}^{n} x_i$
+          
+          块级公式：
+          $$
+          \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+          $$
+          
+          ** 注释和分隔线
+          # 这是单行注释
+          # 多行注释
+          # 都会被高亮显示
+          
+          ---
+          
+          水平分隔线测试
+          
+          * 🧪 基本语法规则总结
+          
+          ** 链接语法说明
+          1. =[[link][description]]= - 带描述的链接
+          2. =[[link]]= - 简单链接  
+          3. =[[*heading]]= - 内部标题链接（org-mode标准）
+          4. =[[id:UUID][description]]= - ID链接（可跨文件）
+          5. =file:path/to/file= - 文件链接
+          6. =http://example.com= - HTTP链接
+          
+          *注意：只有 =[[*heading]]= 格式的内部链接是org-mode标准，=[[heading]]= 格式不被支持。*
+          
+          ** 快捷键说明
+          - *Ctrl+Click* (Win/Linux) 或 *Cmd+Click* (Mac) - 跟随链接
+          - *Ctrl+Enter* (Win/Linux) 或 *Cmd+Enter* (Mac) - 跟随光标处链接
+          - *Ctrl+L* (Win/Linux) 或 *Cmd+L* (Mac) - 插入新链接
+          - *Alt+Enter* - 智能插入新元素
+          - *Tab* - 智能折叠/缩进
+          - *Shift+Tab* - 反向缩进/导航
+          
+          ** 文档结构
+          - 使用 1-6 级标题组织内容
+          - 支持标题标签和属性
+          - 自动生成文档大纲
+          - 支持标题折叠
+          
+          * 🎯 完整测试流程
+          
+          ** 1. 预览功能测试
+          1. 打开预览窗口
+          2. 测试实时更新
+          3. 测试滚动同步
+          4. 测试主题适配
+          
+          ** 2. 链接功能测试
+          1. 测试内部链接跳转
+          2. 测试跨文件链接
+          3. 测试外部链接打开
+          4. 测试ID链接搜索
+          
+          ** 3. 编辑功能测试
+          1. 测试Meta-Return命令
+          2. 测试TAB智能折叠
+          3. 测试快捷键功能
+          
+          ** 4. 语法高亮测试
+          1. 检查所有文本格式
+          2. 检查代码块高亮
+          3. 检查时间戳格式
+          4. 检查标签和属性
+          
+          ** 5. 大纲导航测试
+          1. 检查大纲面板
+          2. 测试快速跳转
+          3. 测试标题折叠
+          
+          ---
+          
+          *🎉 这个测试套件涵盖了VOrg扩展的所有功能！请逐一测试每个功能模块。* 
+          * WAITING 🎯 VOrg 扩展功能测试总览
+
+            这个文件包含了VOrg扩展所有功能的完整测试用例，包括：
+            - 🔗 链接跳转功能（内部、外部、跨文件）
+            - 🌈 智能语法高亮
+            - 📋 文档大纲导航
+            - ⚡ 智能编辑命令 (Meta-Return)
+            - 🔄 智能TAB折叠
+            - 🎨 主题自适应
+            - 📱 实时预览与滚动同步
+            
+              
+            ** 🚀 快速测试指南
+            
+            *** 预览功能测试
+            1. 按 =Ctrl+Shift+V= (Win/Linux) 或 =Cmd+Shift+V= (Mac) 打开预览
+            2. 按 =Ctrl+K V= (Win/Linux) 或 =Cmd+K V= (Mac) 并排预览
+            3. 在编辑器中滚动，观察预览窗口同步滚动
+            4. 切换VS Code主题，观察预览窗口自动适配
+            
+            *** 大纲导航测试
+            1. 查看侧边栏 "Outline" 面板
+            2. 使用 =Ctrl+Shift+O= (Win/Linux) 或 =Cmd+Shift+O= (Mac) 快速跳转
+            3. 点击大纲中的项目，观察编辑器跳转
+            
+            * 🔗 链接跳转功能测试
+            
+            ** 内部链接测试
+            
+            *** 基本内部链接（org-mode标准格式）
+            - 带星号前缀的内部链接：[[*🌐 跨文件链接测试]]
+            - 跳转到语法规则部分：[[*📝 所有TODO状态测试]]
+            - 跳转到编辑功能：[[*⚡ 智能编辑功能测试]]
+            
+            *** ID链接测试（同文件）
+            这是一个带ID的标题，用于测试同文件ID链接：
+            
+            **** 🎯 测试标题A
+            :PROPERTIES:
+            :ID: MAIN-TEST-A123-4567-8901-BCDEF0123456
+            :CREATED: [2024-01-01 Mon 10:00]
+            :CATEGORY: test
+            :END:
+            
+            这是用于测试同文件ID链接的标题。
+            
+            - 同文件ID链接：[[id:MAIN-TEST-A123-4567-8901-BCDEF0123456][跳转到测试标题A]]
+            
+            **** 🔬 测试标题B  
+            :PROPERTIES:
+            :ID: MAIN-TEST-B789-0123-4567-890ABCDEF123
+            :CREATED: [2024-01-01 Mon 10:15]
+            :TAGS: testing example
+            :END:
+            
+            另一个测试标题，用于测试多个ID链接。
+            
+            ** 🌐 跨文件链接测试
+            
+            
+            *** 跨文件ID链接
+            - 跳转到项目文件的VOrg项目：[[id:PROJ-VORG-2024-1234-5678-9ABCDEF01234][VOrg扩展项目]]
+            - 跳转到笔记文件的重要笔记：[[id:NOTE-IMPORTANT-ABCD-1234-EFGH-567890AB][重要开发笔记]]
+            - 跳转到深层目录的标题：[[id:DEEP-SECTION-9876-5432-1098-FEDCBA654321][深层目录测试]]
+            
+            *** 跨文件普通链接
+            - 链接到项目文件：[[file:projects.org][项目管理文档]]
+            - 链接到笔记文件：[[file:notes.org][开发笔记]]
+            - 链接到子目录文件：[[file:subdir/deep.org][深层目录文档]]
+            
+            ** 🔗 HTTP链接测试
+            
+            *** 外部网站链接
+            - 带描述的HTTP链接：[[https://orgmode.org][Org Mode 官方网站]]
+            - 简单HTTP链接：[[https://github.com]]
+            - HTTPS链接：[[https://code.visualstudio.com][VS Code官网]]
+            
+            *** 直接链接（无方括号）
+            直接HTTP链接：https://www.example.com
+            HTTPS链接：https://developer.mozilla.org
+            
+            ** 📁 文件链接测试
+            
+            *** 项目文件链接
+            - 项目根目录文件：[[file:../README.md][项目说明文档]]
+            - 配置文件：[[file:../package.json][Package配置]]
+            - 源码文件：[[file:../src/extension.ts][扩展主文件]]
+            
+            *** 测试数据文件链接
+            - 带描述的文件链接：[[file:projects.org][项目管理]]
+            - 简单文件链接：[[file:notes.org]]
+            - 相对路径文件：[[file:./subdir/deep.org][子目录文件]]
+            
+            *** 直接文件链接（无方括号）
+            file:projects.org
+            file:../src/links/orgLinkProvider.ts
+            
+            * 📝 所有TODO状态测试
+            
+            ** TODO 待完成的任务 :urgent:
+            :PROPERTIES:
+            :ID: TODO-TASK-1111-2222-3333-444444444444
+            :CREATED: [2024-01-01 Mon 08:00]
+            :PRIORITY: A
+            :END:
+            
+            
+            这是一个待完成的高优先级任务。
+            
+            *** 子任务列表
+            - [ ] 子任务1：设计方案
+            - [ ] 子任务2：编写代码
+            - [ ] 子任务3：测试验证
+            
+            ** NEXT 下一步要做的任务 :active:
+            :PROPERTIES:
+            :ID: NEXT-TASK-5555-6666-7777-888888888888
+            :CREATED: [2024-01-01 Mon 09:00]
+            :PRIORITY: B
+            :END:
+            
+            这是下一步要执行的任务。
+            
+            ** WAITING 等待中的任务 :blocked:
+            :PROPERTIES:
+            :ID: WAIT-TASK-9999-AAAA-BBBB-CCCCCCCCCCCC
+            :CREATED: [2024-01-01 Mon 09:30]
+            :WAITING_FOR: 外部依赖
+            :END:
+            
+            这个任务在等待外部条件满足。
+            
+            ** CANCELLED 已取消的任务 :cancelled:
+            :PROPERTIES:
+            :ID: CANCEL-TASK-DDDD-EEEE-FFFF-000000000000
+            :CREATED: [2024-01-01 Mon 10:00]
+            :CANCELLED: [2024-01-01 Mon 15:00]
+            :REASON: 需求变更
+            :END:
+            
+            
+            
+            这个任务因为需求变更被取消了。
+            
+            ** DONE 已完成的任务 :completed:
+            :PROPERTIES:
+            :ID: DONE-TASK-1234-5678-9ABC-DEF012345678
+            :COMPLETED: [2024-01-01 Mon 16:00]
+            :CLOCK: [2024-01-01 Mon 14:00]--[2024-01-01 Mon 16:00] =>  2:00
+            :END:
+            
+            这是一个已完成的任务，包含了时间追踪信息。
+            
+            ** 状态链接测试
+            - 链接到TODO任务：[[*TODO 待完成的任务]]
+            - 链接到NEXT任务：[[*NEXT 下一步要做的任务]]
+            - 链接到WAITING任务：[[*WAITING 等待中的任务]]
+            - 链接到CANCELLED任务：[[*CANCELLED 已取消的任务]]
+            - 链接到DONE任务：[[*DONE 已完成的任务]]
+            - 通过ID链接到TODO：[[id:TODO-TASK-1111-2222-3333-444444444444][待办任务]]
+            
+            * ⚡ 智能编辑功能测试
+            
+            ** Meta-Return 功能测试区域
+            
+            *** 标题编辑测试
+            光标放在这个标题上，按 =Alt+Enter= 应该插入同级新标题。
+            
+            *** 列表编辑测试
+            - 第一项（光标在此按 Alt+Enter 应该插入新列表项）
+            - 第二项
+              - 子项1
+              - 子项2（光标在此按 Alt+Enter 应该插入同级子项）
+            
+            1. 有序列表第一项（按 Alt+Enter 插入下一项）
+            2. 有序列表第二项
+            
+            - [ ] 任务列表项1（按 Alt+Enter 插入新任务）
+            - [X] 任务列表项2（已完成）
+            - [-] 任务列表项3（进行中）
+            
+            *** 表格编辑测试
+            | 列1 | 列2 | 列3 |
+            |-----|-----|-----|
+            | A   | B   | C   |
+            | 光标在此按 Alt+Enter 应该插入新行 |  |  |
+            
+            *** 快捷键说明
+            - *Alt+Enter* - 智能插入新元素（标题、列表项、表格行等）
+            - *Ctrl+Alt+Enter* (Win/Linux) 或 *Cmd+Ctrl+Enter* (Mac) - 在子树末尾插入同级元素
+            - *Shift+Alt+Enter* - 插入TODO标题
+            
+            * 🔄 智能TAB折叠测试
+            
+            ** 标题折叠测试
+            光标放在此标题上按 TAB 键应该切换折叠状态。
+            
+            这是标题下的内容，应该可以被折叠隐藏。
+            
+            *** 子标题也支持折叠
+            子标题的内容同样支持折叠功能。
+            
+            ** 列表智能TAB测试
+            
+            *** 有子项的列表（应该切换折叠）
+            - 主要话题（光标在此按 TAB 应该切换折叠状态）
+              - 子话题 1
+              - 子话题 2
+                - 详细内容
+              - 子话题 3
+            
+            *** 无子项的列表（应该增加缩进）
+            - 独立项目（光标在此按 TAB 应该增加缩进）
+            - 另一个独立项目
+            
+            *** 任务列表TAB测试
+            - [ ] 主要任务（有子项，按 TAB 切换折叠）
+              - [ ] 子任务 1
+              - [X] 子任务 2
+              - [-] 子任务 3
+            - [ ] 独立任务（无子项，按 TAB 增加缩进）
+            
+            ** 表格TAB导航测试
+            | 列1 | 列2 | 列3 |
+            |-----|-----|-----|
+            | A   | B   | C   |
+            | D   | E   | F   |
+            
+            在表格中按 TAB 应该在单元格间移动，按 Shift+TAB 反向移动。
+            
+            ** 代码块折叠测试
+            
+            #+BEGIN_SRC python
+            # 光标在 #+BEGIN_SRC 行按 TAB 应该折叠/展开整个代码块
+            def test_function():
+                print("Hello World")
+                if True:
+                    print("Nested content")
+                    return "success"
+            #+END_SRC
+            
+            * 🌈 语法高亮测试
+            
+            ** 文本格式化
+            这段文本包含了所有支持的格式：
+            - *粗体文本* - 重要内容
+            - /斜体文本/ - 强调内容  
+            - _下划线文本_ - 突出显示
+            - +删除线文本+ - 已删除内容
+            - =代码文本= - 内联代码
+            - ~等宽字体~ - 等宽显示
+            
+            ** 时间戳格式
+            - 活动时间戳：<2024-01-01 Mon 10:00>
+            - 非活动时间戳：[2024-01-01 Mon 10:00]
+            - 时间范围：<2024-01-01 Mon 09:00-17:00>
+            - 重复时间：<2024-01-01 Mon +1w>
+            - 计划时间：SCHEDULED: <2024-01-02 Tue>
+            - 截止时间：DEADLINE: <2024-01-05 Fri 18:00>
+            
+            ** 标签和属性
+            *** 标题标签 :work:project:urgent:
+            *** 全局标签
+            #+TAGS: work(w) home(h) project(p) urgent(u)
+            #+FILETAGS: testing vscode extension
+            
+            ** 数学公式
+            行内公式：$E = mc^2$ 和 $\sum_{i=1}^{n} x_i$
+            
+            块级公式：
+            $$
+            \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+            $$
+            
+            ** 注释和分隔线
+            # 这是单行注释
+            # 多行注释
+            # 都会被高亮显示
+            
+            ---
+            
+            水平分隔线测试
+            
+            * 🧪 基本语法规则总结
+            
+            ** 链接语法说明
+            1. =[[link][description]]= - 带描述的链接
+            2. =[[link]]= - 简单链接  
+            3. =[[*heading]]= - 内部标题链接（org-mode标准）
+            4. =[[id:UUID][description]]= - ID链接（可跨文件）
+            5. =file:path/to/file= - 文件链接
+            6. =http://example.com= - HTTP链接
+            
+            *注意：只有 =[[*heading]]= 格式的内部链接是org-mode标准，=[[heading]]= 格式不被支持。*
+            
+            ** 快捷键说明
+            - *Ctrl+Click* (Win/Linux) 或 *Cmd+Click* (Mac) - 跟随链接
+            - *Ctrl+Enter* (Win/Linux) 或 *Cmd+Enter* (Mac) - 跟随光标处链接
+            - *Ctrl+L* (Win/Linux) 或 *Cmd+L* (Mac) - 插入新链接
+            - *Alt+Enter* - 智能插入新元素
+            - *Tab* - 智能折叠/缩进
+            - *Shift+Tab* - 反向缩进/导航
+            
+            ** 文档结构
+            - 使用 1-6 级标题组织内容
+            - 支持标题标签和属性
+            - 自动生成文档大纲
+            - 支持标题折叠
+            
+            * 🎯 完整测试流程
+            
+            ** 1. 预览功能测试
+            1. 打开预览窗口
+            2. 测试实时更新
+            3. 测试滚动同步
+            4. 测试主题适配
+            
+            ** 2. 链接功能测试
+            1. 测试内部链接跳转
+            2. 测试跨文件链接
+            3. 测试外部链接打开
+            4. 测试ID链接搜索
+            
+            ** 3. 编辑功能测试
+            1. 测试Meta-Return命令
+            2. 测试TAB智能折叠
+            3. 测试快捷键功能
+            
+            ** 4. 语法高亮测试
+            1. 检查所有文本格式
+            2. 检查代码块高亮
+            3. 检查时间戳格式
+            4. 检查标签和属性
+            
+            ** 5. 大纲导航测试
+            1. 检查大纲面板
+            2. 测试快速跳转
+            3. 测试标题折叠
+            
+            ---
+            
+            *🎉 这个测试套件涵盖了VOrg扩展的所有功能！请逐一测试每个功能模块。*        
+          111
+        
+        222

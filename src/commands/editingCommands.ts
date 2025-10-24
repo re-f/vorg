@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { TodoKeywordManager } from '../utils/todoKeywordManager';
-import { ContextAnalyzer } from './editing/contextAnalyzer';
+import { ContextAnalyzer } from '../parsers/contextAnalyzer';
+import { HeadingParser } from '../parsers/headingParser';
 import { HeadingCommands } from './editing/headingCommands';
 import { TodoStateCommands } from './editing/todoStateCommands';
 import { PropertyCommands } from './editing/propertyCommands';
@@ -147,7 +148,7 @@ export class EditingCommands {
 
      if (context.type === 'heading') {
        // 在子树末尾插入新标题
-      const subtreeEnd = HeadingCommands.findSubtreeEnd(document, position);
+      const subtreeEnd = HeadingParser.findSubtreeEnd(document, position);
       const newPosition = new vscode.Position(subtreeEnd.line + 1, 0);
       
       await editor.edit(editBuilder => {

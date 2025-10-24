@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { HeadingParser } from '../parsers/headingParser';
 
 export class OrgFoldingProvider implements vscode.FoldingRangeProvider {
   
@@ -16,9 +17,9 @@ export class OrgFoldingProvider implements vscode.FoldingRangeProvider {
       const line = lines[i];
       
       // 匹配标题行，识别不同层级的标题
-      const headingMatch = line.match(/^(\*+)\s+(.+)$/);
-      if (headingMatch) {
-        const level = headingMatch[1].length; // 星号的数量表示层级
+      const headingInfo = HeadingParser.parseHeading(line);
+      if (headingInfo.level > 0) {
+        const level = headingInfo.level;
         
         // 在添加新标题之前，关闭所有更高或相等层级的标题折叠
         while (headingStack.length > 0) {

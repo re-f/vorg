@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { ContextInfo, HeadingInfo } from '../types/editingTypes';
 import { TodoKeywordManager } from '../../utils/todoKeywordManager';
+import { HeadingParser } from '../../parsers/headingParser';
 
 /**
  * 标题相关命令
@@ -22,7 +23,7 @@ export class HeadingCommands {
     const stars = '*'.repeat(context.level || 1);
     
     // 找到子树结束位置
-    const subtreeEnd = HeadingCommands.findSubtreeEnd(document, position);
+    const subtreeEnd = HeadingParser.findSubtreeEnd(document, position);
     
     // 在子树末尾插入新标题
     editBuilder.insert(subtreeEnd, `\n${stars} `);
@@ -52,7 +53,7 @@ export class HeadingCommands {
     editBuilder.delete(new vscode.Range(position, line.range.end));
     
     // 找到子树结束位置
-    const subtreeEnd = HeadingCommands.findSubtreeEnd(document, position);
+    const subtreeEnd = HeadingParser.findSubtreeEnd(document, position);
     
     // 在子树末尾插入新标题
     editBuilder.insert(subtreeEnd, `\n${stars} ${restOfLine}`);
@@ -68,10 +69,6 @@ export class HeadingCommands {
     const position = editor.selection.active;
     const line = editor.document.lineAt(position.line);
     const lineText = line.text;
-    
-    // 获取当前行的缩进级别
-    const indentMatch = lineText.match(/^(\s*)/);
-    const indent = indentMatch ? indentMatch[1] : '';
     
     // 确定星号数量
     const stars = HeadingCommands.determineStarLevel(editor, position.line);
@@ -107,66 +104,13 @@ export class HeadingCommands {
 
   /**
    * 查找当前位置所属的标题
+   * @deprecated Use HeadingParser.findCurrentHeading instead
    */
   static findCurrentHeading(
     document: vscode.TextDocument,
     position: vscode.Position
   ): { line: vscode.TextLine; headingInfo: HeadingInfo } | null {
-    // 首先检查当前行是否就是标题行
-    const currentLine = document.lineAt(position.line);
-    const currentHeadingInfo = HeadingCommands.parseHeadingLine(currentLine.text);
-    if (currentHeadingInfo.level > 0) {
-      return {
-        line: currentLine,
-        headingInfo: currentHeadingInfo
-      };
-    }
-
-    // 如果当前行不是标题行，向上查找所属的标题
-    for (let lineNumber = position.line - 1; lineNumber >= 0; lineNumber--) {
-      const line = document.lineAt(lineNumber);
-      const headingInfo = HeadingCommands.parseHeadingLine(line.text);
-      
-      if (headingInfo.level > 0) {
-        // 找到了一个标题，检查当前位置是否在这个标题的内容范围内
-        const nextHeadingLine = HeadingCommands.findNextHeadingLine(document, lineNumber, headingInfo.level);
-        
-        if (nextHeadingLine === -1 || position.line < nextHeadingLine) {
-          // 当前位置在这个标题的内容范围内
-          return {
-            line: line,
-            headingInfo: headingInfo
-          };
-        }
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * 解析标题行
-   */
-  static parseHeadingLine(lineText: string): HeadingInfo {
-    const allKeywords = HeadingCommands.todoKeywordManager.getAllKeywords();
-    const keywordRegex = new RegExp(`^(\\*+)\\s+(?:(${allKeywords.map(k => k.keyword).join('|')})\\s+)?(.*)$`);
-    const headingMatch = lineText.match(keywordRegex);
-    
-    if (!headingMatch) {
-      return {
-        level: 0,
-        stars: '',
-        todoState: null,
-        title: lineText
-      };
-    }
-
-    return {
-      level: headingMatch[1].length,
-      stars: headingMatch[1],
-      todoState: headingMatch[2] || null,
-      title: headingMatch[3] || ''
-    };
+    return HeadingParser.findCurrentHeading(document, position);
   }
 
   /**
@@ -176,59 +120,13 @@ export class HeadingCommands {
     const document = editor.document;
     const line = document.lineAt(lineNumber);
     const lineText = line.text;
-    const headingMatch = lineText.match(/^(\*+)\s+(?:(TODO|DONE|NEXT|WAITING|CANCELLED)\s+)?(.*)$/);
+    const headingInfo = HeadingParser.parseHeading(lineText);
 
-    if (headingMatch) {
-      return headingMatch[1];
+    if (headingInfo.level > 0) {
+      return headingInfo.stars;
     }
     return '';
   }
 
-  /**
-   * 查找下一个同级或更高级标题的行号
-   */
-  static findNextHeadingLine(
-    document: vscode.TextDocument,
-    startLine: number,
-    currentLevel: number
-  ): number {
-    for (let lineNumber = startLine + 1; lineNumber < document.lineCount; lineNumber++) {
-      const line = document.lineAt(lineNumber);
-      const headingInfo = HeadingCommands.parseHeadingLine(line.text);
-      
-      if (headingInfo.level > 0 && headingInfo.level <= currentLevel) {
-        return lineNumber;
-      }
-    }
-    
-    return -1; // 没有找到下一个同级或更高级标题
-  }
-
-  /**
-   * 查找子树的结束位置
-   */
-  static findSubtreeEnd(document: vscode.TextDocument, position: vscode.Position): vscode.Position {
-    const currentLine = document.lineAt(position.line);
-    const currentHeadingMatch = currentLine.text.match(/^(\*+)/);
-    
-    if (!currentHeadingMatch) {
-      return position;
-    }
-    
-    const currentLevel = currentHeadingMatch[1].length;
-    
-    // 查找下一个同级或更高级的标题
-    for (let i = position.line + 1; i < document.lineCount; i++) {
-      const line = document.lineAt(i);
-      const headingMatch = line.text.match(/^(\*+)/);
-      
-      if (headingMatch && headingMatch[1].length <= currentLevel) {
-        return new vscode.Position(i - 1, document.lineAt(i - 1).text.length);
-      }
-    }
-    
-    // 如果没找到，返回文档末尾
-    return new vscode.Position(document.lineCount - 1, document.lineAt(document.lineCount - 1).text.length);
-  }
 }
 

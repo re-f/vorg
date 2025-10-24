@@ -8,10 +8,12 @@
 其他测试：
 - [[https://example.com][网站]]
 - [[file:test.org][文件]]  
-- [[#heading][标题]]
+- [[*heading][标题]]
 
 无描述链接：
 - [[id:simple-id]]
 - [[https://example.com]]
 
 裸链接：https://example.com 
+
+* heading

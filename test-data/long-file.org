@@ -1,0 +1,2392 @@
+#+glossary_sources:  Glossary
+
+#+title: 2025 年记录
+
+#+FILETAGS:  GTD
+#+STARTUP: content showstars indent
+
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://rgb-24bit.github.io/org-html-theme-list/org-guidao/style/main.css"/>
+#+OPTIONS:    H:3 num:nil toc:t \n:nil ::t |:t ^:t -:t f:t *:t tex:t d:(HIDE) tags:not-in-toc
+
+* 目标
+
+要列出一系列能由 AI 决策的事情, 并准备好 cot 或者 prompt, 之后将这些决策提交给 AI 决策
+
+如何一个人养老
+
+如何提高个人知识库的知识密度
+
+要跟行业内的人沟通
+
+做好人好事 + 普陀寺必须花到 5000 元, 
+
+* Jan.
+** 目标
+
+- 资料查询练习
+    [[chrome-extension://pnmchffiealhkdloeffcdnbgdnedheme/trends.html][<使用搜索替代闭门造车>的历史记录]]
+- 海外推广学习
+- 个人经营
+  http://pics.anatman.live/ref/beuceo.jpg
+
+** W01 工作记录 [1/1]
+:PROPERTIES:
+:Create:   [2024-12-30]
+:ID:       5B7D39ED-3A3D-48D6-877D-B5D6885FBE50
+:END:
+
+- [[id:A4F1CD57-FE6E-478F-AACB-3660B4E68069][SQL-Genius Marketing]]
+
+- SQL 重写接下来的宣传方式: 每周发布一种数据库的重写效果
+
+- [[id:A9FFAC6E-19CF-44C3-AC7E-72E92ABFB5D9][出海任务]]
+
+- [[id:0B430E24-724B-406D-B1AE-4343EDAEA19A][REview 目标]]
+
+- [[https://wechat.jeffjade.com/?ref=markdown.lovejade.cn][公众号 & Markdown 排版]]
+
+- 出海工作组的任务
+
+  - [ ] 官网怎么处理
+
+  - 搜索关键词:
+
+    - 关注哪些关键展示多
+
+    - 关注点击
+
+    - 关注转换
+
+      都要具体关键字
+
+    - 要找实际搜索多, 但是因为我们出价低导致没有展示的
+
+    - SEO 的关键词的文章
+
+      search consul
+
+    - 关键词列表：
+
+- 如果在完成一件事上, 主导仍然是人, 那么 AI 就只是效率工具
+
+- [X] 苏鹏交接
+  - https://actiontech.feishu.cn/docx/McL5dJZvWo5S9mx5EMHcGv6HnKb 这个里面的事项是有已经安排了开始处理的么
+  - 一问一实验之前有提到在处理, 现在是?
+    之前的处理流程是什么样?
+  - Reddit 有账号的么？
+
+*** DONE Text2SQL
+CLOSED: [2025-01-09 Thu 18:24]
+- State "DONE"       from              [2025-01-09 Thu 18:24]
+https://github.com/eosphoros-ai/Awesome-Text2SQL/blob/main/README.zh.md
+
+BIRD-SQL 榜单较新
+
+产品: xiyan-sql
+
+来源: 1是流量, 2是商务困境
+
+目标(包括阶段性):
+
+1. 免费版本和商业版本
+2. 长期的产品路线
+   1. 比如业务分析做到什么程度
+   2. 怎么
+
+** W02 工作记录 [2/3]
+:PROPERTIES:
+:Create:   [2025-01-06]
+:ID:       0A41C068-2872-440A-BC83-3940083B26F6
+:END:
+
+- [-]  找 AI 创业的网站??
+
+- SQL-GENIUS 宣传方案
+  [[id:A4F1CD57-FE6E-478F-AACB-3660B4E68069][SQL-Genius Marketing]]
+  [[id:A9FFAC6E-19CF-44C3-AC7E-72E92ABFB5D9][出海运营]]
+  产品定位: 主要是面向海外开发的 ToC 产品, 希望用户全体是业务开发群体, 初期可能的群体是: DBA + 一些开发?
+
+  定位的问题:
+   如果是开发便利的问题, 哪你为什么比 gitlen 贵那么多(活动时,价格在4刀一月)
+   定价的问题
+
+   需要总结的内容: 重点在于吴琦的文档, 然后长龙的文档, 需要将文档补充齐全, 哪些 SQL-GENIUS 的, 哪些是通用的, 要去分开
+
+   比较完整的方案文档 [[https://onedrive.live.com/?cid=B5330717907EAC6F&id=B5330717907EAC6F%21sb4f32ba9c35d4f458048f48d98ddc8b8&parId=B5330717907EAC6F%2142963&o=OneUp][海外推广方法]]
+
+  1. 漏斗入口
+
+     - 面向所有群体的宣传渠道(Google(SEO,ADs), Facebook 等)
+
+     - [ ] *用户群体聚集的社区*
+      
+       - 用户聚集在哪儿? 公开社区+半公开/私有社区
+
+         stackoverflow 流量不太行
+        
+     - 后续: 产品联动:免费的 Text2SQL 平台 -> SQL 优化
+
+     - [ ] 其它推广平台: 比如赞助 star-history/GitHub ?      
+        
+  2. [ ] *宣传关键字/噱头/内容* @周园
+
+     - 从大型企业转化的优化经验
+
+     - 提升业务响应速度(需要案例)
+
+       可能需要挑一些"热门"业务的案例
+
+     - 需要常规 3-4 种数据库优化样例
+
+  3. 上线活动
+
+     前置条件: 能有 2-3 个数据库能稳定优化的例子后再开始
+
+     - 需要一些发布平台:
+
+       - 直接送兑换码 3-6 个月的使用
+
+       - 评价活动
+
+     - 市场红人?
+      
+  4. 利用用户生成内容(UGC)
+
+     前置条件: 与 <上线活动> 相同
+
+     - 鼓励早期用户分享使用体验和评价
+
+     - 问题反馈
+
+     - 类似于各种梯子的优化活动
+
+  5. 国内推广(略)
+
+     找几个平台推广
+    
+  6. [X]  产品 Slogan
+
+  7. 想法: 先抄 eversql/pawsql 的方案
+
+     - 如何抄友商:
+       - 公开的渠道( Google, Facebook, 广告关键词的投放)
+
+       - 友商组织/参加了哪些活动
+
+       - 在哪些社区活动比较多
+
+       - 发布的主题和内容有哪些
+
+       - ...
+     
+  8. [X] 需要一些引流的东西
+
+    比如 eversql 有免费的 SQL2Text 的工具, 但是不知道这个工具是用来做什么的, 搭建一个 SQL2Text, 这个肯定火
+
+  9. podwise 使用一些服务
+     - 反馈收集 saas 服务 https://tally.so/
+
+     - https://www.futuretools.io/
+
+- 出海工作组文档结构设置
+
+  - 出海方案文档
+
+    - 例会
+      - 例会上要同步的信息
+        - 产品的注册用户数
+
+        - Google ADs 的数据
+
+      - 上周的任务安排
+
+    - 物料
+
+  - SQL-GENIUS 宣传物料
+
+    - 宣传方案
+                   
+- [X] 准备工作
+
+  - [X] 官网怎么弄?
+    方案 + 内容
+
+  - SEO: 官网+其它平台
+    
+- [[https://cloudcannon.com/tutorials/hugo-seo-best-practices/][Hugo SEO Best Practices | CloudCannon]]
+  
+- 复审 [[https://actiontech.feishu.cn/docx/UsFDdI6umoyO0pxVB8gc3h0Fnbf][‬出海业务计划2025.1.8 - 飞书云文档]]
+  1. 邮件运营
+
+  2. awesome github 打榜
+     
+- [X] ChatDBA - 已添加到飞书任务
+
+  - Plan 的补贴流程没了, 需要说明为什么要补贴, 即补贴解决了说明问题, 或者产生了什么效果, 需要对比样例
+
+  - CoT 流程是从哪里来的么?
+
+  - 对文档进行 Summarize ? why
+
+  - 对于宽泛性的问题, 召回的文档太多
+
+  - 售中试用
+
+  - 宣传的一些事项
+
+- [[id:20D238D0-DECE-4D96-963B-DAF3B43E4762][Text2SQL 的 wishlist]]
+- line mode 美化
+  #+begin_src emacs-lisp :tangle yes :results silent
+        ;; 将内部边框宽度设置为 20，增加框架边距
+        (add-to-list 'default-frame-alist '(internal-border-width . 20))
+
+        ;; 自定义 mode-line 样式，设置 overline
+        (custom-set-faces
+         '(mode-line ((t (:overline t :height 1.0 :background "#f0f0f0" :foreground "#000000" :box nil))))
+         '(mode-line-inactive ((t (:overline nil :background "#e0e0e0" :foreground "#a0a0a0" :box nil)))))
+
+        ;; 定义 mode-line 对齐函数
+        (defun mode-line-align (left right)
+          "返回一个字符串，将 LEFT 和 RIGHT 分别对齐到当前窗口的左右边缘。"
+          (format (format "%%s %%%ds" (- (window-total-width) (length left) 2))
+                  left right))
+      
+      #+end_src
+
+*** Review
+:LOGBOOK:
+CLOCK: [2025-01-11 Sat 22:38]--[2025-01-11 Sat 23:27] =>  0:49
+:END:
+
+** W03 工作记录 [7/7] :ARCHIVE:
+:PROPERTIES:
+:Create:   [2025-01-13]
+:ID:       99C00167-E24D-4D69-8C04-1A82853A42DA
+:END:
+
+- [X] [[id:20D238D0-DECE-4D96-963B-DAF3B43E4762][Text2SQL 的 wishlist]]
+- [X] 备份 vaultwarden, 在 OneDrive 备份
+- [X]  [[id:93835243-371A-4EA9-B383-D4479B3A4A09][ChatDBA 文档规划]]
+  
+- [X] 净收入留存率
+  
+  净收入留存率(NRR)是一项重要的 SAAS 指标，因为它衡量了公司留住和增加来自现有客户的经常性/订阅收入的能力, 对于 ChatDBA/SQLGenius 来说找一项结果是?
+  
+- [X]  [[https://hub.opencompass.org.cn/home][OpenCompass司南 - 评测集社区]]
+- [X] 周园下周
+  - SEO 关键字
+  - SEM
+  - 海报
+  - 示例调整
+
+- [X] 将 git-remote-repo 迁移到 nas, 只在 OneDrive 做备份
+
+  归档至 [[id:4A09E900-F699-45B1-BE70-017D82F769C9][群晖使用说明]]
+  当前现状:      
+  - ssh admin 使用 ip 和域名都能正常登录群晖,
+    执行 ~ssh  -p 2022 admin@192.168.71.67~ 正常
+    执行 ~git clone ssh://git@192.168.71.67:2022:/volume1/git/knowledgebase~  完全没有反应
+  - git 用户执行 git clone ssh://git@192.168.71.67:2022:/volume1/git/knowledgebase 也没有反应
+
+  git remote add ds ssh://git@ref.myds.me:2022/volume1/git/knowledgebase
+
+  https://www.cnblogs.com/timhant/p/15346100.html
+
+*** DONE 周园疑惑官网数据库的独立页面怎没做
+CLOSED: [2025-01-16 Thu 15:17]
+- State "DONE"       from              [2025-01-16 Thu 15:17]
+http://10.186.18.11/confluence/pages/viewpage.action?pageId=189726884
+
+预期/目标
+希望用户知道优化的效果
+
+希望调整的做法
+ 三个阶段的图例
+
+原方案:
+写案例
+
+** W04 工作记录 [0/1]
+:PROPERTIES:
+:Create:   [2025-01-20]
+:ID:       456C3B68-F537-4002-9984-B7F2775438CC
+:END:
+
+- [-] 罗韦训练
+  - 森大主要测什么东西, 汇报什么功能
+  - 年前
+  - 机动人员
+  - 过年房价
+  - 在例会上希望所有人得到什么信息
+    - 内测的情况
+    - 孙健的那个问题： top  SQL  用不了
+    - 会上没有问题是因为你不想在会上提问，还是没想到问什么
+    - 袁 ：移交给前端处理是，所以前端的结论是啥
+    - Java  打包的流邮件
+  - ChatDBA 后续要处理的事项
+    - docs 文档要换方案
+
+   https://applink.feishu.cn/client/message/link/open?token=AmdanJVfD4ACZ2UZD7VKQAI%3D
+  
+  1. 沟通上要多听别人想表述什么
+
+  2. 做事上要先想任务怎么完成
+
+  3. 犯的常见的错误是?
+
+- 等待吴琦任务列表
+- 经验记录
+
+  - 在"不要当个热心的好人"列表新增一个实例
+
+    不要主动提供资源, 因为不是所有人一些 "有些事物" 的价值都达成共识的
+
+  - 与王昊沟通中说处理了的一个场景
+
+    就是
+
+  - 你应该是一个有成本的资源
+- 推送 [[id:20D238D0-DECE-4D96-963B-DAF3B43E4762][Text2SQL 的 wishlist]] 事项给他人开始推进
+- [[id:93835243-371A-4EA9-B383-D4479B3A4A09][ChatDBA 文档规划]] 
+
+*** 虚拟 CTO
+:PROPERTIES:
+:ID:       37C28E6B-61CB-49A4-BD1D-5640C8533978
+:END:
+
+- 黄炎的空间中的文档
+  - [ ]  确定系列, 尝试整理黄炎的文章的内容
+    阅读论文系列, ChatDBA 优化系列
+
+  - 训练方式一
+
+- 需要黄炎回答的问题
+
+  https://www.reddit.com/r/SQLOptimization/
+
+*** Review :REVIEW:
+:LOGBOOK:
+CLOCK: [2025-02-06 Thu 14:37]--[2025-02-06 Thu 14:47] =>  0:10
+:END:
+
+** w05 工作记录 [0/0]
+:PROPERTIES:
+:Create:   [2025-01-29]
+:END:
+
+- orgmode 的 =C-c C-c= 的设计非常有意思
+  就是在 orgmode 文档的各种类型的元素上执行 =C-c C-c= 总会有意想不到的结果, 比如在
+  - *TODO 项目* 上按下 =C-c C-c=，会切换任务状态（如从 TODO 切换到 DONE）。
+  - *表格* 单元格中按下 =C-c C-c=，会重新对表格进行对齐格式化。
+  - *代码块* 中按下 =C-c C-c=，可以执行代码块中的内容（如运行代码）。
+  - *时间戳* 上按下 =C-c C-c=，会更新时间戳为当前日期和时间。
+  - *属性设置* （如 #+TITLE:）上按下 =C-c C-c=，会重新应用该属性。
+  - *CheckBox* 列表项上按下 =C-c C-c=，会更新复选框的状态（如从 [ ] 切换到 [X]）。
+- 已线下沟通。因其服务器部署于境外，为确保合规性，现阶段不会公开宣传在国内直接使用该产品。对外宣传仍维持原口径，但在私下咨询时会和用户可在海外直接试用。同时增加预告会在国内上线
+- 在记日志中的问题
+  比如关于 "为什么" 的信息应该记录在哪儿
+- Mac 升级至指定版本
+
+  https://support.apple.com/zh-cn/102662
+
+*** 过年期间的记录
+:PROPERTIES:
+:ID:       b51eeb97-bae4-49a5-93ab-3bb9ecfacb1d
+:Create:   [2025-02-02]
+:END:
+
+- 在考虑我妈这一辈子找老公的价值, 以及思考一个问题, 对我来说妈妈会更"重要", 这个重要不在于物质, 而在与"情绪价值"?
+- 不要做没有价值的好心人
+  
+  不要让别人会把你的付出当作理所当然
+- 要做一个高能量的人, 或者多接触高能量的人
+
+- 自信的本质是对事坚定，对人谦和
+- *生成了一个2025 的目标:* 之前去拜佛时, 发现自己开过很多次空头支票, 比如要做一个好人, 以及捐赠香油钱等, 要完成自己的空头支票, 因此：2025 年做好人好事 + 普陀寺必须花到 5000 元
+
+*** DONE 给孙健要求 :ARCHIVE:
+CLOSED: [2025-02-06 Thu 11:28]
+- State "DONE"       from              [2025-02-06 Thu 11:28]
+1. 要确人成员有没有理解你的意思
+2. 顾亦佳本周工作安排
+
+* Feb.
+** 目标
+:PROPERTIES:
+:Create:   [2025-02-17]
+:ID:       94EE5ECE-5F8F-485B-AC0F-37920F8BDBCC
+:END:
+
+#+BEGIN: clocktable :scope tree2 :maxlevel 3 :link t
+#+CAPTION: Clock summary at [2025-03-03 Mon 15:22]
+
+#+END:
+
+
+#+BEGIN: clocktable :scope tree2 :link t :match "+REVIEW" 
+#+CAPTION: Clock summary at [2025-03-03 Mon 15:22]
+
+#+END:
+- 资料查询练习
+    [[chrome-extension://pnmchffiealhkdloeffcdnbgdnedheme/trends.html][<使用搜索替代闭门造车>的历史记录]]
+  - google 搜索历史记录: 环比下降 20%
+  - poe 剩余量 937,127
+    
+- 产出一篇文章
+  [[id:57C0ACD8-C1C8-422D-9012-F4596D2B158C][EverSQL 的推广途径]]
+
+** W06 工作记录 [1/1]
+:PROPERTIES:
+:Create:   [2025-02-07]
+:END:
+
+-  需要增加多种数据库的支持
+- deepseek 访问
+
+  腾讯云:https://lke.cloud.tencent.com/lke#/experience-center/detail?expAppBizId=1887453086201675776&appType=knowledge_qa&avatar=https%3A%2F%2Fqidian-qbot-1251316161.cos.ap-guangzhou.myqcloud.com%2Fpublic%2F1773234660389421056%2Fimage%2FnCpqyPwvZLpKKLIogCmk-1887453082234912768.png&name=DeepSeek%E8%81%94%E7%BD%91%E5%8A%A9%E6%89%8B
+  秘塔: https://metaso.cn/
+
+*** DONE SQLFlash 视频大纲
+CLOSED: [2025-02-08 Sat 15:55]
+- State "DONE"       from              [2025-02-08 Sat 15:55]
+https://actiontech.feishu.cn/wiki/TZddw0a4Xi9VlnkScxkcIDIJny5
+
+** W07 工作记录
+
+- 以终为始的文档应该写在哪儿?
+- 如何找到一个 orgmode 的 backlink
+
+  consult-org-roam-backlinks
+- deepseek key
+
+  腾讯云的 API-KEY sk-EoUrzMJJ7nG07B07QLPIWMLIQucu7CAS6e0DmtPVmLlk0LdT
+
+  sk-8a2498e476f9454c815beca726aad545
+  #+begin_src emacs-lisp :tangle yes :results silent
+    ;; OPTIONAL configuration
+    (setq gptel-model   'deepseek-chat
+          gptel-backend
+          (gptel-make-openai "DeepSeek"     ;Any name you want
+            :host "api.deepseek.com"
+            :endpoint "/chat/completions"
+            :stream t
+            :key "sk-8a2498e476f9454c815beca726aad545"             ;can be a function that returns the key
+            :models '(deepseek-chat deepseek-coder)))
+  #+end_src
+
+*** 周期性要追踪的事项
+
+- 王虎程
+- 罗韦
+- 要求 SQLE 的任务拆分下去的问题
+
+*** GA 学习了解
+
+https://actiontech.feishu.cn/docx/QJ7sdwVHcooGotxJ5Zlczg0cnSe
+
+*** ChatDBA 商业流程怎么走
+
+https://applink.feishu.cn/client/message/link/open?token=AmHCudezwEAEZ67wQeKEgAI%3D
+
+** W08 工作记录 [1/2]
+:PROPERTIES:
+:Create:   [2025-02-17]
+:END:
+
+- 数字营销
+
+*** SQLE 的例会问题
+
+- 发现了哪些问题其实是我不需要问的
+- 发现知道应该怎么要求孙健/罗韦了
+  - 要求一定时间后, 所有成员的周报格式应该 xxx 的, 而不应该详细问每个问题
+    - 所有问题是否已经明确下一个时间点, 如果没有时间点, 则需要明确阻塞条件和触发的条件
+- 关于标签的问题: 为什么是孙健在处理
+
+*** TODO [#A] 邮惠万家的沟通
+
+已经跟姜晓宇沟通, 双因素认证 + 脚本执行
+
+*** 沟通
+
+要沟通几个问题
+
+1. 不应该受到现有限制-> 不做内核的开发
+2. 没有先例 -> 所以不敢投入成本
+3. 虎青投入意味着我跟你的投入 -> 过于未知,
+
+**** 为什么没做成
+
+1. SQLFlash 
+   
+2. 我们的分析: 产品已经 OK 了, 是前侧不行 -> 我们应该自己来做
+
+**** 关于接下来能做什么
+
+为什么要投入 hq , 以及投入能做什么
+
+分歧是什么: Tac 觉得需要定义好要给 YHQ 要做什么, 否则不能回答他的问题?
+
+我的观点是, 不能回答就不回答, 后续再想呗, 反正当前也是不知道怎么做, 后续最坏的情况也是不一定知道. 
+
+纷争重要么?
+不重要, 因为我只是觉得这个事可以更多人做, 而且是最合适的资源
+
+**** SQL 内核能做什么
+***** 技术上解决什么问题
+
+- 长 SQL
+- +复杂 SQL(因为是模糊概念, 所以暂时忽略这点)+
+- 来源与 SQLE 的要素
+  - 获取语法树信息
+  - 
+- 来源与 SQLFLASH 的要素
+  - 执行过程
+  - 花费成本
+- 能力是能跨数据库版本 & 跨数据库种类的
+
+- ....
+
+***** 商业上解决哪些问题 & 如何解决这些问题
+
+- 对于爱可生自身而言
+
+  有些特性, 所有的产品都可以使用的, 如长 SQL
+
+- 对于变现而言:
+
+  从趋势分析来看，任何数据库产品都需要具备 "SQL" 的能力。然而，需要回答的关键问题是：
+
+  1. 哪些业务场景需要这些能力？
+
+  2. 哪些场景是用户愿意为此付费的？
+
+*** 更新产研周报版本
+*** DONE 看雷霞他们的测试产品做的效果, 以及可能有哪些卖点
+CLOSED: [2025-02-21 Fri 11:16]
+- State "DONE"       from              [2025-02-21 Fri 11:16] \\
+  批量执行重复的测试用例?
+
+*** 观点
+
+- AI 的下一个突破点是信息输入的方式转变, 当前的文字输入方式实在是效率太低
+- 为什么 AI 是一场革命: 人与人之间的差距变成天堑
+
+*** 与罗百顺沟通交流海外营销的事项的沟通
+:PROPERTIES:
+:ID:       6FE09DB9-C0A8-49DE-957C-E58E1A4DA41C
+:END:
+:LOGBOOK:
+CLOCK: [2025-02-26 Wed 15:43]--[2025-02-26 Wed 15:48] =>  0:05
+CLOCK: [2025-02-24 Mon 18:26]--[2025-02-24 Mon 18:41] =>  0:15
+:END:
+[[id:DD6DE9D3-33C7-4CAD-843D-C59DEC4115CC][2025-02-26 日 SQLFLASH 需要做的调整]]
+
+*** Review :REVIEW:
+:LOGBOOK:
+CLOCK: [2025-02-24 Mon 11:21]--[2025-02-24 Mon 11:31] =>  0:10
+CLOCK: [2025-02-23 Sun 22:54]--[2025-02-23 Sun 23:24] =>  0:30
+:END:
+
+** W09 工作记录   [2/4]
+:PROPERTIES:
+:Create:   [2025-02-24]
+:END:
+
+- 每件事需要问的问题
+  - Define-Of-Done 是什么?
+
+    - 是否有倒推
+    
+  - 如果效率要提升 10 倍, 该怎么做?
+  - 是否遵守了第一性原理
+- [ ]  ChatDBA 测试:https://actiontech.feishu.cn/docx/Tjt7d9Y7BoFdt9xq8gAczBZVnWf
+
+*** DONE 任务排期的标准
+CLOSED: [2025-02-24 Mon 15:28]
+- State "DONE"       from              [2025-02-24 Mon 15:28]
+1. 杨 的 上汽大众 还有要修复的以及等待
+
+*** NEXT AI 下一个产品线, 找一下企查查或者天眼查的监听问题
+:PROPERTIES:
+:ID:       aabf3558-0ded-4dda-a780-6d1f7bcbd5e1
+:END:
+
+*** DONE 跟王昊沟通后续的前端安排
+CLOSED: [2025-02-24 Mon 18:22]
+- State "DONE"       from              [2025-02-24 Mon 18:22] \\
+  1. 自己做
+  2. 没问题, 但是需要思考一下怎么做
+
+     
+1. 为前端团队制定一套可行的 AI 使用方案
+2. 规划新产品开发
+
+*** DDDrr
+
+- 找最佳
+
+  找热点/喂热点
+
+**** 历史的总结
+:PROPERTIES:
+:GPTEL_TOPIC: 历史发展的一些总结
+:Create:   [2025-02-26]
+:END:
+
+这个后面加追问
+告诉他日志中报错是什么
+
+*** 人升
+
+1. 日常打卡 -- 维持现状
+2. 副业赚钱进度
+
+*** Review :REVIEW:
+:LOGBOOK:
+CLOCK: [2025-03-03 Mon 14:39]--[2025-03-03 Mon 15:21] =>  0:42
+:END:
+
+* Mar.
+** 目标
+
+- 每天定一个主题，然后围绕这个主题进行查找 10 个左右的资料，然后进行记录，从 3 月 24 日开始: 没有做到, 大概总共才找了 10 个资料
+
+** W10 工作记录 [3/3] :ARCHIVE:
+:PROPERTIES:
+:Create:   [2025-03-03]
+:END:
+
+- SQLFLASH 训练时, 如何构建数据
+
+*** 整理出来合适的 AI 类的想法
+
+- [[https://earlybird.im/blog/30-brilliant-micro-saas-ideas-for-developers-marketers-and-designers-in-2023-from-chatgpt/][30 个面向 2025 年个体经营者的优秀微型 SaaS 创意（来自 ChatGPT）]]
+
+*** CANCELLED gptel/AI 使用上的问题 :CANCELLED:
+CLOSED: [2025-03-19 Wed 15:05]
+:PROPERTIES:
+:Create:   [2025-02-27]
+:END:
+- State "CANCELLED"  from              [2025-03-19 Wed 15:05] \\
+  实在太难用, 不考虑使用了
+
+  
+- 菜单挺看不懂的?
+
+- 在 GPTel 预设 prompt 列表中新增一项：针对所选区域提问"为什么"。
+
+- 如何在 gptel 现有的配置方式下,  支持不同场景下使用不同的 system prompt
+
+  - 比如优化文字
+
+  - 问为什么
+
+- 设置了 gptel-org-set-topic 后, 翻译用不了了
+
+- 使用 AI 时, 很多时候对于最终结果的要求是不明确, 只能从结果判断不太对
+
+  举例: 如让 AI  调整周报
+
+  - 我不知道从整体上来说应该是怎么样
+
+  - 我不知道下一步是什么
+
+  - 通用诉求：符合当前文档的层级要求
+
+- context
+  
+  需要提供合适的 context 给 AI 
+
+**** 功能介绍
+***** 保存与 LLM 的聊天记录
+
+- 暂时只有一轮对话, 因为这是最常用的
+
+*** DONE SQLFlash 下一步
+CLOSED: [2025-03-19 Wed 15:21]
+:PROPERTIES:
+:Create:   [2025-02-26]
+:END:
+- State "DONE"       from "IMMED"      [2025-03-19 Wed 15:21]
+:LOGBOOK:
+CLOCK: [2025-03-19 Wed 15:19]--[2025-03-19 Wed 15:21] =>  0:02
+CLOCK: [2025-03-17 Mon 10:28]--[2025-03-17 Mon 10:48] =>  0:20
+:END:
+
+- [X] 各方要填的数据: 在周报中
+- 国内宣传
+
+  - 找 KOL 推广国内: 可能需要提供一些数据/案例怎么来
+- [X] 增加 SEO 内容 -- By 开发
+  http://10.186.18.11/confluence/pages/viewpage.action?pageId=194674946
+  
+  - 可用主题
+    各种 SQL 的优化案例
+
+- [X]  周园的文档迁移
+
+**** DONE 周五跟罗百顺的沟通内容
+CLOSED: [2025-03-19 Wed 15:22]
+- State "DONE"       from              [2025-03-19 Wed 15:22]
+1. 怎么分析 GA 的数据
+2. 我们现在的 SEO 怎么做 
+3. 外链方案的评估
+
+**** sqlflash 的外链方案 [[id:50502299-F024-43F8-B4DB-ACAF253470FF][@管长龙]]
+:PROPERTIES:
+:ID:       2C1D1140-B9C1-43C1-BABF-325AE9EA674E
+:END:
+
+1. 我们后续看什么平台的数据, 怎么看
+   要求涉及到具体指标, 指标主要查看 DA ?
+   https://actiontech.feishu.cn/wiki/Q3pvwcg9giTuUJkKTVUcChT2nyE?table=tblorqYsviLA3YsL&view=vewfUTFcUV
+
+**** 关键词用哪些
+
+http://10.186.18.11/confluence/pages/viewpage.action?pageId=194674946&focusedCommentId=195461637#comment-195461637
+
+*** DONE 追踪王昊开发流程 AI 改善的事项
+CLOSED: [2025-03-19 Wed 15:22]
+- State "DONE"       from              [2025-03-19 Wed 15:22]
+目标: 新产品能使用
+- [ ] 王昊需要总结文档:当前遇到的问题的清单
+
+*** DeepSeek 的出现, 不应该是英伟达不行了, 恰恰相反, 应该是让更多的芯片公司行类
+*** Review :REVIEW:
+:LOGBOOK:
+CLOCK: [2025-03-19 Wed 15:05]--[2025-03-19 Wed 15:29] =>  0:24
+CLOCK: [2025-03-14 Fri 14:53]--[2025-03-14 Fri 15:19] =>  0:26
+:END:
+
+** W11 工作记录 [6/6]
+:PROPERTIES:
+:Create:   [2025-03-11]
+:END:
+
+- [ ] 查资料: 面向 AI 的SEO
+
+   最近 AI 的趋势, 完全不同的几方都在问我或者再跟我沟通, 怎么让 AI 展示出他们公司的产品
+- metatags.io : 网站 metatag 调试预览网站
+- 分析文章, 找到在描述相同的概念但是使用相似或者近义词的内容
+
+*** DONE 外链选用
+CLOSED: [2025-03-21 Fri 15:22]
+- State "DONE"       from              [2025-03-21 Fri 15:22]
+[[https://actiontech.feishu.cn/wiki/Q3pvwcg9giTuUJkKTVUcChT2nyE?table=tblorqYsviLA3YsL&view=vewfUTFcUV][SQLFlash 外链建设 - 飞书云文档]]
+
+*** 黄炎的文章: 非常非常适合发表
+
+http://8.134.54.170:8330/pages/viewpage.action?pageId=3801147
+
+文章解决的问题:
+1. 只解决了数据压缩, 但是没解决如何查找问题的?
+2. 如何构建 SQL 特征齐全的 SQL 数据集, 并在此之下满足类以下要求
+   - 能按照不同的业务场景补充对应的 SQL 特征
+3. 在 SQL 优化的场景下: 如何快速校验结果是否复合要求, 从原来孙健3-4小时验证一轮, 到20 分钟一轮
+
+*** DONE [[https://actiontech.feishu.cn/wiki/IZDvwbhrQiVIX2kpESBcaMutnWb?fromScene=spaceOverview&sheet=Z4nlnu][数科的评估]]
+CLOSED: [2025-03-11 Tue 16:01]
+- State "DONE"       from              [2025-03-11 Tue 16:01] \\
+  毛利低于 40%, 不考虑做
+需要弄清出的问题:
+1. 需要了解产品大概交付内容/成本
+
+   数据库种类和操作系统都非常多, 需要说明,
+   核心数据库是 Oracle, SQL Server 使用量不少,
+   操作系统: linux 系成本都包括, windows 不支持
+
+   产品重点在监控和巡检上 + 报表, 其中巡检需求反复沟通多轮, 但是需求有简化
+   1. 产品交付的重点需求有哪些?
+   2. 数据库种类
+   3. 用户关注的功能有哪些?
+2. 哪些东西必须开发, 哪些是开发成本非常高的
+
+   巡检开发, SQL Server(ing) +  oracle 
+
+3. 目前评估下来风险在哪儿?
+
+   操作系统要支持的种类比较多
+   
+4. 交付时间?
+   
+
+目前信息是这样的
+开发成本包括:  SQLE + DMP
+- SQLE 需要开发支持 Redis + Mongo, 目前这一块在需求单上是没有之前填成本, 因此总成本还要加 80 人天
+- DMP 需要需要开发都成本都在表格上, 能压缩都成本有限, 其余都是需要做的功能
+
+交付信息信息: 时间太短
+- 产品定制化开发部分须在合同签署后60日内开始上线试运行，上线试运行时间2个月
+
+
+结论: 我看标书是低价优先, 那按照 40%  的毛利要求, 这个项目做不了
+
+*** DONE SQLFlash 文章复审
+CLOSED: [2025-03-20 Thu 16:40]
+- State "DONE"       from              [2025-03-20 Thu 16:40] \\
+  http://10.186.18.11/confluence/pages/viewpage.action?pageId=194674946
+文章目标:
+
+1. 展示我们在数据库领域的专业性
+2. 展示 SQLFlash 产品的的优点
+
+*** DONE 市场例会
+CLOSED: [2025-03-21 Fri 13:50]
+- State "DONE"       from              [2025-03-21 Fri 13:50] \\
+  [[https://actiontech.feishu.cn/wiki/JokHwYjBHiZt7Sk146rceZGznZc][2025-03-18 周报 - 飞书云文档]]
+付费流量来源
+1. Eversql 的流量来源
+
+   小工具
+2. PingCAP 的流量
+   
+3. 长龙: 总结跟 QC 的交流结论, 包括内容可能有如下:
+   1. 需要确定后续我们要看哪些指标
+
+   2. 友商使用过的一些营销策略, 如流量来源等
+
+   3. QC 的建议
+      1. 网站本身的优化
+
+      2. OnePage 的优化不到位
+
+上周工作情况
+1. [X]  网站调整，增加邮件订阅--进行中1
+2. [ ]  活动页面修改，增加并放大兑换码--进行中
+3. [ ] SEO内容策略，外链等---外链邮箱申请完成后，即刻购买外链上架
+4. [ ] 确认一个问答渠道，深耕或者建立个人站--stackoverflow
+5. SEO宣传课程，网上教程----时间紧张未看
+6. 虚拟CTO的名字，技术性--孙健
+7. github的SQLFlash的产品页面---还没开始
+
+*** 老的安排
+
+- 医疗知识
+- 钱
+- 社交
+
+*** DONE 张金牛的安排
+CLOSED: [2025-03-21 Fri 15:23]
+- State "DONE"       from              [2025-03-21 Fri 15:23]
+- [ ] 要跟他沟通几个ChatDBA 的问题
+  
+  http://10.186.16.135:7019/share/session/7e8f73f8-fe4c-4165-97a4-1fe9370091de/
+- [ ] 需要跟他确定好文章后续书写的问题
+
+*** DONE SQLFlash 活动页调整
+CLOSED: [2025-03-21 Fri 15:26]
+- State "DONE"       from              [2025-03-21 Fri 15:26]
+搜索参考: https://www.perplexity.ai/search/provide-some-examples-of-saas-Qr.rLTHeT5qqYdBOOMf2qg
+
+- https://beefree.io/ 挺有意思的网站, 不过好像是偏向实体经济的点子营销
+  好象是着陆页和网站设计
+
+** W12 工作记录 [1/3]
+:PROPERTIES:
+:Create:   [2025-03-17]
+:END:
+
+- 文章列表: 王悦: 如何制作数据, 王昊: cursor 在编程中遇到的问题
+- [X]  2 篇 SQLFlash 文章复审
+
+  http://10.186.18.11/confluence/pages/viewpage.action?pageId=197918749&focusedCommentId=197919116#comment-197919116
+
+*** DONE SQLFlash 周报
+CLOSED: [2025-03-20 Thu 16:15]
+- State "DONE"       from              [2025-03-20 Thu 16:15]
+
+**** 数据填写
+***** 吴琦
+
+- 用户数
+- 兑换码使用量
+- 任务量
+
+***** SEO 要同步的数据
+
+- [ ] SEO文章两篇
+- SEO 数据
+- 定期找词更新 SEO 关键词库: 需要提供本周的关键字
+
+***** GA 数据
+
+- 活跃用户数 & 与上周的数据差异
+- 其余数据按照之前方式同步
+
+**** 上周任务
+
+- 与 QC 的沟通后的结论
+
+  1. 需要确定后续我们要看哪些指标, 需要与同行对齐基线
+
+  2. 友商使用过的一些营销策略, 如流量来源等
+
+  3. QC 的建议
+     1. 网站本身的优化
+
+     2. OnePage 的优化不到位
+
+  4. ....等等
+
+- [X]  官网调整,增加并放大兑换码
+  
+   调整了首页+活动页. 会根据反馈再调整
+   
+- [X] 虚拟 CTO: 后续开发提供的文章统一署名: Rebooter.S
+
+- [ ] eversql,pawsql的付费流量情况截图  
+
+- [ ] medium/reddit 个人号申请
+  
+- [X] SEO内容策略，外链等---外链邮箱申请完成后，即刻购买外链上架
+  
+- [X] 确认一个问答渠道，深耕或者建立个人站--stackoverflow/reddit
+
+- [ ] 网站调整，增加邮件订阅--进行中
+
+  本周开发会完成
+- [ ] github的SQLFlash的产品页面---还没开始    
+  
+- [ ] SEM谈打包充值价格，找采购谈折扣
+
+- [ ] 其他社交平台正常同步内容，回答问题
+  
+- [X] 外链需要的邮箱和采购预算
+
+**** 其它
+
+- [ ] SEO宣传课程，网上教程----时间紧张未看
+- [ ] 网站优化，结构，图片性能，OP性能不到位
+
+*** 个人版本 rag
+
+- 能解析各种文档
+- 能根据用户文档补充内容
+  总结: 方法, 理论等
+- 能让用户看到文档的 chunk 是否合理
+
+*** WAITING Tac 对孙健的反馈 :WAITING:
+:PROPERTIES:
+:Create:   [2025-03-03]
+:END:
+- State "WAITING"    from              [2025-03-03 Mon 14:42]
+
+  孙在对下的沟通时, 会打断别人的话, 没给人发言机会
+
+*** 调研"监听网页变更"类产品市场
+:PROPERTIES:
+:Create:   [2025-02-26]
+:END:
+
+有哪些产品, 使用场景是?
+黄炎用过的是 Changedetection.io
+
+LLM 的回答 https://poe.com/s/NmcROfys1jxReMrvrli9
+
+- [ ]  初步了解 Changedetection.io 的功能和使用场景。
+- [ ]  使用 LLM (Poe) 获取相关信息：[粘贴 LLM 的具体回答，并进行总结和分析]。
+- [ ]  深入了解用户的使用场景，例如：[列举具体的使用场景，例如：价格监控、新闻追踪、竞争对手监控]。
+- [ ] 找一些行业报告
+
+*** 整理信息
+**** 角色&场景
+
+上班族, 管理者/项目管理者, 是会接收到大量信息并需要处理的职业。需要高效地管理信息，避免重复劳动，并能快速检索所需内容。深层需求可能包括减少信息过载带来的压力，提升工作效率，以及构建个人知识体系。
+
+**** 需求/痛点
+
+- 降低认知负荷(重复内容占用认知资源、） > 构建知识体系 > 提升决策质量（按优先级排序、知识难以转化为行动项）
+- 跨项目交叉引用
+
+**** 目标
+
+- 短期目标（降低信息熵值）
+  
+- 中期目标（建立信息关联网络）
+  
+- 长期目标（实现知识反哺工作流）
+
+**** 整理策略
+
+1. 分类逻辑采用「MECE原则」（相互独立，完全穷尽）
+2. 优先级标记系统：
+   - [#A] 紧急重要
+   - [#B] 重要不紧急
+   - [#C] 日常事务
+3. 时间线组织 :: 为含时间节点信息自动创建SCHEDULED标记
+
+**** 处理指令
+
+对于用户每次提交的碎片信息，LLM能自动整理，这可能涉及到信息的分级、标签化、关联已有内容等。
+
+***** TODO 需要在 prompt 中定义明确的处理步骤，比如捕获新信息、分类、更新索引、生成结构化输出等。
+***** 【记忆强化机制】:潜在知识缺口检测（推荐需要补充的信息类型）
+** W13 工作记录 [2/2]
+:PROPERTIES:
+:Create:   [2025-03-24]
+:END:
+
+- 关于目标的练习内容:
+  - 确定一个关键词, 搜索 10 个网页, 然后指定一个 prompt 由 AI 总结
+
+*** DONE 吴琦的绩效 bonus 备注
+CLOSED: [2025-03-25 Tue 13:35]
+- State "DONE"       from              [2025-03-25 Tue 13:35]
+做事主动性好, 产出高，本月完成了多个事项， 效果都很好
+
+*** DONE 电信电渠 :项目:
+CLOSED: [2025-03-28 Fri 10:42]
+- State "DONE"       from              [2025-03-28 Fri 10:42]
+
+**** 当前对客户的把握程度?
+**** 客户信息
+
+1. 已经在用 Archery, 而且有很多定制化, 能做到自动生成 SQL, 然后走后续审核流程, 因此不考虑完全将 Archery 替换成 SQLE
+   - 存在的问题: 没有多轮对话, 只有单轮
+   - 需要更多的支持 DML, From: AI+SQL审核平台.docx
+2. 客户 AI 开发团队和数据库团队今年一定要做点东西?
+3. 今年会有 oracle 迁移到 ob 的业务
+   执行方式会有点区别, 迁移会分为多个阶段
+   - 仅仅迁移: 能上线即可? 一般是走商业方案完成(比如原厂服务,  或者爱可生的服务)
+     这个阶段只关注,能不能让原业务跑起来
+   - 后续优化: 实际业务运行过程中, 由开发自行负责优化调整
+    
+
+参考: https://bailian.console.aliyun.com/xiyan?spm=5176.29602854.J_OAuvzIEbrr89sKa_vZwXK.2.68c85f7bA21c3Q#/home ?
+
+**** 预期的客户场景
+***** 场景一: 当前的 Archery + AI 满足 DBA 团队当前的问题?
+
+- Text2SQL + 优化
+- DML 
+
+***** 场景二: 迁移至 OB + 后续 OB 的优化
+
+- 明确的需求: 迁移至 OB
+- 可能的场景: 后续 OB 持续使用过程中
+
+***** 业务场景三: 也许我们可以提供?
+**** 预期的合作模式:
+
+明确的可合作的内容
+1. 支持用户去 O, SQL 迁移和转换
+   - 初期 SaaS 服务
+   - 后期可私有化部署
+
+可能的方向
+
+1. 定制版本的 Text2SQL:
+   - 主要解决 《AI+SQL审核平台.docx》文档中关于 DML 的对应的问题
+   - 包括与 Archery 的集成
+
+     这个部分目前没有对应产品和技术积累, 预计从开源或者已有方案找一个方案, 可只做后端服务, 也可以是完整方案
+   
+2. ChatDBA -> DBA-Agent :
+   - 初期: ChatDBA 的 SaaS 版本, 需要比较好的支持 OB
+   - 后续: 定制版本/私有化部署版本 ChatDBA
+
+     根据客户的问题版本做的定制化问答版本的 ChatDBA, 由用户负责供场景和训练训练数据, 我们负责模型训练
+
+     场景范围包括 ChatDBA 现有范围, 知识问答 + 故障排查, 是否包括 Text2SQL 取决于 1. 是否合作
+
+*** Readme - 西顾
+
+ 职位
+负责产品线-DMP,SQLE,DMS
+做事观点
+坚定的做对的事情
+温柔的坚持自己的观念
+
+
+与我沟通的方式
+直接了当的沟通，用
+
+*** [#A] 投资的私募群
+** W14 工作记录 [1/1]
+:PROPERTIES:
+:Create:   [2025-03-31]
+:END:
+
+*** DONE SEO 关键字
+CLOSED: [2025-04-02 Wed 19:04]
+- State "DONE"       from              [2025-04-02 Wed 19:04]
+- [X]  blog 的文章上需要配置的 image, 这样分享到社交媒体, 才有图片
+
+*** SQLFlash 要解决的问题 -- SQL 一致性的问题
+
+https://yiyibooks.cn/arxiv/2312.10321v4/index.html
+可能的文章方向:
+- 数据集
+- 测试方法
+- 要解决的问题方向
+
+*** 在尝试在 reddit 中回复问题时发现
+
+- 在做 AI 类产品中, 经验和历史非常重要
+  比如 SQLFlash "我"尝试回复 SQL Server 时, 回答成本非常高, 首先的答案得我们验证, 其次"我" 是不能回复问题中没提到的内容
+- 你不知道"用户"要什么
+
+*** 本周针对具体关键字查过了多少网页
+*** 推广需要回答的问题
+:PROPERTIES:
+:ID:       8CC93E74-A12E-4ACD-B1C5-BAEF9D3D80AD
+:END:
+
+完成 [[id:48FA87AC-2AFB-4E4E-974E-B4FE45950AD9][整理 SQLFlash 宣传的信息]]
+
+- [ ] semrush 应该看哪些数据, 能得出哪些结论
+- [ ] GA 应该看哪些数据, 能得出哪些结论
+- [ ] Google Console 应该看哪些数据, 能得出哪些结论
+- [ ] 应该如何分析一个网站 
+
+* Apr.
+** 目标
+:PROPERTIES:
+:ID:       CE193AD6-6BA2-4135-BD34-54C34AEB615C
+:END:
+
+- [[id:5371417D-0D1F-46C8-8E36-A02206780A05][信息获取能力]]:
+- 抄毛选:
+   《湖南农民运动考察报告的》《论持久战》《新民主主义论》《星星之火，可以燎原》《矛盾论》《实践论》
+
+** W15 工作记录 [0/1]
+:PROPERTIES:
+:Create:   [2025-04-07]
+:END:
+
+- 流程: 首先找到一些资料交给 AI 总结, 其次让 AI 自行总结, 对比差异
+
+*** semrush 的 seo audit 分析
+
+参考来源: https://www.semrush.com/blog/seo-analysis/
+semrush vip3 路线
+- 外链
+- 关键字
+- 竞争性
+  - 竞争对手的流量
+  - 竞争对手的关键字
+
+工具, semrush 怎么看
+http://pics.anatman.live/kb/通过资料获取邮箱订阅.png
+
+*** SEO 分析学习
+
+  http://pics.anatman.live/kb/g-search-reuslt-20250415.png
+
+- [[https://moz.com/learn/seo/commercial-keywords][商业意图关键词指南：如何寻找和排名 - Moz --- Commercial Intent Keywords Guide: How to Find and Rank For Them - Moz]]
+- [[https://ahrefs.com/blog/zh/long-tail-keywords/][长尾关键词：它们是什么以及如何从中获取搜索流量]]
+  - [ ] https://poe.com/s/BTk0ckRLzdq9qlBRdDKz
+- 如何挑选关键字
+  - 长尾关键词
+  - 用户意图为商业的关键词
+
+*** GA 显示 (data not available) 问题:
+
+参考: https://poe.com/s/nCFqgKLebW9IfF2kXPKg
+
+- [ ] 我测试的:https://support.google.com/analytics/answer/1034342
+- [X] 需要吴琦检查 utm: https://ga-dev-tools.web.app/campaign-url-builder/ 
+
+*** TODO 生成 SEO 文章
+
+- 工具: https://serpapi.com/searches google 搜索 API
+
+
+
+- 流程: https://cloud.dify.ai/app/a369ce92-599e-4977-b2cf-87c19066151f/workflow
+  改为 jupyter book, Dify 太难用了
+  - [ ]  问题: 最好能我们额外给一些资料? 为什么: google 搜索的不够使用么?
+  - 要给书写方向么?
+    
+  - 当前问题:
+    - [X] 要确认生成的内容, 是否跟实际的关键字有关联
+
+    - [X] 每个章节都添加了 markdown 的代码块
+
+    - [ ] 要英文版
+      
+    - [X] 章节被打印出来了
+    - [ ] 问题: 
+    - [ ] 最后输出的时候添加一些 hugo 格式
+    - [ ] 流程最后添加一个 review 的流程?
+    - 裂变方向: 不同的例子, 如果是多个场景, 则每个场景分别写一篇文章
+    - 论述的风格: 理论论述, 举例的模式等等
+
+** W16 工作记录 [1/1]
+:PROPERTIES:
+:Create:   [2025-04-16]
+:END:
+
+- 观点: 不论 AI 怎么发展, 怎么有效输入上下文都是必须解决的事情之一
+
+*** 从生成 SEO 文章来说, 发现的 AI 流程
+
+搜索 -> 总结
+
+*** 深思圈工作号信息汇总
+**** [[https://mp.weixin.qq.com/s/8qXoKbnpnkQHnKRjM5ZY8A][深度干货｜我这一年的AI产品出海之路]] [收费]
+
+运营方向:
+
+*** DONE 将 medium 的文章转发到 Twitter
+CLOSED: [2025-04-20 Sun 22:58]
+- State "DONE"       from              [2025-04-20 Sun 22:58]
+
+*** 以前都是 EN 区的信息往 CN 区搬运, 也许我可以从 CN 往 cxEN 区搬运?
+*** lenny misc.a@outlook.com
+
+bundle 地址: https://lennysbundle.com/
+bundle2: https://lennysproductpass.com/
+cursor: 兑换码 K2XVNI55YM
+perplexity : LENNYEA5NN1HA
+n8n: 2025-LENNY-12AAF0E1
+warp: R3E1JFCM
+gamma: GXUAOO1A
+bolt: C6JX1KOM
+
+*** 每天要发2-3篇的话, 发什么内容?
+*** 深思圈文章
+**** 一、核心项目梳理
+
+1. AI 产品开发与迭代  
+   - 目标：打造差异化、符合海外市场的 AI 工具。  
+   - 关键行动：  
+     - 选择 PLG（产品驱动增长） 模式，聚焦海外生产力工具/教育领域。  
+     - 开发 AI-Native 产品（如无代码 LangChain、垂直场景工具）。  
+     - 通过用户反馈快速迭代，嵌入用户工作流（如插件形态）。  
+
+2. *自媒体与社群运营*
+   - 目标：建立影响力，获取早期用户和行业资源。  
+   - 关键行动：  
+     - 高频更新：
+       - 公众号/视频号每日 3-5 条 AI 产品资讯（内容筛选+手动剪辑）。
+       - 高频更新, 高频阅读, 能让自己有一个感觉: 读书百遍, 其义自现
+     - 多平台布局：要确定要维护哪些平台(Twitter & medium/reddit?): 同步小红书、即刻、Twitter（X）等，打造 SenseAI 品牌矩阵。  
+     - 私域社群：运营微信信息分享群（实时更新 AIGC/出海干货），维护高活跃度。
+   - Twitter/X 很重要
+
+     
+
+3. 海外流量体系建设  
+   - 目标：构建可持续的获客与品牌曝光渠道。  
+   - 关键行动：  
+     - Product Hunt 冷启动：提前 3 周准备素材，利用 Banner 功能预曝光。  
+     - SEO 优化：使用 AI 工具生成关键词内容，定期更新博客/官网。  
+     - 社交平台运营：Twitter（X）涨粉、Reddit 精准引流、LinkedIn 职场背书。  
+
+**** 二、具体行动步骤（Next Actions）
+***** 1. 产品开发与验证
+
+- 下一步行动：  
+  - 确定垂直场景（如教育类 AI 工具），完成 MVP 开发。  
+  - 提交至 AI 导航站（Futurepedia 等）获取早期用户。  
+  - 通过用户访谈验证 PMF（Product-Market Fit）。  
+
+***** 2. 内容营销与增长
+
+- 下一步行动：  
+  - Twitter（X）运营：每日发布 2 条 #BuildInPublic 或者 #indiehacker 标签的相关内容进展（如 ARR 数据、用户案例）。
+    - 小红类的清单内容: 
+  - Product Hunt 冲榜：选择周二/三发布，社群拉票（避免刷量）。  
+  - SEO 执行：用 Semrush 挖掘低竞争关键词，生成 10 篇博客并添加内外链。  
+
+***** 3. 资源整合与合作
+
+- 下一步行动：  
+  - 筛选 3 家 AI 初创团队，提供 GTM（Go-To-Market）策略支持。  
+  - 加入 Magineer 孵化营，学习内容营销与独立开发者变现路径。  
+  - 申请加入 Product Hunt 信息分享群，获取 KOL 资源。  
+
+---
+
+**** 三、策略与技巧总结
+***** 1. *冷启动策略*
+
+- Product Hunt：  
+  - 发布时间选 周二/三（流量高峰），利用 Banner 预埋关注。  
+  - 发布后同步至 Twitter，@ 官方账号与 AI 博主求转发。  
+
+- SEO：  
+  - 针对排名 10-20 名的关键词优化内容，定期提交至免费导航站。  
+  - 用数据图表吸引反向链接（如行业报告、工具对比）。
+  - 还有一个小技巧，在做了一段时间SEO后，你可以在CoogleSearchConsole的Performance 里找到被收录链接对应的关键词以及排名，找到那些排名在10-20名之间的关键词，把这些关键词在...（更多内容见付费）
+
+***** 2. 社媒运营技巧
+
+- *混圈子/打造粉丝基础*: 像国内公众号圈子
+  深思圈在构建平台时, 目标和明确: 要构建 Indie Hacker 的 Community -> 他的观点时: 必须要真正的融入活跃的创业生态圈中
+  - indie hackers(独立开发者)
+  - 和活跃的 KOL 建立 connection
+- Twitter（X）：  
+  - 使用 清单体（如"5 个必备 AI 工具"）和钩子文案（如"90% 的人不知道…"）。  
+  - 通过 RPA 工具批量关注目标用户（Indie Hacker、AI 开发者），提升粉丝精准度。  
+
+- Reddit：  
+  - 在 r/SaaS、r/Entrepreneur 等板块发帖，植入产品解决痛点的场景。  
+  - 用 Phantombuster 抓取潜在用户邮箱，定向推送 Waitlist。  
+
+***** 3. 资源复用
+
+- 工具栈推荐：  
+  - SEO：Semrush(keyword magic tool  ) + SurferSEO + ChatGPT 内容生成。  
+  - 社媒管理：Hootsuite（多平台调度）+ Taplio（LinkedIn 自动化）。  
+  - 冷启动：Product Hunt + AI 导航站 + Indie Hackers 社区。  
+
+---
+
+**** 四、等待处理与参考资料
+
+- 待确认事项：  
+  - Magineer 孵化营第二期报名时间。  
+  - 海外 KOL 合作报价（Twitter/X 转发费用）。  
+- 参考资料：  
+  - 红杉报告《生成式 AI：一个创造性的新世界》。  
+  - 文章提及的实战案例（Levelsio、Chatbase 等）。  
+  - AI 导航站清单（Futurepedia、FutureTools, theresanaiforthat）。  
+
+---
+
+执行原则：  
+- 快速验证：优先低成本试错（如无代码工具快速搭建 Landing Page）。  
+- 数据驱动：每日跟踪 SEO 排名、社媒互动率、产品转化率。  
+- 生态融入：积极参与海外社区（Product Hunt 评论、Twitter 互动），建立信任背书。
+
+**** 其它信息
+
+- Founder-Market-Fit
+- Paradigm Shift: 范式转移
+- 找一下小红书的运营策略
+  - 清单内容(eg: 你一定不能错过的 5 个 AI 生成图片应用等)
+
+**** W17 工作记录 [1/1]
+:PROPERTIES:
+:Create:   [2025-04-21]
+:END:
+
++ 可以往给类 validator 上投递广告
+
+  - 等等
++ [X]  提示词工程不会是护城河, 在什么时候用什么样到提示词能达到效果,并能判断这个提示词给出来的结果是否合适才是护城河
+
+***** 要找一些 AI  KOL
+
+- DillonUzar
+
+  之前, 从 [[https://x.com/DillonUzar/status/1913251324218466767][这一篇]] 开始流量飙升,
+
+***** 上海公租房
+
+- 上海公租房申请条件
+- 上海公租房申请流程
+- 上海公租房申请材料
+- 上海公租房申请时间
+- 上海公租房申请费用
+- 上海公租房申请咨询电话
+
+***** AI 例会问题
+
+- 嵌套的问题
+- 长 SQL 的问题
+- SQL 不够贴近实际业务的问题
+
+***** SQLFlash 怎么增加 MCP 的问题
+***** 文章生成流程
+
+- 图片地址编辑
+- 本地看不到效果
+- 代码块的方式依然是错的
+- meta 的一些信息 - keyword，时间，description
+
+1. 生成类 blog
+ - metadata
+ - 图片
+2. 已有文章
+  - metadata： AI 生成
+  - 
+
+0. 都需要预览
+  - 图片文章放在一个目录中
+  - 图片还要公共目录
+
+
+
+https://actiontech.feishu.cn/wiki/Ih7HwScBOicGATkCk6acZA2Hneh
+
+* May.
+** W19 工作记录 [0/0]
+:PROPERTIES:
+:Create:   [2025-05-08]
+:ID:       DCDAE2F4-6715-425A-A60F-BF3EF67434A9
+:END:
+
+- 重点要解决的: 信息获取和输出的密度都太低
+- 要不要放在 flash: 完全没关系
+  能放在哪儿? chatdba: 换一下 keyword 和 tags?
+- [[id:E793289B-E950-4066-952B-BD4613BDD0D4][光明区政府项目]]
+
+*** QWen 3 锐评
+
+- 性能对比: 旗舰模型之间的对比, 自家不同规模的对比数据(显示 Qwen3 比原来大一个量级的 Qwen2.5 的效果都好, 需要放2张图)
+  需要查询榜单每行代表的含义
+- 亮点:
+  思考模式 + 非思考模式并行
+
+*** 平潭
+
+- 福建人好松弛
+- 福建女人真贤惠
+- 酒店老板娘真是事无巨细的管着
+- 交通稀烂
+- 碰到了个很有意思的咖啡馆, 物价十分便宜(图)
+- vivo 的拍照效果真好
+- 千万做好防晒, 腿部还有颈部, 脖子被晒得要死
+- 天气好不好倒是无所谓, 因为不同的天气有不同的美
+- 海边风很大, 小心帽子吹跑
+- 去了的地方: 仙人井, 最美环岛路, 68 海里
+- 需要做点心理准备, 因为旅游配套稀烂
+- 适合什么人: 是考虑度假, 而不是游玩娱乐的
+- 住的话, 我们这次住在了 68 海里附近, 老板人非常好, 我愿意再住, 但是去北线太远了
+
+** W20 工作记录 [0/0]
+:PROPERTIES:
+:Create:   [2025-05-16]
+:END:
+
+-  风过竹篱，徒留虚响
+
+*** 海外渠道维护
+** W21 工作记录 [0/0]
+:PROPERTIES:
+:Create:   [2025-05-19]
+:END:
+
+- twitter 上要发什么?
+- 市场的资料整理
+- 邝儿吸引到你不就是因为她身上的一些东西吸引到你么, 她自律, 内核稳定, 真诚友善, 乐观, 能对黑粉说爱你, 这些东西不能让你摆脱你负面情绪么
+- 特性: 日常憨憨的, 别人说什么做什么
+  - 比如: 2025-05-24 韩国 FM , 粉丝都走了后, 工作人员让她向空座位像粉丝告别, 她虽然不理解, 但是还是照做了
+- 特性: 仪式感
+
+*** 2025-05-19 与宋歌的沟通
+:PROPERTIES:
+:ID:       4ACDFD99-C3CE-4E51-94BE-3D6E4C203AE2
+:END:
+
+[[id:E793289B-E950-4066-952B-BD4613BDD0D4][光明区政府项目]]
+- 梁的意思: 商务上要摸得更通透, 不要被总包给玩了
+- 技术上: 要完成多表 join 的需求: 具体 case 是?人怎么实现?
+
+*** 光明项目优化 - 多表联合优化
+
+项目的问题:
+
+商务问题: 怎么保障不被总包商甩下车(与之前 DMP 的项目类似)
+技术问题: 需求梳理错误
+
+- case1: 能查不同时间点的数据
+
+  2024年12月光明区总人口数，深圳户籍人数（光明户籍人数，深圳非光明区户籍人数），非深圳户籍人数
+
+  2025 年 4 月 光明区总人口数，深圳户籍人数（光明户籍人数，深圳非光明区户籍人数），非深圳户籍人数
+
+  问题：
+
+  1. 表的归档日期逻辑是? 按季度归档还是?
+
+  2. 两个表名的含义是啥?
+
+  3. 实际实施的时候是数据是合并到同一个表里, 还是拆成的两个表?
+- 2025-05-21 与宋歌的沟通结论
+
+  1. 客户使用预期:
+     1. 后续不用再等待外包商?第三方整理类似 ppu 的宽表, 而是能通过问数平台直接获取结果
+
+  2. 最近的 demo 演示优先级:
+     - 之前的 case 能正确显示
+
+     - 增加 2 个 case:
+       1. 2024 年 12 月和 2025 年 5 月的 0-4岁、5-9岁、10-14岁、15-19岁...以此相隔4岁至94岁以上男性、女性人数、趋势
+
+       2. 对比 2025 年 4 月和 2024 年 12月份的非户籍人口负担系数 （D=（A+C）/B*100%），0-14岁（A），15-64岁(B)，65岁以上(C)
+
+  3. 相比与竞对的优势口径
+     - 
+
+- 2025-05-26
+  - 需求部门非常满意
+
+  - 应用部分: 要成熟产品
+    
+  - 领导:
+  - 时间: 等待客户提供的时间多久前区汇报,
+  - 使用方: 数据治理人员, 应用(部分), 领导(主任)
+
+*** ai 工具站
+*** 语言包
+
+-  https://www.locize.com/
+
+*** Rebooter.S /SQLFlash 的文章应该区分哪些系列?
+*** [#A] 最近的事
+
+- 个人
+  - 羽毛球
+  - 拳击
+  - 平潭
+  - k
+  - 司喵的账号
+  - 618
+- 市场
+  - twitter - SQLFlash
+    - 怎么跟 SQLFLASH 关联上
+  - 外链怎么做
+  - 日常要看海外 KOL 做些什么
+    https://lp.similarweb.com/brand-2/?utm_medium=ppc&utm_source=adwords&utm_campaign=dmng_search_brand_cross_both_na&utm_id=21309765244&utm_content=699914175069&utm_term=similarweb&utm_network=g&utm_group=168282956848&utm_placement=&utm_matchtype=e&utm_adposition=&affiliate_id=similarweb&gad_source=1&gad_campaignid=21309765244&gbraid=0AAAAADlzGbBVuT44V3i3xrMlM1yzVf_Dj&gclid=Cj0KCQjwlrvBBhDnARIsAHEQgOSP3EodmT0j6pUxyoHQk0jbzIcY8lA2Im1fJBBoI5_GV63ISbVUbtAaArn-EALw_wcB
+
+  - 需要分析为什么
+
+  - 资料整理 - SQLFLASH
+  - SQLShift
+  - 调整市场例会的内容
+- 光明区的项目
+- 长期
+  - 炒股
+
+*** etn=
+
+当前最严重的问题: 图片怎么保存
+1. 图床什么时候会用(小红书会使用)
+2. 图床没有腾讯云的图床配置说明
+3. 从小程序无法定位到你们的官网/使用文档: https://www.everythingto.site/website/docs/newUser
+
+** W22 工作记录 [0/0]
+:PROPERTIES:
+:Create:   [2025-05-27]
+:END:
+
+*** 光明
+**** 任务
+:PROPERTIES:
+:ID:       907E7D65-AC9D-48F7-8AAA-6A4C95DF230E
+:END:
+
+1. 合适的页面风格
+   - 主要是要数据源管理和角色权限管理: *沿用 DMS 的*
+2. 找合适的可以直接集成的框架
+
+   无, 暂未找到带数据源管理和角色管理的框架, 而如果只是 chat 的前端的工具的话, 有 antd-x
+   
+3. 确定 demo  [[id:75456FD4-9696-426A-9B58-1BA6D26CF146][流程]]
+      
+4. 确定工作内容
+   1. 对话流程对接
+
+   2. 安装部署
+
+   3. DMS 的页面迁移
+
+**** 流程
+:PROPERTIES:
+:ID:       75456FD4-9696-426A-9B58-1BA6D26CF146
+:END:
+
+1. 登录 -> 直接跳转到问答页面,进行对话问答
+   - 使用之前的测试用例
+   - 在之前的基础上增加对话上下文关联
+   - [ ] 是否需要展示没有权限的人的问答效果(??)
+
+2. 演示角色/权限/数据库账号管理: *参考 DMS*
+
+3. 演示数据源管理
+   - 添加库表, 需要包含对表/列的各种释义管理
+   - 在 DMS 的基础上额外增加表的详细释义
+
+4. 业务逻辑管理
+   暂时隐藏?
+
+**** 框架评估
+
+- DB-GPT: 针对在 Text-To-SQL 上有所处理
+- Path: 
+- [[https://github.com/infiniflow/ragflow][RAGFlow]]: 商业版有权限管理功能, 社区版好像只有针对知识库的权限管理功能
+
+* Jun.
+** ai 例会信息
+:PROPERTIES:
+:ID:       7F5108B5-EF7F-46D6-9245-84E015EE693D
+:END:
+
+- 长 SQL 的方法
+- 复杂 SQL 多
+  - 多层嵌套
+  - 多次修改
+- 
+
+
+** W23 工作记录 [0/2]
+:PROPERTIES:
+:Create:   [2025-06-03]
+:END:
+
+- [ ] 跟梁辰沟通后续宣传一些 SQL 案例
+- [ ] benchmakrk 的发布任务
+- "只有知识会令人发疯，无知不会
+
+*** 市场例会模板调整
+- 当前重要项目进度
+- 上周已完成
+- 每周要做的任务
+- 要同步的数据
+- 待做的任务
+
+**** 待完善的市场信息
+- 竞品信息
+- 物料
+  - 宣传关键字
+  - 宣传图/文案/视频  
+  - 
+- 资料整理
+  - 案例
+  - 联系资源
+- SOP
+  - 产品发布
+  - 数据采集和分析
+    - 
+  - 市场信息反馈
+      从社区获取的电话号码， 收集上来的调查问卷
+  - 竞争对手监控
+    - 竞争对手的宣传口径
+    - 竞争对手的案例
+  - 与销售对接（？）
+    
+     比如: 梁辰提到的, 专业版和企业版其实使用的人不少
+    - 有哪些环节/信息/支持/资源/帮助/反馈/建议
+      
+     
+
+**** 宣传范畴
+- 朋友圈，公众号，网络文章、微信、今日头条、抖音等
+- 曝光方式：SEM，SEO，信息流广告、线上会议、线下活动、渠道合作等
+- 需要关注的指标和指数
+  - 微信指数
+- 产品发布管理
+  - 问检
+  - SQLFlash
+  - SQLShift 
+  -
+
+
+*** SQLE 的社区运营数据
+
+*** 黄炎提到 AWS 的费控事项
+*** 与鹏仔的沟通
+
+- 因为你负责, 所以你能做好
+- 真要赚钱就去做, 不要等
+*** [[https://ysymyth.github.io/The-Second-Half/][The Second Half – Shunyu Yao – 姚顺雨]]
+
+- I.I.D 解释
+  https://poe.com/s/tjhBrtPLTpW5wvClOiG8
+*** 宣传
+- 成功的商业案例
+
+** W24 工作记录 [2/2]
+:PROPERTIES:
+:Create:   [2025-06-09]
+:END:
+*** DONE 本周必须处理的事项
+CLOSED: [2025-06-16 Mon 15:48]
+- State "DONE"       from              [2025-06-16 Mon 15:48]
+- [X] 市场部周例会信息调整
+  
+- 光明
+  - [X] 确定本周能否完成用户登录的功能
+  - [X] 周一的汇报
+  - 周五给他们试用
+
+*** SQLE 下一步的安排
+
+梁辰提到的, 专业版和企业版其实使用的人不少
+
+*** 产品路线
+
+**** AI 系列产品
+
+**** [[id:022AC925-D6EA-4B90-AA65-F8C09177A40F][问数: 最近要做成什么样子]]
+:PROPERTIES:
+:ID:       31DBE7CF-1BBE-45C5-990B-86EECDBC4A75
+:END:
+*** Claude 的教程
+
+*** DONE 林啸涛的复盘
+CLOSED: [2025-06-17 Tue 16:05]
+- State "DONE"       from              [2025-06-17 Tue 16:05]
+https://actiontech.feishu.cn/docx/Z1ZLdOSVgoPCvoxlMPGc2Hkgnid
+- 工程性上缺失的经验
+  - 什么东西初级开发应该学习和了解?
+- 关于删库的核心问题是: 绝大部分情况都不应该轻易的操作生产环境
+  
+- [X]  补充完整项目信息(特别是测试数据)
+  
+#+transclude: [[id:7F5108B5-EF7F-46D6-9245-84E015EE693D][ai 例会信息]] :level 3
+  
+** W25 工作记录 [1/1]
+:PROPERTIES:
+:Create:   [2025-06-17]
+:ID:       77145F13-EE2F-4B9C-BCFC-D87367B83A00
+:END:
+
+- [X]  [[id:D5C5E4D1-623E-4C8F-8E16-538B91057543][AI-产品: 合同审核]]
+*** datafun
+
+*** text2sql 语义记忆
+
+
+** W26 工作记录 [0/0] :ARCHIVE:
+:PROPERTIES:
+:Create:   [2025-06-23]
+:END:
+
+*** DONE AWS Marketplace 上线项目调研
+CLOSED: [2025-06-23]
+- State "DONE"       from              [2025-06-23]
+- 已归档至 [[id:AWS-MARKETPLACE-2025][AWS Marketplace 上线项目]]
+- 主要发现：需要海外实体、AWS 部署、Partner 级别等前置条件
+
+*** DONE 上海机场合同审核项目竞品分析
+CLOSED: [2025-06-23]
+- State "DONE"       from              [2025-06-23]
+- 已归档至 [[id:SHANGHAI-AIRPORT-CONTRACT-2025][上海机场合同审核项目]]
+- 竞品包括法狗狗、智合同等，功能涵盖条款大数据、缺失条款识别等
+
+*** DONE 问数项目进展确认
+CLOSED: [2025-06-23]
+- State "DONE"       from              [2025-06-23]
+- 已更新 [[id:022AC925-D6EA-4B90-AA65-F8C09177A40F][问数项目]] 节点
+- 本周需求进展已确认，下一步需要解决多表查询的动态数据源问题
+
+*** WAITING 运营外链建设
+- State "WAITING"    from              [2025-06-23]
+- 待完成外链建设工作（twitter 不算，medium 已上）
+
+* Jul.
+:PROPERTIES:
+:Create:   [2025-06-23]
+:END:
+** 大智小计
+- 成本问题
+- 电子版
+- 小册子:
+  
+  - 按主题拆开: 且精选: 包括历史上所有内容
+    - SQL 优化
+    - OB
+    - MySQL
+    - NoSQL
+    - 图解
+    - 一问一实验
+- 版权纠纷的问题 vs 获客问题
+** REVIEWED W27 工作记录 [0/0]
+:PROPERTIES:
+:Create:   [2025-07-01]
+:END:
+- 做事的区别：有些人会只搜集资料, 有人会总结结论和下一步行为
+- review 要做的事情:
+  1. 将信息整理到合适的位置
+  2. 让语句通顺
+*** [[id:022AC925-D6EA-4B90-AA65-F8C09177A40F][问数项目]]
+- [ ] 确定问数试用手感：实现从单个表查询升级到多个表查询
+- [X] 解决 prompt 中写死数据的问题
+- [X] 解决动态数据源管理问题
+- [ ] 确定本周需求进展状态
+  
+
+*** [[id:SHANGHAI-AIRPORT-CONTRACT-2025][上海机场合同审核项目]]
+- [ ] 7月中旬提供 poc 版本
+  进行中
+  
+- [X] 确定本周具体功能需求
+
+*** [[id:AWS-MARKETPLACE-2025][AWS Marketplace 上线项目]]
+- [X] [2025-07-03] 日周四与 hermann 沟通
+  
+- [ ] 评估产品 AWS SaaS 服务集成多技术方案
+  
+- [X] 确认海外实体注册方案
+
+*** REVIEWED 市场运营
+- [ ] 建立产品发布周期工作清单
+- [ ] 记录每个产品发布时需要做的工作
+
+** W28 工作记录 [0/0]
+:PROPERTIES:
+:Create:   [2025-07-07]
+:END:
+- 要问的问题: 每次都要检查当前做事的方法是不是对的
+*** REVIEWED 本周计划[4/5]
+
+- [X]  问数: 完成大屏需求设计 - 已归档至 [[id:EC234DC5-3A9A-4EEF-AB67-DC53728EA7A9][产品: 问数]]
+- [X] 上海机场审核项目, 提交 poc 版本给 ISV 试用 - 已归档至 [[id:SHANGHAI-AIRPORT-CONTRACT-2025][上海机场合同审核项目]]
+- [X] 追踪光明项目进展 - 已归档至 [[id:E793289B-E950-4066-952B-BD4613BDD0D4][项目: 光明区政府项目]]
+- [X] 追踪上汽大众-DMS 项目进展 - 已归档至 [[id:SHANGHAI-AUTOMOTIVE-DMS-2025][上汽大众-DMS项目]]
+
+- 上架 AWS marketplace 下一步要做什么
+- [ ]  学点海外推广的内容
+- 招投标系统的交接(?)
+- 问数: 测试中宏费控数据是否正确产出
+- 周园的安排 - 问数的产品或者合同产品
+- 其它事项： 了解: vibe code
+
+
+** W29 工作记录 [1/1]
+:PROPERTIES:
+:Create:   [2025-07-14]
+:END:
+- [X]  bw 在公司无法使用的原因 - 已归档至 [[id:8B9C0D1E-2F3A-4B5C-6D7E-8F9A0B1C2D3E][技术问题解决]]
+
+  因为: 我的 bw 搭建在群晖上, 群晖使用的 ipv6 才能外部访问, 而公司网络不支持 ipv6
+- [ ] 商机具体要报多少钱+自己用
+  
+  
+*** REVIEWED [[id:AWS-MARKETPLACE-2025][AWS Marketplace 上线项目]]
+
+*** REVIEWED [[a57814b7-7c53-479b-8520-5aef43cfae85][问数项目]]
+
+*** CANCELLED [[id:SHANGHAI-AIRPORT-CONTRACT-2025][上海机场合同审核项目]]    :CANCELLED:
+CLOSED: [2025-07-16 Wed 17:57]
+
+- State "CANCELLED"  from              [2025-07-16 Wed 17:57] \\
+  因为客户变更, 项目取消
+- [X] 跟进 ISV 试用环境的反馈结果
+- [X] 根据试用反馈调整 POC 版本
+
+*** REVIEWED  [[id:ZHONGHONG-WENSHU-2025][中宏问数项目]]
+
+*** REVIEWED [[id:7A8B9C0D-1E2F-3A4B-5C6D-7E8F9A0B1C2D][AI 复审工作流]]
+
+** W30 工作记录 [0/1]
+:PROPERTIES:
+:Create:   [2025-07-21]
+:END:
+
+
+- 111
+  
+  我对生活最大的疑惑, 就是我究竟是如何走到这一步的, 回过头我真的找不到一件我自己做成的事, 周期性的我总会忍不住问自己这个问题
+
+*** 工作计划
+- [X] 市场下半年安排
+  - [X]  看下半年参加哪个展会活动? 不参加 DTCC
+  - [X] 找更多的关于 AI+ 领域的展会 @吴琦
+  - [X] 关于大智小计
+- [X]  合同审核产品
+
+  要确定产品定位: 面向 C 端用户的产品
+- [X] 问数: 追踪大屏进度
+
+  关于任务进展
+
+- 上架 AWS Marketplace
+
+  1. 需要对方注册 AWS 卖家: https://docs.aws.amazon.com/marketplace/latest/userguide/seller-registration-process.html
+
+     操作步骤: https://awsmpchinasaasguideline.s3.cn-northwest-1.amazonaws.com.cn/cn/set-up-your-account/complete-your-seller-account-set-up.html
+
+     需要确定这个事, 他们能不能主导做到: 事项不少
+
+  2. 要确定费用有哪些环节
+
+     - AWS 抽成
+     - 代理商抽成
+     - 服务部署费用（每部署一套时使用的 AWS 资源）
+     - 其他费用
+
+  3. 需要定价策略
+
+  4. 确定找哪家:
+
+     需要与代理商/渠道签订合同
+
+  5. 卖家注册后, 我们才能测试模拟
+
+  6. 需要确定产品知识产权
+
+  7. 产品改造
+
+  需要做产品改造? 改造做什么,
+
+  确定代理需要做什么, 确定我们
+  1. 与 hm 沟通, 后续是我们自己
+
+     自己是卖家的话, 优点是所有我们自己使用量和可以作为我们的 marketplace 合作伙伴的资质, 如果是代理商的话, 他们可以用我们的用量去申请 AWS 的各种服务, 比如市场经费之类
+
+     1. 既然是代理商做, 为什么我们还需要注册
+
+     2. 对于公司营业范围有要求么?
+
+     3. 是不是如果代理商没有做过的, 其实也可以算在 hm 头上 -> 这样, 我们可以有个可以一直沟通的 AWS 支持的人
+
+  2. 需要确定让代理
+
+  3. 确定销售区域
+
+  4. 与代理需要我们准备好所有资料, 然后要找代理商
+
+  5. 要确定税务关系: 以韩国为主体
+
+  6. 是否可以绕过 AWS: 因为 AWS 可以线下付费
+
+  7. 如果付费渠道跑不通, 可以做免费渠道
+
+  8. FTR 是必要的么?
+
+  9. 是使用 Marketing 的账号申请
+
+  额外的工作
+  - 创新沙盒资金申请
+
+  - 一些认证能力
+
+  - 市场开发资金(MDF): 如果使用了韩国代理, 是否我们就不能使用和申请了?(优先级低, 因为需要我们提供一定量的商机)
+       
+
+** W31 工作记录 [4/4]
+:PROPERTIES:
+:Create:   [2025-07-28]
+:ID:       B16FD125-33A7-47B7-9663-421A5C2456B4
+:END:
+
+- [X] [[id:A1B2C3D4-E5F6-7890-1234-567890ABCDEF][文章复审经验]]整理：建立复审标准流程和经验库
+
+- [X] [[id:B8C9D0E1-F2A3-4567-8901-234567890ABC][BI产品问题]]洞察摘抄：整理BI应用核心挑战
+
+- [ ] 市场社区运营转型思考：从MySQL运维向AI产品出名的策略转变
+
+- [X] [[id:CB-IMPROVE-2025][王昊CloudBeaver改造]]反馈：SQLE组件集成优化建议
+
+- [[id:R3S4T5U6-V7W8-9012-3456-789012345678][研祥项目交付尺度]]与洪斌沟通，确定质量控制标准
+
+- [X] [[id:A8B9C0D1-E2F3-4567-8901-234567890123][航天八院]]AI项目成本评估：16-28人月，基于Dify的大模型管理平台
+    
+* Aug.
+** W32 工作记录 [2/2]
+:PROPERTIES:
+:Create:   [2025-08-04]
+:END:
+- 这篇文章写得很好, 要找市场上类似的文章, 并且看流量怎么样 [[https://actiontech.feishu.cn/wiki/ASg5wVGBfiv0psklMHMcJsrFnXb][⁣⁡‍⁢⁢‍⁤‌⁡​⁢🌟SCALE宣传 7月版本 - 飞书云文档]] 最终总结为什么好
+- AI 希望实现的目标:
+  - 比如摘抄自动移动到对的位置
+  - 比如项目信息自动按照好的信息记录方式移动到合适位置
+- [X] [[id:7f9e2a84-c3d1-4b5e-8a72-9f1d5e6c8b02][问数dashboard测试]]
+  
+- [ ] 确定会议演讲主题
+  
+  https://applink.feishu.cn/client/message/link/open?token=AmHqSsXTAEAcaJSGyKiKABM%3D
+- [X] [[id:a3f7b2e1-9c8d-4f5a-b7e6-3a1c9d2f8e47][SQLFlash注册增长分析]]
+
+  8月1日KOL写文章，8月5日更新榜单，导致注册用户大幅增加
+- [X] [[id:e8a9f1c2-7d4b-3e6a-9f8c-2b5e1a7d9c48][智能合同审核toC需求复审]]
+
+- [X] [[id:2f8e4a76-5c9b-4d7e-8a15-6f3c2b9e1d84][与李总沟通AWS海外上架下一步]]
+
+   https://actiontech.feishu.cn/wiki/FVnYwoScGiJfopk2HBgcSbqynQh
+   沟通完成，等待吴琦和宋歌推进
+- [X] 问数和合同审核产品发布通知
+  - [X] 合同审核 @周园
+
+  - [X] 问数发新版本
+    
+- [X] [[id:933DAEBE-7582-4EF9-939B-35C585082CFA][知识库AI流程规划]]： W32完成工作流程设计升级，建立AI辅助的知识管理方案
+  
+  复审时将口语化信息结构化，已整合到AI复审工作日志flow项目中
+- [X] 膝盖症状描述
+  
+*** REVIEWED [[id:D2D47E84-61F3-4C8B-AEDB-5D6E2E31D6F9][总结 Action 当前 AI 系列产品]]
+CLOSED: [2025-08-15 Fri 18:47]
+
+
+*** REVIEWED 智能合同审核
+[[id:e8a9f1c2-7d4b-3e6a-9f8c-2b5e1a7d9c48][智能合同审核toC市场定位决策]]
+
+确定做C端需要做的工作，复审结论：明确toC市场定位，制定用户细分策略和产品实现路径。
+
+** W33 工作记录 [0/0]
+:PROPERTIES:
+:Create:   [2025-08-13]
+:END:
+*** 深圳信创联盟活动申请
+
+目标: 我们活动方案是否需要调整
+下一步要做什么: 
+1. 话题方向
+  - 可以跟宋歌沟通光明项目
+2. 爱可生在做的 AI 相关的产品方向
+    - 爱可生可以出的主题
+      - 我们在数据库领域做的产品
+      - 我们在制造业做的赋能
+        - 与弘讯科技合作 （这是一家做注塑机领域的智能制造的公司）
+      - 我们在视频生成领域做的产品
+      - 我们在视频领域的产品
+        - 一镜到底
+        - 短剧质量评估  
+3. 邀请的话题类型
+  -         
+
+
+
+目标： 
+为就行业赋能，智能制造场景，为行业提速比如智能审核，比如数据分析与洞察，为企业员工赋能，比如问数所做
+政府目标：举办一场不错的活动
+我们的目标： 我们要打广告， 那被邀请的人就应该是我们的目标用户，或者可以合作的用户
+
+因此： 
+邀请参会的人员是要产品，或者要场景，或者要案例，或者要技术
+分享的人则输出优秀产品或者优秀案例，或者技术
+
+目标不仅仅是数据库领域（基础领域），涉及范围包括医学，视频生成，制造业，展示，AI 赋能
+
+
+- [ ] 提供视频生成和评估的资料
+
+
+
+*** Action 目前关于 AI 领域的布局 from: 黄炎
+:PROPERTIES:
+:ID:       5CB2C339-6E9E-467D-8A3C-24674BD02150
+:END:
+to: [[id:441C9B29-9ADB-44B2-AD11-371B6DD14C35][AI技术基础概念介绍]]
+
+todos:
+
+BI-INSIGHT 和 ChatBI 有什么区别： BI-INSIGHT 面向报表和各类 BI 软件，ChatBI 面向数据分析和数据可视化
+
+
+AI 领域应用大致分 2 种不同类型的产品:
+1. 自行训练或者微调模型
+2. 基于大模型做应用
+有很多架构 MCP，Agentic？RAG？
+在不同领域的难在哪，需要具体举例？
+
+爱可生全都是基于大模型做应用的，但是我们有投入资源做模型微调, 每个补充项目信息，一句话产品介绍
+
+1. ChatDBA: 没有后续计划
+    典型的 RAG 应用
+2. SQLe中的SQL改写模块: 
+   产品赋能，增加 AI 能力，从提出问题到解决问题
+   - 进度: 正在探索GRPO架构, 提升智能
+   - 该功能已经在上汽DMS项目上线
+3. SQLFlash: 
+   - 产品简介： 智能 SQL 优化，为什么比传统的 SQL 优化工具好？
+   - 已上线， 在线服务
+   - 进展1：目前大部分的工程师投入在研究自研模型, 目前没有明确的发布日期, 自研模型尚有很多技术问题
+   - 进展2：锦江国际二期立项中
+4. SQLShift: 
+   - 产品简介： 数据库方言转换工具，对于国内用户而言，在做数据库国产化时，需要将数据库方言转换为国产数据库方言
+   - 进展1：目前已经支持 Oracle -> OB_Oracle, Oracle->PG, SQL Server->GuassDB, 以及支持超长存储过程转换
+   - 进展2：8月底会支持SQL Server->OB
+   - 进展3：正在探索GRPO架构, 提升智能
+5. 问简平台
+   - 产品简介：类 RPA 应用， 
+   - 应用场景：自动化测试平台  
+   - 进展1：已经推出Saas demo, 供销售使用 
+   - 进展2：等待外高桥造船厂的测试
+6. BI-insight: BI诊断系统
+   - 产品简介：BI诊断系统，用于诊断BI系统的问题
+   - 进展1：已经跟帆软report 和 帆软BI 进行了集成
+   - 进展2：等待商务的推进, 再安排后续开发计划
+7. 大模型SQL能力评估榜单
+   - 产品简介：大模型SQL能力评估榜单，用于评估大模型在SQL能力上的表现，并给出排名
+   - 背景：
+      1. 来源于团队内部，在公司内部的产品开发过程中，我们也经常疑惑也无法评估效果
+      2. 参考恩墨的数据库榜单，我们在后期经常遇到很多关于这些榜单的询问
+      3. 在市面上完全空白时，我们需要抢占认知
+
+8. 问数:
+   - 产品简介：ChatBI 类产品，用于辅助用户进行数据分析和解读，类似产品 阿里，腾讯，网易都有类似产品
+   - 产品进展：
+   - 项目进展：
+    1. 深圳光明区的问数项目
+    2. 中宏保险云账单项目
+9. 合同评审系统
+   - 产品简介：智能合同评审系统，用于辅助用户进行合同评审
+   - 开发已经完成, 由上海利迪进行渠道售卖. 立项时间推迟, 等待商务推进
+   - 已给内部提供试用
+   - 正在进行SaaS化
+10. 招投标评审系统
+    - 已给内部提供试用
+    - 等待商务推进
+11. 制造业: 弘讯AI解决方案
+    - 产品简介：帮助制造业企业进行生产过程的优化和决策支持
+    - 已完成几轮AI demo, 取得与对方的技术互信.
+    - 等待商务下一步推进
+12. 比价系统
+    - 已基于问简技术, 提供SaaS demo, 等待商务推进
+13. 视频AI一镜到底
+    - 安踏视频生成
+    - 等待用户反馈
+    - 产品小剧场 一键生成
+    - 等待开发, 希望做成SaaS服务
+14. 短剧质量评估AI
+    - 产品简介：帮助用户评估短剧质量，提供改进建议
+    - 已出demo, 等待同步给李总, 等待商务推进
+
+---许愿池: 
+1. AI 投标文件生成
+2. DBA 巡检报告 AI 化
+3. 医疗论文解析
+   - 人民网全球科技文献数据平台? 
+   - 检索平台：可以对数据进行检索，并提供交互式问答、机器辅助阅读理解、主题演化分析等分析功能。
+   - 基于文献全文数据训练学科知识图谱、支持趋势分析、研究热点发现。
+   - 将现有文献的查询功能制作成API接口，便于用户调用
+4. SQLShift的模型化?
+5. 视频生成进阶
+6. 问简的saas化
+
+** W34 工作记录 [6/6]
+:PROPERTIES:
+:Create:   [2025-08-18]
+:END:
+- 追踪团队成员 AI 使用情况
+
+  特别是沈亚军团队
+- [X] [[id:d8e5f2a1-4b7c-6e9a-3d8f-1a2b3c4d5e6f][友商 AI 能力对比分析]]: 已归档至竞品分析文档，提供AI产品战略参考 
+- 复审孙健给售前提供的 SQLFlash 和 SQLE 改写的技术说明
+
+  下周处理
+- [X] [[id:a57814b7-7c53-479b-8520-5aef43cfae85][问数预警需求复审]]: 已归档至问数项目，包含问题分析和改进方向
+- [X] [[id:a8f3c2d1-4e5b-6f7a-9081-234567890abc][合同审核产品toC试水]]: 已归档至合同审核项目，验证用户关注度和付费意愿
+
+*** REVIEWED 弥森交流 wms 问数沟通
+- [X] [[id:f2e8a7b4-9c5d-4e6a-8b71-3d2f9a1e5c67][弥森wms合作洽谈]]: 已归档至问数项目，包含详细沟通记录和下一步计划
+
+**** REVIEWED 问数产品每次售前沟通需要问清楚的问题
+- [X] [[id:c8f4d2a1-5e6b-7c9a-1234-8d7f9a0e2b4c][问数产品售前沟通标准流程]]: 已归档至问数产品文档，建立产品专用售前流程
+
+** W35 工作记录 [8/8]             :ARCHIVE:
+  :PROPERTIES:
+  :Create:   [2025-08-25]
+  :END:
+  - [X] [[id:b3f2e1d4-8c9a-5f6b-7e3d-1a4c2b8f0e97][长周期任务开发节奏控制经验]]: 已归档至产研管理经验，包含验收标准和用户流程优先级原则
+  - [X] [[id:e8f2d3a6-9c5b-4a7e-1f8d-6b9e3a2c5f01][知识库核心设计问题]]: 已归档至灵感种子，涵盖信息流向、存储、分类等关键问题
+  - [X] [[id:a8f9c3e2-5d6b-4a7e-9f81-234567890def][问数项目W35进展]]: 已更新至问数项目进展，记录弥森wms沟通结果
+  - [X] [[id:d4e8b2f7-3c9a-6e5d-8f1b-9a7c4e3d2f01][AI时代产品经理价值定位分析]]: 已归档至管理知识库，分析任务驱动vs价值取向思维模式
+  - [X] 复审王昊文档: [[https://actiontech.feishu.cn/wiki/SG92wc2UxiAKpsk3c35csyb3nQg][AI快速demo框架]]
+    
+    https://poe.com/s/ukqEWk5gMvs19bDBppyH
+
+    当前方案过于模糊, 需要补充信息
+  - [X] 杠杆思维培养问题: 已归档至灵感种子，包含投入×杠杆系数=输出的思考公式
+  - [X] 王鑫伟的工作安排
+  - [X] 需要安排个人复审他们做的无 agent 数据库前端改造的方案, 包括成本和方案
+
+    
+*** REVIEWED 问数
+
+**** 复审需求
+ [[https://actiontech.feishu.cn/docx/QBChd50jxoFwHDxFgk3cbrY5nzh][使用Prompt模拟告警过程]]
+
+ 问题: 闭门造成, 不核对数据
+
+
+
+* Sep.
+** W36 工作记录 [5/5]                    :ARCHIVE:
+:PROPERTIES:
+:Create:   [2025-09-01]
+:ID:       58BC012A-E532-4552-A8F0-292DCFB600B4
+:END:
+- [X] [[id:f2e8a7b4-9c5d-4e6a-8b71-3d2f9a1e5c67][问数-弥森WMS项目]]：更新顾老师需求列表和黄炎大屏反馈
+- [X] [[id:c8f9a2b5-3e7d-4c6a-8f1e-9a2b3c4d5e6f][AI工具优化]]：AI快速纠错记忆机制想法
+- [X] [[id:zhonghong-insurance-wenshu-2025][问数-中宏保险项目]]：售前反馈问题和项目进展更新
+
+- [X] [[id:E793289B-E950-4066-952B-BD4613BDD0D4][项目: 光明区政府项目]]：宋歌反馈商务策略调整和预算缩减
+
+- [X] [[id:CONTRACT-AUDIT-TOC-2025][合同审核产品toC试水项目]]：上线准备工作安排
+
+** W37 工作记录 [9/10]             :ARCHIVE:
+:PROPERTIES:
+:Create:   [2025-09-08]
+:END:
+
+- [X] [[id:CONTRACT-AUDIT-TOC-2025][合同审核产品小红书换名]]：账号准备任务已完成
+- [ ] 需要把吴琦从 xxx 解放出来, 哪些工作是需要她调整的
+- [X] [[id:48FA87AC-2AFB-4E4E-974E-B4FE45950AD9][Google Search Console 数据解读]]：已归档到SQLFlash宣传项目的流量分析部分
+
+
+*** REVIEWED 问数
+- [X] [[id:a57814b7-7c53-479b-8520-5aef43cfae85][问数生成人可读的 SQL 解析]]：已更新到问数产品需求单
+- [X] [[id:58D6A5A8-FF60-4AEA-BF18-A6F0A013ECB3][售前通过大模型生成SQL后直接提交问数]]：已更新到问数产品需求单，标记为高优先级
+
+*** REVIEWED [[id:zhonghong-insurance-wenshu-2025][问数-中宏保险项目]]
+- [X] [[id:zhonghong-insurance-wenshu-2025][客户新需求沟通记录]]：已更新项目状态和新需求，包括API对接和下钻分析需求
+
+*** REVIEWED [[id:f2e8a7b4-9c5d-4e6a-8b71-3d2f9a1e5c67][问数-弥森WMS项目/弘讯]]
+- [X] [[id:f2e8a7b4-9c5d-4e6a-8b71-3d2f9a1e5c67][技术验证完成]]：已更新项目状态为技术验证完成，等待商务决策
+
+*** REVIEWED [[id:CONTRACT-AUDIT-TOC-2025][合同审核产品toC试水项目]]
+- [X] [[id:CONTRACT-AUDIT-TOC-2025][上线准备进展]]：已更新账号准备和产品调整完成状态
+
+** W38 工作记录 [1/0]
+  :PROPERTIES:
+  :Create:   [2025-09-15]
+  :END:
+  - [X] 合同审核
+    - 小红书修改名字
+      - 一只猫头鹰
+      - 鹰嘤怪
+    - 上线任务规划
+      https://applink.feishu.cn/client/todo/task_list?guid=1f998909-2e80-4adb-8835-2c4e1443ce08
+      
+  - [X] 信息获取能力
+    - 这个能力被初级开发按在地上打
+    - 第 n 次自我质疑: 我究竟是怎么走到当前这个位置的, 真的很菜啊
+  
+    
+*** 问数
+  
+  - 看几个竞品功能
+    需要包括下钻功能, 分析功能等
+    
+    - PowerBI:https://www.youtube.com/watch?v=BbplhqDCWOM
+    - 腾讯云BI：https://cloud.tencent.com/document/product/590/85776
+      腾讯 ChatBI 的手工搓大屏的方法: https://cloud.tencent.com/document/product/590/106355
+  
+    - 阿里云BI：https://help.aliyun.com/zh/quick-bi/user-guide/drilling-filter-interaction-and-hyperlink-1
+    - 帆软BI：https://help.fanruan.com/finebi/doc-view-1830.html
+    - 观远BI：[[https://www.bilibili.com/video/BV1Po4y1y73d/?vd_source=fc1b1205e4e0c462504482973f5bd7f4][【观远数据BI官方教程】观远BI教学视频从入门到进阶_哔哩哔哩_bilibili]]
+  - [ ] 需求问答稳定性优化
+  - [X] 完成表格组件支持
+  - [ ] 图表转换规划:预计下周完成
+  
+*** 问数-中宏
+  
+  二、项目方案与需求推进
+  1. 建设方案完成 ：丁嘉胤已完成中宏AI问数项目建设方案的初步编写，待与客户（Nick）沟通确认内容偏差或增减项。
+  2. Dashboard生成需求 ：需根据现有SQL生成新 7-8 月的Dashboard，
+      - 同步客户提出的按月自动生成报表（参数化）、基于dashboard下钻分析（类BI-Insight）等功能需求。
+  3. 类BI-Insight功能排期 ：类BI-Insight的数据下钻分析功能预计2周左右完成（时间节点为国庆后）。
+  
+
+** W39 工作记录 [6/7]             :ARCHIVE:
+:PROPERTIES:
+:Create:   [2025-09-22]
+:END:
+- [X] 刘柏瑞说 Azure 账号可能要变更
+- [ ] 每天更新小红书的账号
+- [X] [[id:a57814b7-7c53-479b-8520-5aef43cfae85][问数产品进度跟踪]]：每天跟踪问数产品进度和ChatBI研究
+- [X] [[id:a57814b7-7c53-479b-8520-5aef43cfae85][问数ChatBI研究]]：看完上周ChatBI链接列表，已规整到NotebookLM中
+- 小红书: 186:西顾-AI
+  小红书: 191-西顾
+
+*** REVIEWED 上汽大众
+- [X] [[id:SHANGHAI-AUTOMOTIVE-DMS-2025][上汽大众项目状态更新]]：项目遇到重要问题，验收被卡
+
+*** REVIEWED 问数: 用 NotebookLM 研究 ChatBI 领域
+- [X] [[id:a57814b7-7c53-479b-8520-5aef43cfae85][问数ChatBI市场研究]]：完成NotebookLM研究和核心问题分析
+
+*** REVIEWED 如何使用 Gemini Deep Research + NotebookLM 做研究报告
+- [X] [[id:8f3e2d9c-4b6a-4e5f-b8c7-1a9d2e4c6f8b][研究方法论]]：Gemini + NotebookLM研究报告方法论
+
+
+** W40 工作记录 [1/1]
+:PROPERTIES:
+:Create:   [2025-09-29]
+:END:
+
+*** DONE 宣传折页
+CLOSED: [2025-09-29 Mon 15:53]
+#+begin_src gptel
+    ```
+    这是我的产品宣传测的文档需要优化一下,
+        1. 注意字数不要不补充太多, 只回复优化后的内容
+        2. 注意参考下网上 SQLFlash 产品的信息
+        3. "无论您是否具备深厚的调优经验"这句话要换个描述
+
+    ```
+
+#+end_src
+
+#+RESULTS:
+* Oct.
+** W41 工作记录 [0/0]
+:PROPERTIES:
+:Create:   [2025-10-10]
+:END:
+
+*** 合同审核
+
+** W42 工作记录 [0/0]
+:PROPERTIES:
+:Create:   [2025-10-15]
+:END:
+- from Tac:
+  - sqlflash 问题列表
+  
+  - [X] DMP 最近来了很多紧急的活
+- [X] 王鑫伟离职
+  - ChatDBA 文档
+  - 问数对接
+- 旦旦礼物
+- 护照
+- 妈妈的衬衣
+- 左的回信  
+*** 中宏问数
+- [ ] 中宏如果本周丁没有跟销售约时间, 就找梁辰沟通
+- [ ] 本周下钻: 提交一版本给售前和销售
+  遗留:
+  - 交互版本的下钻分析
+  - 多图下钻分析
+- [ ] 接下来的安排
+  1. 需求林看竞品的洞察是怎么做
+  2. [ ] 给售前提供一个使用版本
+     等前端更新成相对好看的版本在更新可交互的形式
+*** 问数
+- 与梁辰的沟通下钻的效果
+  梁辰的预期: 希望问数主动提供反馈问题, 比如哪些云服务资源长期没有被使用过, 应该提醒客户资源浪费了
+  丁的预期: 用户看到了图表, 希望问数自行发掘多个维度解读数据
+- 问数需要支持的功能
+  报告和 dashboard 的区别异同
+  - 报告
+  - dashboard
+  - 关于计算,可以尝试调用 python 计算, 而不是使用 AI 直接计算
+  
+** W43 工作记录 [10/12]
+:PROPERTIES:
+:Create:   [2025-10-20]
+:Reviewed: [2025-10-28]
+:END:
+
+- [X] 去参展
+- [ ] 小红书写 2 篇稿子
+- [X] [[https://github.com/yzfly/Awesome-MCP-ZH?tab=readme-ov-file][MCP学习资源]]：已归档到seedbox等待深入研究
+
+- [X] 东院的出差人员安排：安排黄仁鹏，2-3天完成接口对接调试
+
+- [X] [[id:B5330717907EAC6F%2135137][vorg AST拆分]]：已完成，后续整合为SQL集成功能
+- [X] [[id:c8f9a2b5-3e7d-4c6a-8f1e-9a2b3c4d5e6f][产品日常工作方法]]：将竞品分析等思考归档到seedbox
+
+
+
+*** REVIEWED 中宏问数
+- [X] [[id:zhonghong-insurance-wenshu-2025][中宏问数项目进展]]：项目暂停，预算削减一半；记录阿里云资源查询技术难点
+*** REVIEWED 问数
+- [X] [[id:a57814b7-7c53-479b-8520-5aef43cfae85][问数产品工作记录]]：完成视频录制和需求整理，需确定人员安排
+
+*** REVIEWED 合同审核
+- [X] [[id:CONTRACT-AUDIT-TOC-2025][合同审核产品测试反馈]]：记录测试问题（审核结果展示、分享链接）
+- [ ] 分析小红书上流量较大帮助手册用词习惯
+
+*** REVIEWED marketing
+- [X] [[id:A9FFAC6E-19CF-44C3-AC7E-72E92ABFB5D9][出海运营工具和流程]]：记录新榜工具使用经验，多平台发文流程规划
+*** REVIEWED 徐雪涛客户
+- [X] [[id:XU-XUETAO-VIDEO-2025][徐雪涛视频制作项目]]：记录客户需求和供应商报价信息，待确定交付方案
+ 
+** W44 工作记录 [0/0]
+:PROPERTIES:
+:Create:   [2025-10-27]
+:END:
+- 小红书
+
+  文案: 在小小的合同里面, 发现大大的坑，一呀，二呀，
+- vorg 预览时 checkbox 的 list 前没有一个点,导致样式对不上

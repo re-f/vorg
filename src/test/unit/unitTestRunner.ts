@@ -137,8 +137,17 @@ async function runTests() {
     
     // 动态导入所有测试文件
     const testFiles = [
+      // 已有的测试
       path.join(__dirname, '../suite/orgFoldingProvider.test.js'),
-      path.join(__dirname, 'orgHeadlineParser.test.js')
+      path.join(__dirname, 'orgHeadlineParser.test.js'),
+      
+      // 解析器测试（✅ 已实现）
+      path.join(__dirname, 'contextAnalyzer.test.js'),
+      path.join(__dirname, 'headingParser.test.js'),
+      path.join(__dirname, 'listParser.test.js'),
+      path.join(__dirname, 'propertyParser.test.js'),
+      path.join(__dirname, 'tableParser.test.js'),
+      path.join(__dirname, 'linkParser.test.js')
     ];
     
     for (const testFile of testFiles) {

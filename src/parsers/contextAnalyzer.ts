@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { ContextInfo } from '../types/editingTypes';
+import { ContextInfo } from '../commands/types/editingTypes';
+import { HeadingParser } from './headingParser';
 
 /**
  * 上下文分析器
@@ -13,14 +14,14 @@ export class ContextAnalyzer {
     const line = document.lineAt(position.line);
     const lineText = line.text;
 
-    // 检查是否在标题中
-    const headingMatch = lineText.match(/^(\*+)\s+(?:(TODO|DONE|NEXT|WAITING|CANCELLED)\s+)?(.*)$/);
-    if (headingMatch) {
+    // 检查是否在标题中 - 使用HeadingParser来解析
+    const headingInfo = HeadingParser.parseHeading(lineText);
+    if (headingInfo.level > 0) {
       return {
         type: 'heading',
-        level: headingMatch[1].length,
-        todoState: headingMatch[2] || null,
-        content: headingMatch[3] || ''
+        level: headingInfo.level,
+        todoState: headingInfo.todoState,
+        content: headingInfo.title
       };
     }
 

@@ -1,6 +1,11 @@
 import * as vscode from 'vscode';
+import { TodoKeywordManager } from '../utils/todoKeywordManager';
+import { HeadingParser } from '../parsers/headingParser';
+import { LinkParser } from '../parsers/linkParser';
+import { PropertyParser } from '../parsers/propertyParser';
 
 export class LinkCommands {
+  private static todoKeywordManager = TodoKeywordManager.getInstance();
   
   /**
    * 注册链接相关命令
@@ -48,51 +53,22 @@ export class LinkCommands {
     const line = document.lineAt(position);
     const lineText = line.text;
     
-    // 检查方括号链接 [[link][description]] 或 [[link]]
-    const bracketRegex = /\[\[([^\]]+)\](?:\[([^\]]*)\])?\]/g;
-    let match;
+    // 使用 LinkParser 检查光标位置是否在链接内
+    const link = LinkParser.isPositionInLink(lineText, position.character);
     
-    while ((match = bracketRegex.exec(lineText)) !== null) {
-      const startCol = match.index;
-      const endCol = match.index + match[0].length;
+    if (link) {
+      const range = new vscode.Range(
+        new vscode.Position(position.line, link.startCol),
+        new vscode.Position(position.line, link.endCol)
+      );
       
-      if (position.character >= startCol && position.character <= endCol) {
-        const range = new vscode.Range(
-          new vscode.Position(position.line, startCol),
-          new vscode.Position(position.line, endCol)
-        );
-        return { linkTarget: match[1], range };
+      // 对于文件链接，保留 'file:' 前缀
+      let linkTarget = link.target;
+      if (link.type === 'file') {
+        linkTarget = `file:${link.target}`;
       }
-    }
-    
-    // 检查HTTP链接
-    const httpRegex = /(https?:\/\/[^\s\]]+)/g;
-    while ((match = httpRegex.exec(lineText)) !== null) {
-      const startCol = match.index;
-      const endCol = match.index + match[0].length;
       
-      if (position.character >= startCol && position.character <= endCol) {
-        const range = new vscode.Range(
-          new vscode.Position(position.line, startCol),
-          new vscode.Position(position.line, endCol)
-        );
-        return { linkTarget: match[1], range };
-      }
-    }
-    
-    // 检查文件链接
-    const fileRegex = /file:([^\s\]]+)/g;
-    while ((match = fileRegex.exec(lineText)) !== null) {
-      const startCol = match.index;
-      const endCol = match.index + match[0].length;
-      
-      if (position.character >= startCol && position.character <= endCol) {
-        const range = new vscode.Range(
-          new vscode.Position(position.line, startCol),
-          new vscode.Position(position.line, endCol)
-        );
-        return { linkTarget: match[0], range }; // 包含 'file:' 前缀
-      }
+      return { linkTarget, range };
     }
     
     return null;
@@ -267,18 +243,23 @@ export class LinkCommands {
   private static extractHeadings(document: vscode.TextDocument): Array<{ label: string; description: string }> {
     const headings: Array<{ label: string; description: string }> = [];
     const text = document.getText();
-    const headingPattern = /^(\*+)\s+(.+?)(?:\s+:[a-zA-Z0-9_@:]+:)?\s*$/gm;
-    let match;
+    const lines = text.split('\n');
 
-    while ((match = headingPattern.exec(text)) !== null) {
-      const level = match[1].length;
-      const title = match[2].trim();
-      const cleanTitle = title.replace(/^(TODO|DONE|NEXT|WAITING|CANCELLED)\s+/, '');
+    for (const line of lines) {
+      // 使用 HeadingParser 解析标题
+      const headingInfo = HeadingParser.parseHeading(line);
       
-      headings.push({
-        label: cleanTitle,
-        description: `${'  '.repeat(level - 1)}${title}`
-      });
+      if (headingInfo.level > 0) {
+        // 构建完整的标题显示文本（包含 TODO 状态）
+        const fullTitle = headingInfo.todoState 
+          ? `${headingInfo.todoState} ${headingInfo.title}`
+          : headingInfo.title;
+        
+        headings.push({
+          label: headingInfo.title,  // 标签只显示标题文本（不含 TODO 状态）
+          description: `${'  '.repeat(headingInfo.level - 1)}${fullTitle}`  // 描述显示完整信息
+        });
+      }
     }
 
     return headings;
@@ -345,20 +326,17 @@ export class LinkCommands {
    * 在指定文档中查找ID
    */
   private static async findIdInDocument(document: vscode.TextDocument, id: string): Promise<vscode.Location | null> {
-    const text = document.getText();
-    const idPattern = new RegExp(`:ID:\\s+${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'gm');
-    const match = idPattern.exec(text);
+    // 使用 PropertyParser 查找 ID
+    const idLine = PropertyParser.findIdInDocument(document, id);
     
-    if (!match) {
+    if (idLine === null) {
       return null;
     }
-
-    const idPosition = document.positionAt(match.index);
     
-    // 向上查找最近的标题
-    for (let i = idPosition.line; i >= 0; i--) {
+    // 向上查找最近的标题 - 使用 HeadingParser
+    for (let i = idLine; i >= 0; i--) {
       const line = document.lineAt(i);
-      if (line.text.match(/^\*+\s+/)) {
+      if (HeadingParser.isHeadingLine(line.text)) {
         return new vscode.Location(document.uri, new vscode.Position(i, 0));
       }
     }
@@ -375,15 +353,18 @@ export class LinkCommands {
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      // 匹配标题行：以一个或多个*开头，后跟空格，然后是标题文本
-      const headingMatch = line.match(/^(\*+)\s+(.+?)(?:\s+:[a-zA-Z0-9_@:]+:)?\s*$/);
       
-      if (headingMatch) {
-        let headlineTitle = headingMatch[2].trim();
-        // 移除状态关键字 (TODO, DONE, etc.)
-        const cleanTitle = headlineTitle.replace(/^(TODO|DONE|NEXT|WAITING|CANCELLED)\s+/, '');
+      // 使用 HeadingParser 解析标题
+      const headingInfo = HeadingParser.parseHeading(line);
+      
+      if (headingInfo.level > 0) {
+        // 获取完整标题（包含 TODO 状态）
+        const fullTitle = headingInfo.todoState 
+          ? `${headingInfo.todoState} ${headingInfo.title}`
+          : headingInfo.title;
         
-        if (cleanTitle === title || headlineTitle === title) {
+        // 匹配标题文本（带或不带 TODO 状态）
+        if (headingInfo.title === title || fullTitle === title) {
           return new vscode.Location(document.uri, new vscode.Position(i, 0));
         }
       }

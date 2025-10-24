@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { HeadingInfo } from '../types/editingTypes';
 import { TodoKeywordManager } from '../../utils/todoKeywordManager';
 import { HeadingCommands } from './headingCommands';
+import { HeadingParser } from '../../parsers/headingParser';
 
 /**
  * TODO状态管理命令
@@ -67,34 +68,12 @@ export class TodoStateCommands {
     newState: string
   ) {
     const lineText = line.text;
-    let newLineText: string;
-
-    if (!newState) {
-      // 移除状态
-      if (headingInfo.todoState) {
-        newLineText = lineText.replace(
-          new RegExp(`^(\\*+)\\s+${headingInfo.todoState}\\s+(.*)$`),
-          '$1 $2'
-        );
-      } else {
-        return; // 已经没有状态了
-      }
-    } else {
-      // 设置新状态
-      if (headingInfo.todoState) {
-        // 替换现有状态
-        newLineText = lineText.replace(
-          new RegExp(`^(\\*+)\\s+${headingInfo.todoState}\\s+(.*)$`),
-          `$1 ${newState} $2`
-        );
-      } else {
-        // 添加新状态
-        newLineText = lineText.replace(
-          /^(\*+)\s+(.*)$/,
-          `$1 ${newState} $2`
-        );
-      }
-    }
+    
+    // 使用HeadingParser重建标题行
+    const newLineText = HeadingParser.updateTodoState(
+      lineText,
+      newState || null
+    );
 
     // 应用文本变更
     await editor.edit(editBuilder => {

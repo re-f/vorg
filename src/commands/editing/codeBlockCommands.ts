@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { ContextInfo } from '../types/editingTypes';
+import { ListParser } from '../../parsers/listParser';
 
 /**
  * 代码块相关命令
@@ -17,8 +18,8 @@ export class CodeBlockCommands {
     const line = editor.document.lineAt(position.line);
     const lineEnd = line.range.end;
     
-    // 保持代码块的缩进
-    const indent = line.text.match(/^(\s*)/)?.[1] || '';
+    // 保持代码块的缩进 - 使用ListParser的缩进解析
+    const indent = ListParser.parseIndent(line.text);
     editBuilder.insert(lineEnd, `\n${indent}`);
   }
 

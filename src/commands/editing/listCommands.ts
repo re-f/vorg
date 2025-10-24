@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { ContextInfo } from '../types/editingTypes';
+import { ListParser } from '../../parsers/listParser';
 
 /**
  * 列表相关命令
@@ -20,17 +21,10 @@ export class ListCommands {
     const line = document.lineAt(position.line);
     const indent = ' '.repeat(context.indent || 0);
     
-    // 确定列表标记
+    // 确定列表标记 - 使用ListParser
     let marker = '';
     if (typeof context.marker === 'string') {
-      if (context.marker.match(/^\d+\.$/)) {
-        // 有序列表，递增数字
-        const num = parseInt(context.marker) + 1;
-        marker = `${num}.`;
-      } else {
-        // 无序列表，保持相同标记
-        marker = context.marker;
-      }
+      marker = ListParser.getNextMarker(context.marker);
     }
 
     if (isAtBeginning && line.text.trim() === '') {
@@ -40,7 +34,7 @@ export class ListCommands {
       return null;
     } else {
       // M-RET: 在当前列表项（包括其子内容）之后插入新项
-      const itemEnd = ListCommands.findListItemEnd(document, position, context.indent || 0);
+      const itemEnd = ListParser.findListItemEnd(document, position, context.indent || 0);
       editBuilder.insert(itemEnd, `\n${indent}${marker} `);
       
       // 返回光标应该移动到的位置
@@ -62,18 +56,14 @@ export class ListCommands {
     const line = document.lineAt(position.line);
     const indent = ' '.repeat(context.indent || 0);
     
+    // 确定列表标记 - 使用ListParser
     let marker = '';
     if (typeof context.marker === 'string') {
-      if (context.marker.match(/^\d+\.$/)) {
-        const num = parseInt(context.marker) + 1;
-        marker = `${num}.`;
-      } else {
-        marker = context.marker;
-      }
+      marker = ListParser.getNextMarker(context.marker);
     }
 
     // M-RET: 在当前列表项（包括其子内容）之后插入新项
-    const itemEnd = ListCommands.findListItemEnd(document, position, context.indent || 0);
+    const itemEnd = ListParser.findListItemEnd(document, position, context.indent || 0);
     editBuilder.insert(itemEnd, `\n${indent}${marker} [ ] `);
     
     // 返回光标应该移动到的位置
@@ -94,12 +84,9 @@ export class ListCommands {
     const line = document.lineAt(position.line);
     const indent = ' '.repeat(context.indent || 0);
     
-    // 确定列表标记
+    // 确定列表标记 - 使用ListParser
     let marker = context.marker || '-';
-    if (marker.match(/^\d+\.$/)) {
-      const num = parseInt(marker) + 1;
-      marker = `${num}.`;
-    }
+    marker = ListParser.getNextMarker(marker);
     
     // 获取光标后的内容
     const restOfLine = line.text.substring(position.character).trim();
@@ -128,11 +115,9 @@ export class ListCommands {
     const line = document.lineAt(position.line);
     const indent = ' '.repeat(context.indent || 0);
     
+    // 确定列表标记 - 使用ListParser
     let marker = context.marker || '-';
-    if (marker.match(/^\d+\.$/)) {
-      const num = parseInt(marker) + 1;
-      marker = `${num}.`;
-    }
+    marker = ListParser.getNextMarker(marker);
     
     const restOfLine = line.text.substring(position.character).trim();
     editBuilder.delete(new vscode.Range(position, line.range.end));
@@ -149,39 +134,10 @@ export class ListCommands {
   static async toggleListFold(editor: vscode.TextEditor, position: vscode.Position) {
     const document = editor.document;
     const currentLine = document.lineAt(position.line);
-    const currentLineText = currentLine.text;
-    const currentIndentMatch = currentLineText.match(/^(\s*)/);
-    const currentIndent = currentIndentMatch ? currentIndentMatch[1].length : 0;
+    const currentIndent = ListParser.getIndentLevel(currentLine.text);
     
-    // 先检查当前列表项是否有子项
-    let hasSubItems = false;
-    for (let i = position.line + 1; i < document.lineCount; i++) {
-      const line = document.lineAt(i);
-      const lineText = line.text.trim();
-      
-      // 如果是空行，跳过
-      if (lineText === '') {
-        continue;
-      }
-      
-      // 检查缩进
-      const lineIndentMatch = line.text.match(/^(\s*)/);
-      const lineIndent = lineIndentMatch ? lineIndentMatch[1].length : 0;
-      
-      // 如果缩进大于当前级别，说明有子内容
-      if (lineIndent > currentIndent && lineText !== '') {
-        hasSubItems = true;
-        break;
-      }
-      
-      // 如果遇到同级或更高级的结构，停止查找
-      const listMatch = line.text.match(/^(\s*)([-+*]|\d+\.)\s+/);
-      const headingMatch = line.text.match(/^(\*+)\s+/);
-      
-      if ((listMatch && lineIndent <= currentIndent) || headingMatch || (lineIndent <= currentIndent && lineText !== '')) {
-        break;
-      }
-    }
+    // 先检查当前列表项是否有子项 - 使用ListParser
+    const hasSubItems = ListParser.hasSubItems(document, position.line, currentIndent);
     
     // 根据是否有子项决定行为
     if (hasSubItems) {
@@ -213,15 +169,13 @@ export class ListCommands {
     const line = document.lineAt(position.line);
     const lineText = line.text;
     
-    // 检查是否是列表项
-    const listMatch = lineText.match(/^(\s*)([-+*]|\d+\.)\s+(.*)$/);
-    if (!listMatch) {
+    // 检查是否是列表项 - 使用ListParser
+    const listInfo = ListParser.parseListItem(lineText);
+    if (!listInfo) {
       return;
     }
 
-    const currentIndent = listMatch[1];
-    const marker = listMatch[2];
-    const content = listMatch[3];
+    const currentIndent = ' '.repeat(listInfo.indent);
     const newIndent = currentIndent + '  '; // 增加 2 个空格缩进
     
     // 计算光标的相对位置，缩进后需要相应调整
@@ -229,7 +183,14 @@ export class ListCommands {
     const newCursorChar = cursorCharInLine + 2; // 增加了2个空格的缩进
 
     await editor.edit(editBuilder => {
-      editBuilder.replace(line.range, `${newIndent}${marker} ${content}`);
+      const newLine = ListParser.buildListItemLine(
+        listInfo.indent + 2,
+        listInfo.marker,
+        listInfo.content,
+        listInfo.hasCheckbox,
+        listInfo.checkboxState
+      );
+      editBuilder.replace(line.range, newLine);
     });
     
     // 重新设置光标位置，保持在相对位置
@@ -245,27 +206,29 @@ export class ListCommands {
     const line = document.lineAt(position.line);
     const lineText = line.text;
     
-    // 检查是否是列表项
-    const listMatch = lineText.match(/^(\s*)([-+*]|\d+\.)\s+(.*)$/);
-    if (!listMatch) {
+    // 检查是否是列表项 - 使用ListParser
+    const listInfo = ListParser.parseListItem(lineText);
+    if (!listInfo) {
       return;
     }
 
-    const currentIndent = listMatch[1];
-    const marker = listMatch[2];
-    const content = listMatch[3];
-    
     // 减少 2 个空格缩进，但不能少于 0
-    const newIndentLength = Math.max(0, currentIndent.length - 2);
-    const newIndent = ' '.repeat(newIndentLength);
+    const newIndentLength = Math.max(0, listInfo.indent - 2);
     
     // 计算光标的相对位置，反向缩进后需要相应调整
     const cursorCharInLine  = position.character;
-    const indentReduction = currentIndent.length - newIndentLength;
+    const indentReduction = listInfo.indent - newIndentLength;
     const newCursorChar = Math.max(0, cursorCharInLine - indentReduction);
 
     await editor.edit(editBuilder => {
-      editBuilder.replace(line.range, `${newIndent}${marker} ${content}`);
+      const newLine = ListParser.buildListItemLine(
+        newIndentLength,
+        listInfo.marker,
+        listInfo.content,
+        listInfo.hasCheckbox,
+        listInfo.checkboxState
+      );
+      editBuilder.replace(line.range, newLine);
     });
     
     // 重新设置光标位置，保持在相对位置
@@ -273,46 +236,5 @@ export class ListCommands {
     editor.selection = new vscode.Selection(newPosition, newPosition);
   }
 
-  /**
-   * 查找列表项的结束位置（包括其所有子内容）
-   */
-  static findListItemEnd(
-    document: vscode.TextDocument,
-    position: vscode.Position,
-    currentIndent: number
-  ): vscode.Position {
-    let lastNonEmptyLine = position.line;
-    
-    // 从当前行的下一行开始查找
-    for (let i = position.line + 1; i < document.lineCount; i++) {
-      const line = document.lineAt(i);
-      const lineText = line.text;
-      
-      // 跳过空行，但记录上一个非空行
-      if (lineText.trim() === '') {
-        continue;
-      }
-      
-      // 检查缩进
-      const lineIndentMatch = lineText.match(/^(\s*)/);
-      const lineIndent = lineIndentMatch ? lineIndentMatch[1].length : 0;
-      
-      // 检查是否是列表项
-      const listMatch = lineText.match(/^(\s*)([-+*]|\d+\.)\s+/);
-      // 检查是否是标题
-      const headingMatch = lineText.match(/^(\*+)\s+/);
-      
-      // 如果遇到同级或更高级的列表项，或者遇到标题，说明当前列表项结束
-      if ((listMatch && lineIndent <= currentIndent) || headingMatch) {
-        return new vscode.Position(lastNonEmptyLine, document.lineAt(lastNonEmptyLine).text.length);
-      }
-      
-      // 更新最后一个非空行
-      lastNonEmptyLine = i;
-    }
-    
-    // 如果没找到，返回文档末尾
-    return new vscode.Position(document.lineCount - 1, document.lineAt(document.lineCount - 1).text.length);
-  }
 }
 

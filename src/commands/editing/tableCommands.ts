@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { ContextInfo } from '../types/editingTypes';
+import { TableParser } from '../../parsers/tableParser';
 
 /**
  * 表格相关命令
@@ -18,9 +19,9 @@ export class TableCommands {
     const line = document.lineAt(position.line);
     const lineText = line.text;
     
-    // 计算列数
-    const columns = lineText.split('|').length - 2; // 减去首尾的空字符串
-    const newRow = '|' + ' |'.repeat(columns);
+    // 计算列数 - 使用TableParser
+    const columnCount = TableParser.getColumnCount(lineText);
+    const newRow = TableParser.createEmptyRow(columnCount);
     
     const lineEnd = line.range.end;
     editBuilder.insert(lineEnd, `\n${newRow}`);
@@ -34,20 +35,12 @@ export class TableCommands {
     const line = document.lineAt(position.line);
     const lineText = line.text;
     
-    // 查找当前光标后的下一个 | 符号
-    const afterCursor = lineText.substring(position.character);
-    const nextPipeIndex = afterCursor.indexOf('|');
+    // 查找当前光标后的下一个单元格 - 使用TableParser
+    const nextCellPos = TableParser.findNextCell(lineText, position.character);
     
-    if (nextPipeIndex !== -1) {
+    if (nextCellPos !== null) {
       // 找到了下一个单元格
-      const nextCellStart = position.character + nextPipeIndex + 1;
-      // 跳过空格，找到单元格内容开始位置
-      let cellContentStart = nextCellStart;
-      while (cellContentStart < lineText.length && lineText[cellContentStart] === ' ') {
-        cellContentStart++;
-      }
-      
-      const newPosition = new vscode.Position(position.line, cellContentStart);
+      const newPosition = new vscode.Position(position.line, nextCellPos);
       editor.selection = new vscode.Selection(newPosition, newPosition);
     } else {
       // 当前行没有更多单元格，尝试移到下一行的第一个单元格
@@ -55,16 +48,11 @@ export class TableCommands {
         const nextLine = document.lineAt(position.line + 1);
         const nextLineText = nextLine.text;
         
-        if (nextLineText.match(/^\s*\|/)) {
+        if (TableParser.isTableLine(nextLineText)) {
           // 下一行也是表格行
-          const firstPipeIndex = nextLineText.indexOf('|');
-          if (firstPipeIndex !== -1) {
-            let cellContentStart = firstPipeIndex + 1;
-            while (cellContentStart < nextLineText.length && nextLineText[cellContentStart] === ' ') {
-              cellContentStart++;
-            }
-            
-            const newPosition = new vscode.Position(position.line + 1, cellContentStart);
+          const firstCellPos = TableParser.findNextCell(nextLineText, -1);
+          if (firstCellPos !== null) {
+            const newPosition = new vscode.Position(position.line + 1, firstCellPos);
             editor.selection = new vscode.Selection(newPosition, newPosition);
           }
         }
@@ -80,44 +68,25 @@ export class TableCommands {
     const line = document.lineAt(position.line);
     const lineText = line.text;
     
-    // 查找当前光标前的上一个 | 符号
-    const beforeCursor = lineText.substring(0, position.character);
-    const lastPipeIndex = beforeCursor.lastIndexOf('|');
+    // 查找当前光标前的上一个单元格 - 使用TableParser
+    const prevCellPos = TableParser.findPreviousCell(lineText, position.character);
     
-    if (lastPipeIndex !== -1 && lastPipeIndex > 0) {
-      // 找到了前一个单元格分隔符，现在找到该单元格的开始位置
-      const prevCellEnd = lastPipeIndex;
-      const cellStart = beforeCursor.substring(0, lastPipeIndex).lastIndexOf('|');
-      
-      if (cellStart !== -1) {
-        let cellContentStart = cellStart + 1;
-        while (cellContentStart < prevCellEnd && lineText[cellContentStart] === ' ') {
-          cellContentStart++;
-        }
-        
-        const newPosition = new vscode.Position(position.line, cellContentStart);
-        editor.selection = new vscode.Selection(newPosition, newPosition);
-      }
+    if (prevCellPos !== null) {
+      // 找到了前一个单元格
+      const newPosition = new vscode.Position(position.line, prevCellPos);
+      editor.selection = new vscode.Selection(newPosition, newPosition);
     } else {
       // 当前行没有前一个单元格，尝试移到上一行的最后一个单元格
       if (position.line > 0) {
         const prevLine = document.lineAt(position.line - 1);
         const prevLineText = prevLine.text;
         
-        if (prevLineText.match(/^\s*\|.*\|\s*$/)) {
+        if (TableParser.isTableLine(prevLineText)) {
           // 上一行也是表格行，找到最后一个单元格
-          const lastPipeIndex = prevLineText.lastIndexOf('|');
-          if (lastPipeIndex > 0) {
-            const secondLastPipeIndex = prevLineText.substring(0, lastPipeIndex).lastIndexOf('|');
-            if (secondLastPipeIndex !== -1) {
-              let cellContentStart = secondLastPipeIndex + 1;
-              while (cellContentStart < lastPipeIndex && prevLineText[cellContentStart] === ' ') {
-                cellContentStart++;
-              }
-              
-              const newPosition = new vscode.Position(position.line - 1, cellContentStart);
-              editor.selection = new vscode.Selection(newPosition, newPosition);
-            }
+          const lastCellPos = TableParser.findPreviousCell(prevLineText, prevLineText.length);
+          if (lastCellPos !== null) {
+            const newPosition = new vscode.Position(position.line - 1, lastCellPos);
+            editor.selection = new vscode.Selection(newPosition, newPosition);
           }
         }
       }

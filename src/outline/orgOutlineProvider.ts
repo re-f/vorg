@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { TodoKeywordManager } from '../utils/todoKeywordManager';
+import { HeadingParser } from '../parsers/headingParser';
 
 export class OrgOutlineProvider implements vscode.DocumentSymbolProvider {
   private todoKeywordManager: TodoKeywordManager;
@@ -42,13 +43,14 @@ export class OrgOutlineProvider implements vscode.DocumentSymbolProvider {
       }
       
       // 处理标题行
-      const headingMatch = line.match(/^(\*+)\s+(.+)$/);
-      if (headingMatch) {
-        const level = headingMatch[1].length;
-        const titleText = headingMatch[2];
+      const headingInfo = HeadingParser.parseHeading(line);
+      if (headingInfo.level > 0) {
+        const level = headingInfo.level;
+        const titleText = headingInfo.title;
+        const todoStatus = headingInfo.todoState;
         
-        // 解析标题文本，提取 TODO 状态和标签
-        const { cleanTitle, todoStatus, tags } = this.parseHeadingText(titleText);
+        // 解析标签
+        const { cleanTitle, tags } = this.parseHeadingTags(titleText);
         
         // 确定符号类型
         let kind = vscode.SymbolKind.Module;
@@ -111,25 +113,14 @@ export class OrgOutlineProvider implements vscode.DocumentSymbolProvider {
   }
   
   /**
-   * 解析标题文本，提取 TODO 状态和标签
+   * 解析标题文本，提取标签
    */
-  private parseHeadingText(titleText: string): {
+  private parseHeadingTags(titleText: string): {
     cleanTitle: string;
-    todoStatus: string | null;
     tags: string[];
   } {
     let cleanTitle = titleText.trim();
-    let todoStatus: string | null = null;
     let tags: string[] = [];
-    
-    // 提取 TODO 状态
-    const allKeywords = this.todoKeywordManager.getAllKeywords();
-    const todoRegex = new RegExp(`^(${allKeywords.map(k => k.keyword).join('|')})\\s+(.+)$`);
-    const todoMatch = cleanTitle.match(todoRegex);
-    if (todoMatch) {
-      todoStatus = todoMatch[1];
-      cleanTitle = todoMatch[2];
-    }
     
     // 提取标签
     const tagMatch = cleanTitle.match(/^(.+?)\s+(:[\w_@]+(?::[\w_@]+)*:)\s*$/);
@@ -139,7 +130,7 @@ export class OrgOutlineProvider implements vscode.DocumentSymbolProvider {
       tags = tagString.slice(1, -1).split(':').filter(tag => tag.length > 0);
     }
     
-    return { cleanTitle, todoStatus, tags };
+    return { cleanTitle, tags };
   }
   
   /**
