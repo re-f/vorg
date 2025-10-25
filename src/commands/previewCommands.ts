@@ -4,6 +4,8 @@ import { COMMANDS } from '../utils/constants';
 
 export class PreviewCommands {
   private previewManager: PreviewManager;
+  private updateTimeout: NodeJS.Timeout | undefined;
+  private readonly DEBOUNCE_DELAY = 300; // 300ms 防抖延迟
 
   constructor(context: vscode.ExtensionContext) {
     this.previewManager = new PreviewManager(context);
@@ -26,14 +28,22 @@ export class PreviewCommands {
   }
 
   public registerEventListeners(context: vscode.ExtensionContext): void {
-    // 监听文档变化，实时更新预览
+    // 监听文档变化，实时更新预览 - 添加防抖避免频繁更新
     vscode.workspace.onDidChangeTextDocument(
       event => {
         // 只处理当前活动的org文档
         if (event.document === vscode.window.activeTextEditor?.document && 
             event.document.languageId === 'org') {
-          // 更新所有打开的预览窗口
-          this.previewManager.updateAllPreviews();
+          // 清除之前的定时器
+          if (this.updateTimeout) {
+            clearTimeout(this.updateTimeout);
+          }
+          
+          // 设置新的防抖定时器
+          this.updateTimeout = setTimeout(() => {
+            this.previewManager.updateAllPreviews();
+            this.updateTimeout = undefined;
+          }, this.DEBOUNCE_DELAY);
         }
       },
       null,
@@ -44,7 +54,11 @@ export class PreviewCommands {
     vscode.window.onDidChangeActiveTextEditor(
       editor => {
         if (editor && editor.document.languageId === 'org') {
-          // 当切换到org编辑器时，更新预览
+          // 当切换到org编辑器时，立即更新预览（不需要防抖）
+          if (this.updateTimeout) {
+            clearTimeout(this.updateTimeout);
+            this.updateTimeout = undefined;
+          }
           this.previewManager.updateAllPreviews();
         }
       },

@@ -15,7 +15,11 @@ export class HtmlGenerator {
     }
 
     try {
-      // 首先使用 unified 处理流程转换 Org 到 HTML
+      // 首先解析 AST（只解析一次，后续重用）
+      const parser = unified().use(uniorgParse as any);
+      const ast = parser.parse(text);
+      
+      // 使用 AST 生成 HTML
       const processor = unified()
         .use(uniorgParse as any)
         .use(uniorgRehype as any)
@@ -23,8 +27,8 @@ export class HtmlGenerator {
 
       let html = processor.processSync(text).toString();
       
-      // 后处理：添加 checkbox 支持
-      html = this.processCheckboxes(html, text);
+      // 后处理：添加 checkbox 支持（重用 AST）
+      html = this.processCheckboxes(html, ast);
 
       // 后处理：修复示例块的换行
       html = this.processExampleBlocks(html);
@@ -32,8 +36,8 @@ export class HtmlGenerator {
       // 获取当前 VS Code 主题信息
       const isDarkTheme = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
 
-      // 添加行号标记到 HTML 中以便滚动同步
-      const htmlWithLineMarkers = this.addLineMarkers(html, text);
+      // 添加行号标记到 HTML 中以便滚动同步（重用 AST）
+      const htmlWithLineMarkers = this.addLineMarkers(html, ast);
 
       return this.generateStyledHtml(htmlWithLineMarkers || html, isDarkTheme);
     } catch (error) {
@@ -117,50 +121,107 @@ export class HtmlGenerator {
     `;
   }
 
-  private static addLineMarkers(html: string, text: string): string {
-    const lines = text.split('\n');
-    let htmlWithLineMarkers = '';
-    let currentLineIndex = 0;
-
-    // 为每个标题添加行号标记
-    const htmlLines = html.split('\n');
-    htmlLines.forEach((line, index) => {
-      if (line.includes('<h1') || line.includes('<h2') || line.includes('<h3') || 
-          line.includes('<h4') || line.includes('<h5') || line.includes('<h6')) {
-        // 找到对应的原始行号
-        const headerMatch = line.match(/>([^<]+)</);
-        if (headerMatch) {
-          const headerText = headerMatch[1].trim();
-          const originalLineIndex = lines.findIndex((orgLine, lineIndex) => {
-            return lineIndex >= currentLineIndex && 
-                   orgLine.trim().startsWith('*') && 
-                   orgLine.includes(headerText);
-          });
-          if (originalLineIndex !== -1) {
-            currentLineIndex = originalLineIndex + 1;
-            htmlWithLineMarkers += line.replace(/(<h[1-6][^>]*>)/, `$1<span class="line-marker" data-line="${originalLineIndex}"></span>`);
-          } else {
-            htmlWithLineMarkers += line;
+  private static addLineMarkers(html: string, ast: any): string {
+    // 从 AST 中提取元素和行号的映射关系
+    const lineMap = new Map<string, number>();
+    
+    const extractLineInfo = (node: any): void => {
+      // 获取节点的位置信息（如果有的话）
+      if (node.position && node.position.start) {
+        const lineNumber = node.position.start.line - 1; // AST 行号从 1 开始，我们需要从 0 开始
+        
+        // 处理标题节点
+        if (node.type === 'headline') {
+          // 提取标题的纯文本内容
+          const titleText = this.extractTextFromNode(node);
+          if (titleText) {
+            lineMap.set(titleText.trim(), lineNumber);
           }
-        } else {
-          htmlWithLineMarkers += line;
         }
-      } else {
-        htmlWithLineMarkers += line;
+        
+        // 处理段落节点
+        else if (node.type === 'paragraph') {
+          const paragraphText = this.extractTextFromNode(node);
+          if (paragraphText && paragraphText.length >= 10) {
+            // 使用前50个字符作为键，提高匹配成功率
+            lineMap.set(paragraphText.trim().substring(0, 50), lineNumber);
+          }
+        }
+        
+        // 处理列表项节点
+        else if (node.type === 'list-item') {
+          const listText = this.extractTextFromNode(node);
+          if (listText && listText.length >= 5) {
+            lineMap.set(listText.trim().substring(0, 50), lineNumber);
+          }
+        }
       }
-      if (index < htmlLines.length - 1) {
-        htmlWithLineMarkers += '\n';
+      
+      // 递归处理子节点
+      if (node.children) {
+        node.children.forEach(extractLineInfo);
       }
-    });
+    };
+    
+    extractLineInfo(ast);
+
+    // 使用正则在 HTML 中插入行号标记
+    let htmlWithLineMarkers = html;
+    
+    // 为标题添加行号标记
+    htmlWithLineMarkers = htmlWithLineMarkers.replace(
+      /(<h[1-6][^>]*>)([^<]+)/g,
+      (match, openTag, content) => {
+        const cleanContent = content.trim();
+        const lineNum = lineMap.get(cleanContent);
+        if (lineNum !== undefined) {
+          return `${openTag}<span class="line-marker" data-line="${lineNum}"></span>${content}`;
+        }
+        return match;
+      }
+    );
+
+    // 为段落和列表项添加行号标记
+    htmlWithLineMarkers = htmlWithLineMarkers.replace(
+      /(<(?:p|li)[^>]*>)([^<]{10,})/g,
+      (match, openTag, content) => {
+        const cleanContent = content.trim().substring(0, 50);
+        const lineNum = lineMap.get(cleanContent);
+        if (lineNum !== undefined) {
+          return `${openTag}<span class="line-marker" data-line="${lineNum}"></span>${content}`;
+        }
+        return match;
+      }
+    );
 
     return htmlWithLineMarkers;
   }
 
-  private static processCheckboxes(html: string, orgText: string): string {
-    // 解析 org 文本来获取 checkbox 信息
-    const processor = unified().use(uniorgParse as any);
-    const ast = processor.parse(orgText);
+  /**
+   * 从 AST 节点中提取纯文本内容
+   */
+  private static extractTextFromNode(node: any): string {
+    if (!node) {
+      return '';
+    }
     
+    // 如果节点有直接的值，返回它
+    if (node.value) {
+      return node.value;
+    }
+    
+    // 如果有子节点，递归提取文本
+    if (node.children && node.children.length > 0) {
+      return node.children
+        .map((child: any) => this.extractTextFromNode(child))
+        .join('')
+        .trim();
+    }
+    
+    return '';
+  }
+
+  private static processCheckboxes(html: string, ast: any): string {
     // 收集所有的 checkbox 信息
     const checkboxItems: Array<{checkbox: string | null, content: string}> = [];
     
@@ -411,11 +472,12 @@ export class HtmlGenerator {
 
       /* 任务列表样式 */
       .task-list-item {
-        list-style-type: none;
+        /* 不设置 list-style-type，自然继承父元素的样式，保持一致 */
       }
 
       .task-list-item input[type="checkbox"] {
         margin-right: 0.5em;
+        vertical-align: middle;
       }
 
       /* 标签样式 */
@@ -461,24 +523,57 @@ export class HtmlGenerator {
         
         switch (message.command) {
           case 'updateScroll':
-            updateScrollPosition(message.scrollPercentage);
+            updateScrollPosition(message.scrollPercentage, message.lineNumber);
             break;
         }
       });
       
-      function updateScrollPosition(percentage) {
+      function updateScrollPosition(percentage, lineNumber) {
+        // 尝试使用行号进行精确定位
+        if (lineNumber !== undefined) {
+          const targetElement = findClosestElementByLine(lineNumber);
+          if (targetElement) {
+            // 找到了对应的元素，滚动到该元素
+            targetElement.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+            updateScrollIndicator(percentage);
+            return;
+          }
+        }
+        
+        // 如果无法通过行号定位，使用百分比作为后备方案
         const body = document.body;
         const documentHeight = body.scrollHeight - window.innerHeight;
         const targetScrollTop = documentHeight * percentage;
         
-        // 平滑滚动到目标位置
         window.scrollTo({
           top: targetScrollTop,
           behavior: 'smooth'
         });
         
-        // 更新滚动指示器
         updateScrollIndicator(percentage);
+      }
+      
+      function findClosestElementByLine(targetLine) {
+        // 查找所有带有行号标记的元素
+        const markers = document.querySelectorAll('.line-marker');
+        let closestMarker = null;
+        let closestDistance = Infinity;
+        
+        markers.forEach(marker => {
+          const line = parseInt(marker.getAttribute('data-line'), 10);
+          const distance = Math.abs(line - targetLine);
+          
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestMarker = marker;
+          }
+        });
+        
+        // 返回标记所在的父元素
+        return closestMarker ? closestMarker.parentElement : null;
       }
       
       function updateScrollIndicator(percentage) {
