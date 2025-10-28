@@ -2,7 +2,7 @@
   "name": "vorg",
   "displayName": "VOrg - Org-mode Preview",
   "description": "基础 Org-mode 支持的扩展：实时预览、智能编辑、链接跳转、TODO 管理。在 VS Code 中实现基础的 Org-mode 编辑功能。",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "vorg",
   "license": "MIT",
   "packageManager": "pnpm@10.19.0",

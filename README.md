@@ -127,7 +127,11 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 - [ ] 添加 headline 跳转功能
 - [ ] 添加图表支持（Mermaid）
 - [ ] 支持 refile 功能
-- [ ] 支持 org-pro/demote-subtree
+- [ ] 支持 headline 的树操作
+  - [ ]  org-pro/demote-subtree
+  - [ ]  cut-subtree
+  - [ ]  org-metadown/up
+- [ ] todo 相关展示
 - [ ] 支持插件或自定义代码
 
 ---

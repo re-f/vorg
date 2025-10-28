@@ -12,13 +12,13 @@ export function run(): Promise<void> {
     const testsRoot = path.resolve(__dirname, '..');
 
     return new Promise((c, e) => {
-        glob('**/**.test.js', { cwd: testsRoot }, (err, files) => {
+        glob('**/**.test.js', { cwd: testsRoot }, (err: Error | null, files: string[]) => {
             if (err) {
                 return e(err);
             }
 
             // 添加测试文件到测试套件
-            files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
+            files.forEach((f: string) => mocha.addFile(path.resolve(testsRoot, f)));
 
             try {
                 // 运行 Mocha 测试
