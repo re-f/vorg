@@ -47,13 +47,27 @@
   },
   "onEnterRules": [
     {
-      "beforeText": "^\\s*(-|\\+|\\*|\\d+\\.|[a-zA-Z]\\.)\\s+.*$",
+      "beforeText": "^\\s*(-|\\+|\\d+\\.|[a-zA-Z]\\.)\\s+.*$",
       "action": {
         "indent": "indent"
       }
     },
     {
-      "beforeText": "^\\s*(-|\\+|\\*)\\s+\\[[ X-]\\]\\s+.*$",
+      // 仅匹配带缩进且为单个 * 的列表项，避免与 headline 冲突
+      "beforeText": "^\\s+\\*(?!\\*)\\s+.*$",
+      "action": {
+        "indent": "indent"
+      }
+    },
+    {
+      "beforeText": "^\\s*(-|\\+)\\s+\\[[ X-]\\]\\s+.*$",
+      "action": {
+        "indent": "indent"
+      }
+    },
+    {
+      // * 复选框列表，同样要求带缩进且为单个 *
+      "beforeText": "^\\s+\\*(?!\\*)\\s+\\[[ X-]\\]\\s+.*$",
       "action": {
         "indent": "indent"
       }
