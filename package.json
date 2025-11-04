@@ -92,12 +92,14 @@
       {
         "command": "vorg.preview",
         "title": "VOrg: Open Preview",
-        "icon": "$(preview)"
+        "icon": "$(preview)",
+        "enablement": "editorLangId == 'org'"
       },
       {
         "command": "vorg.previewToSide",
         "title": "VOrg: Open Preview to the Side",
-        "icon": "$(open-preview)"
+        "icon": "$(open-preview)",
+        "enablement": "editorLangId == 'org'"
       },
       {
         "command": "vorg.followLink",
@@ -158,22 +160,12 @@
     "menus": {
       "editor/title": [
         {
-          "when": "editorLangId == org",
-          "command": "vorg.preview",
-          "group": "navigation"
-        },
-        {
-          "when": "editorLangId == org",
+          "when": "editorLangId == 'org'",
           "command": "vorg.previewToSide",
           "group": "navigation"
         },
         {
-          "when": "editorLangId == org",
-          "command": "vorg.followLink",
-          "group": "navigation"
-        },
-        {
-          "when": "editorLangId == org",
+          "when": "editorLangId == 'org'",
           "command": "vorg.insertLink",
           "group": "navigation"
         }
