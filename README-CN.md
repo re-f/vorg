@@ -4,9 +4,9 @@
 [![Downloads](https://img.shields.io/vscode-marketplace/d/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
 [![Rating](https://img.shields.io/vscode-marketplace/r/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
 
-**Language / 语言**: [中文](README.md) | [English](README-EN.md)
+**语言**: [中文](README-CN.md) | [English](README.md)
 
-VOrg 是一个简单的 VS Code 扩展，为在 VS code 中实现基本可用 Org-mode 功能而开发，并不考虑完全迁移 Emacs 上的 Org-mode 使用体验，因此很多功能并不会在组件中实现。 相比于 Emacs 的 Org-mode 能称得上优势的功能就是预览体验。 
+VOrg 是一个简单的 VS Code 扩展，为在 VS Code 中实现基本可用的 Org-mode 功能而开发，并不考虑完全迁移 Emacs 上的 Org-mode 使用体验，因此很多功能并不会在组件中实现。相比于 Emacs 的 Org-mode 能称得上优势的功能就是预览体验。 
 
 ## ✨ 核心特性
 
@@ -18,7 +18,7 @@ VOrg 是一个简单的 VS Code 扩展，为在 VS code 中实现基本可用 Or
 VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、文本格式、列表、代码块、表格、链接、数学公式、时间戳等。详细的语法高亮说明请参考 [语法高亮文档](docs/SYNTAX_HIGHLIGHTING.md)。
 
 ### 📋 智能导航
-- **文档大纲**：自动解析文档结构，提供完整的 Outline 导航
+- **文档大纲**：自动解析文档结构，提供完整的大纲导航
 - **快速跳转**：使用 `Ctrl+Shift+O` (Windows/Linux) 或 `Cmd+Shift+O` (Mac) 快速跳转到标题
 
 ### 🔗 链接跳转
@@ -127,10 +127,10 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 - [ ] 添加 headline 跳转功能
 - [ ] 添加图表支持（Mermaid）
 - [ ] 支持 refile 功能
-- [ ] 支持 headline 的树操作
-  - [ ]  org-pro/demote-subtree
-  - [ ]  cut-subtree
-  - [ ]  org-metadown/up
+- [ ] 支持 headline 树操作
+  - [ ] org-promote/demote-subtree（标题提升/降级）
+  - [ ] cut-subtree（剪切子树）
+  - [ ] org-metadown/up（标题上下移动）
 
 ---
 

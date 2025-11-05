@@ -1,0 +1,119 @@
+---
+description: VOrg 项目版本发布流程规则
+globs: ["package.json", "CHANGELOG.md"]
+alwaysApply: false
+---
+
+# VOrg 版本发布规则
+
+## 发布新版本的标准流程
+
+当用户要求发布新版本时，必须按以下步骤执行：
+
+### 1. 确定版本号
+- 使用语义化版本控制 (SemVer): `MAJOR.MINOR.PATCH`
+  - `MAJOR`: 不兼容的 API 变更
+  - `MINOR`: 向后兼容的功能新增
+  - `PATCH`: 向后兼容的 Bug 修复
+- 当前版本号在 `package.json` 的 `version` 字段中
+
+### 2. 更新版本号
+- 更新 `package.json` 中的 `version` 字段
+- 使用 `search_replace` 工具精确替换版本号字符串
+
+### 3. 更新 CHANGELOG.md
+- 在 CHANGELOG.md 顶部添加新版本条目
+- 格式：`## [版本号] - YYYY-MM-DD`
+- 使用 `date +%Y-%m-%d` 获取当前日期
+- 按以下类别组织变更：
+  - `🐛 Bug 修复`
+  - `✨ 新增功能`
+  - `🔧 改进优化`
+  - `📝 文档更新`
+  - `⚡ 性能提升`
+  - `🎨 样式更新`
+  - `♻️ 代码重构`
+- 从 git 历史中提取变更信息：
+  ```bash
+  git log --oneline --since="上次发布版本日期"
+  git log 上次发布版本commit..HEAD --name-status
+  git log 上次发布版本commit..HEAD --pretty=format:"%h - %s (%an, %ar)" --name-status
+  ```
+
+### 4. 构建和打包
+- 运行 `pnpm run package` 命令
+- 这会执行：
+  - Webpack 生产构建
+  - 生成 VSIX 包文件
+- 输出文件：`vorg-版本号.vsix`
+
+### 5. 验证清单
+发布前检查：
+- [ ] 版本号已更新
+- [ ] CHANGELOG.md 已更新
+- [ ] 构建成功无错误
+- [ ] VSIX 文件已生成
+- [ ] Git 提交已创建
+- [ ] Git 标签已创建并推送
+
+### 6. Git 提交和标签
+- 提交版本变更到 Git：
+  - Commit 信息格式：`release 版本号` 或 `chore: release 版本号`
+  - 示例：`git commit -am "chore: release 0.0.5"`
+- 创建 Git 标签：
+  - 标签格式：`v版本号`（例如：`v0.0.5`）
+  - 创建带注释的标签：`git tag -a v版本号 -m "Release 版本号"`
+  - 示例：`git tag -a v0.0.5 -m "Release 0.0.5"`
+  - 推送标签到远程：`git push origin v版本号` 或 `git push --tags`
+
+## 示例发布命令响应
+
+当用户说"发布新版本 X.Y.Z"时，应该：
+1. 更新 `package.json` 版本号
+2. 更新 `CHANGELOG.md`（从 git 历史提取变更）
+3. 运行 `pnpm run package`
+4. 确认生成的文件
+5. 创建 Git commit
+6. 创建 Git tag（格式：`vX.Y.Z`）
+7. 推送 commit 和 tag 到远程仓库
+
+## 代码编辑规范
+
+- 使用 `search_replace` 工具进行精确替换
+- 读取文件时使用 `read_file` 工具
+- 执行命令时使用 `run_terminal_cmd` 工具
+- 所有响应使用中文
+
+## 文件路径规范
+
+- 使用绝对路径：`/Users/Ref/Library/CloudStorage/OneDrive-Personal/codes/vorg/`
+- 或者相对于工作区根目录的路径
+
+## CHANGELOG 格式示例
+
+```markdown
+## [0.0.5] - 2025-11-05
+
+### 🐛 Bug 修复
+
+- **修复标题**：详细描述
+
+### 🔧 改进优化
+
+- **优化标题**：详细描述
+  - 子项说明
+  - 子项说明
+
+### 📝 文档更新
+
+- **更新标题**：详细描述
+```
+
+## Git 历史分析
+
+当需要更新 CHANGELOG 时：
+1. 查看最近的提交：`git log --oneline -20`
+2. 查看详细变更：`git log --stat -10`
+3. 查看特定版本后的变更：`git log 上次版本commit..HEAD --pretty=format:"%h - %s (%an, %ar)" --name-status`
+4. 提取变更类型和描述
+5. 按类别组织到 CHANGELOG 中

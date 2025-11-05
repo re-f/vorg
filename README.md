@@ -4,7 +4,7 @@
 [![Downloads](https://img.shields.io/vscode-marketplace/d/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
 [![Rating](https://img.shields.io/vscode-marketplace/r/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
 
-**Language / 语言**: [中文](README-CN.md) | [English](README.md)
+**Language**: [中文](README-CN.md) | [English](README.md)
 
 VOrg is a simple VS Code extension developed to provide basic Org-mode functionality in VS Code. It doesn't aim to completely replicate the Emacs Org-mode experience, so many features are not implemented in this component. The main advantage over Emacs Org-mode is the preview experience.
 
@@ -15,7 +15,7 @@ VOrg is a simple VS Code extension developed to provide basic Org-mode functiona
 - **Scroll Synchronization**: Automatic scroll synchronization between editor and preview window
 
 ### 🎨 Syntax Highlighting
-VOrg provides complete Org-mode syntax highlighting support, including headings, TODO states, text formatting, lists, code blocks, tables, links, math formulas, timestamps, and more. For detailed syntax highlighting documentation, please refer to [Syntax Highlighting Documentation](docs/SYNTAX_HIGHLIGHTING.md).
+VOrg provides complete Org-mode syntax highlighting support, including headings, TODO states, text formatting, lists, code blocks, tables, links, math formulas, timestamps, and more. For detailed information, please refer to [Syntax Highlighting Documentation](docs/SYNTAX_HIGHLIGHTING.md).
 
 ### 📋 Smart Navigation
 - **Document Outline**: Automatically parses document structure and provides complete Outline navigation
@@ -128,15 +128,12 @@ If you encounter problems or have improvement suggestions:
 - [ ] Add chart support (Mermaid)
 - [ ] Support refile functionality
 - [ ] Support headline tree operations
-  - [ ]  org-pro/demote-subtree
-  - [ ]  cut-subtree
-  - [ ]  org-metadown/up
-- [ ] todo 相关展示
-- [ ] 支持插件或自定义代码
+  - [ ] org-promote/demote-subtree
+  - [ ] cut-subtree
+  - [ ] org-metadown/up
+- [ ] Add TODO-related display features
+- [ ] Support plugins or custom code
 
----
-
-**VOrg - 让 Org-mode 编辑更加现代化和高效！** 🚀
 ---
 
 **VOrg - Making Org-mode editing more modern and efficient!** 🚀
