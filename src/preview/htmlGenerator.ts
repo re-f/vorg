@@ -6,7 +6,7 @@ import rehypeStringify from 'rehype-stringify';
 
 export class HtmlGenerator {
   
-  public static generatePreviewHtml(document: vscode.TextDocument): string {
+  public static generatePreviewHtml(document: vscode.TextDocument, webview?: vscode.Webview): string {
     const text = document.getText();
 
     // 如果不是 org 文件，显示提示信息
@@ -39,7 +39,7 @@ export class HtmlGenerator {
       // 添加行号标记到 HTML 中以便滚动同步（重用 AST）
       const htmlWithLineMarkers = this.addLineMarkers(html, ast);
 
-      return this.generateStyledHtml(htmlWithLineMarkers || html, isDarkTheme);
+      return this.generateStyledHtml(htmlWithLineMarkers || html, isDarkTheme, webview);
     } catch (error) {
       return this.generateErrorHtml(error);
     }
@@ -299,7 +299,9 @@ export class HtmlGenerator {
     return html;
   }
 
-  private static generateStyledHtml(content: string, isDarkTheme: boolean): string {
+  private static generateStyledHtml(content: string, isDarkTheme: boolean, webview?: vscode.Webview): string {
+    const exportButtonHtml = webview ? this.getExportButtonHtml() : '';
+    
     return `
       <!DOCTYPE html>
       <html>
@@ -308,15 +310,192 @@ export class HtmlGenerator {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
             ${this.getStyles(isDarkTheme)}
+            ${this.getExportButtonStyles()}
           </style>
         </head>
         <body>
+          ${exportButtonHtml}
           <div class="scroll-indicator" id="scrollIndicator"></div>
           ${content}
           
           <script>
-            ${this.getScript()}
+            ${this.getScript(webview)}
           </script>
+        </body>
+      </html>
+    `;
+  }
+
+  private static getExportButtonHtml(): string {
+    return `
+      <div class="export-button-container">
+        <button id="exportHtmlButton" class="export-button" title="导出为 HTML 文件">
+          <svg class="export-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </button>
+      </div>
+    `;
+  }
+
+  private static getExportButtonStyles(): string {
+    return `
+      .export-button-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1001;
+      }
+
+      .export-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background-color: var(--quote-border);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: visible;
+      }
+
+      .export-button:hover {
+        background-color: var(--link-color);
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), 0 3px 6px rgba(0, 0, 0, 0.15);
+      }
+
+      .export-button:active {
+        transform: translateY(0) scale(0.98);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .export-button::before {
+        content: attr(title);
+        position: absolute;
+        bottom: 100%;
+        right: 0;
+        margin-bottom: 8px;
+        padding: 6px 12px;
+        background-color: rgba(0, 0, 0, 0.85);
+        color: white;
+        font-size: 12px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        white-space: nowrap;
+        border-radius: 4px;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(4px);
+        transition: opacity 0.2s, transform 0.2s;
+      }
+
+      .export-button:hover::before {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .export-icon {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+      }
+
+      /* 确保按钮在滚动时保持可见 */
+      @media (max-width: 600px) {
+        .export-button-container {
+          bottom: 15px;
+          right: 15px;
+        }
+        
+        .export-button {
+          width: 44px;
+          height: 44px;
+        }
+        
+        .export-icon {
+          width: 18px;
+          height: 18px;
+        }
+      }
+    `;
+  }
+
+  /**
+   * 生成可导出的完整 HTML（不包含 VS Code 特定的脚本）
+   */
+  public static generateExportableHtml(document: vscode.TextDocument): string {
+    const text = document.getText();
+
+    // 如果不是 org 文件，显示提示信息
+    if (document.languageId !== 'org') {
+      return this.generateInfoHtml(document.languageId);
+    }
+
+    try {
+      // 首先解析 AST（只解析一次，后续重用）
+      const parser = unified().use(uniorgParse as any);
+      const ast = parser.parse(text);
+      
+      // 使用 AST 生成 HTML
+      const processor = unified()
+        .use(uniorgParse as any)
+        .use(uniorgRehype as any)
+        .use(rehypeStringify as any);
+
+      let html = processor.processSync(text).toString();
+      
+      // 后处理：添加 checkbox 支持（重用 AST）
+      html = this.processCheckboxes(html, ast);
+
+      // 后处理：修复示例块的换行
+      html = this.processExampleBlocks(html);
+
+      // 获取当前 VS Code 主题信息
+      const isDarkTheme = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
+
+      // 添加行号标记到 HTML 中（导出版本不需要滚动同步，但保留标记以便将来可能使用）
+      const htmlWithLineMarkers = this.addLineMarkers(html, ast);
+
+      return this.generateExportableStyledHtml(htmlWithLineMarkers || html, isDarkTheme);
+    } catch (error) {
+      return this.generateErrorHtml(error);
+    }
+  }
+
+  /**
+   * 生成可导出的样式化 HTML（不包含 VS Code 特定脚本）
+   */
+  private static generateExportableStyledHtml(content: string, isDarkTheme: boolean): string {
+    // 移除滚动指示器（导出版本不需要）
+    const contentWithoutScrollIndicator = content.replace(
+      /<div class="scroll-indicator"[^>]*>.*?<\/div>/s,
+      ''
+    );
+
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Org Preview Export</title>
+          <style>
+            ${this.getStyles(isDarkTheme)}
+            /* 隐藏滚动指示器（如果存在） */
+            .scroll-indicator {
+              display: none !important;
+            }
+          </style>
+        </head>
+        <body>
+          ${contentWithoutScrollIndicator}
         </body>
       </html>
     `;
@@ -510,23 +689,40 @@ export class HtmlGenerator {
     `;
   }
 
-  private static getScript(): string {
+  private static getScript(webview?: vscode.Webview): string {
+    const hasWebview = webview ? 'true' : 'false';
+    
     return `
-      const vscode = acquireVsCodeApi();
+      const vscode = ${webview ? 'acquireVsCodeApi()' : 'null'};
+      const hasWebview = ${hasWebview};
       
       // 通知 VS Code 预览窗口已准备就绪
-      vscode.postMessage({ command: 'ready' });
+      if (hasWebview && vscode) {
+        vscode.postMessage({ command: 'ready' });
+      }
       
       // 监听来自 VS Code 的消息
-      window.addEventListener('message', event => {
-        const message = event.data;
-        
-        switch (message.command) {
-          case 'updateScroll':
-            updateScrollPosition(message.scrollPercentage, message.lineNumber);
-            break;
+      if (hasWebview && vscode) {
+        window.addEventListener('message', event => {
+          const message = event.data;
+          
+          switch (message.command) {
+            case 'updateScroll':
+              updateScrollPosition(message.scrollPercentage, message.lineNumber);
+              break;
+          }
+        });
+      }
+
+      // 导出按钮点击处理
+      if (hasWebview && vscode) {
+        const exportButton = document.getElementById('exportHtmlButton');
+        if (exportButton) {
+          exportButton.addEventListener('click', () => {
+            vscode.postMessage({ command: 'exportHtml' });
+          });
         }
-      });
+      }
       
       function updateScrollPosition(percentage, lineNumber) {
         // 尝试使用行号进行精确定位

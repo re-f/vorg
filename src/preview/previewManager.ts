@@ -15,8 +15,14 @@ export class PreviewManager {
     currentPanel: undefined,
     currentSidePanel: undefined
   };
+  private exportCallback: ((document: vscode.TextDocument) => Promise<void>) | undefined;
+  private currentDocument: vscode.TextDocument | undefined;
 
   constructor(private context: vscode.ExtensionContext) {}
+
+  public setExportCallback(callback: (document: vscode.TextDocument) => Promise<void>): void {
+    this.exportCallback = callback;
+  }
 
   public openPreview(): void {
     const activeEditor = vscode.window.activeTextEditor;
@@ -46,6 +52,15 @@ export class PreviewManager {
           this.panelManager.currentPanel = undefined;
         },
         null,
+        this.context.subscriptions
+      );
+
+      // 处理来自预览窗口的消息
+      this.panelManager.currentPanel.webview.onDidReceiveMessage(
+        message => {
+          this.handleWebviewMessage(message, this.panelManager.currentPanel);
+        },
+        undefined,
         this.context.subscriptions
       );
     }
@@ -91,12 +106,7 @@ export class PreviewManager {
       // 处理来自预览窗口的消息
       this.panelManager.currentSidePanel.webview.onDidReceiveMessage(
         message => {
-          switch (message.command) {
-            case WEBVIEW_MESSAGES.READY:
-              // 预览窗口准备就绪，发送初始滚动位置
-              ScrollSync.syncScrollToPreview(this.panelManager.currentSidePanel);
-              break;
-          }
+          this.handleWebviewMessage(message, this.panelManager.currentSidePanel);
         },
         undefined,
         this.context.subscriptions
@@ -130,7 +140,38 @@ export class PreviewManager {
     }
 
     const document = vscode.window.activeTextEditor.document;
-    const html = HtmlGenerator.generatePreviewHtml(document);
+    this.currentDocument = document; // 保存当前文档引用
+    const html = HtmlGenerator.generatePreviewHtml(document, panel.webview);
     panel.webview.html = html;
+  }
+
+  private handleWebviewMessage(message: any, panel: vscode.WebviewPanel | undefined): void {
+    if (!panel) {
+      return;
+    }
+
+    switch (message.command) {
+      case WEBVIEW_MESSAGES.READY:
+        // 预览窗口准备就绪，发送初始滚动位置
+        ScrollSync.syncScrollToPreview(panel);
+        break;
+      case WEBVIEW_MESSAGES.EXPORT_HTML:
+        // 处理导出请求
+        if (this.exportCallback && this.currentDocument) {
+          this.exportCallback(this.currentDocument);
+        } else {
+          // 如果没有保存的文档，尝试从活动编辑器获取
+          const activeEditor = vscode.window.activeTextEditor;
+          if (activeEditor && activeEditor.document.languageId === 'org') {
+            this.currentDocument = activeEditor.document;
+            if (this.exportCallback) {
+              this.exportCallback(this.currentDocument);
+            }
+          } else {
+            vscode.window.showErrorMessage('无法找到 Org-mode 文件。请确保已打开一个 .org 文件。');
+          }
+        }
+        break;
+    }
   }
 } 

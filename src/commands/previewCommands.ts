@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { PreviewManager } from '../preview/previewManager';
+import { HtmlGenerator } from '../preview/htmlGenerator';
 import { COMMANDS } from '../utils/constants';
 
 export class PreviewCommands {
@@ -9,6 +11,7 @@ export class PreviewCommands {
 
   constructor(context: vscode.ExtensionContext) {
     this.previewManager = new PreviewManager(context);
+    this.previewManager.setExportCallback((document) => this.exportPreviewToSameDirectory(document));
   }
 
   public registerCommands(context: vscode.ExtensionContext): void {
@@ -24,7 +27,102 @@ export class PreviewCommands {
       () => this.previewManager.openPreviewToSide()
     );
 
-    context.subscriptions.push(previewDisposable, previewToSideDisposable);
+    // 导出预览命令
+    const exportPreviewDisposable = vscode.commands.registerCommand(
+      COMMANDS.EXPORT_PREVIEW,
+      () => this.exportPreview()
+    );
+
+    context.subscriptions.push(previewDisposable, previewToSideDisposable, exportPreviewDisposable);
+  }
+
+  /**
+   * 导出预览为 HTML 文件（显示保存对话框）
+   */
+  private async exportPreview(): Promise<void> {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (!activeEditor) {
+      vscode.window.showErrorMessage('没有活动的编辑器。请先打开一个 Org-mode 文件。');
+      return;
+    }
+
+    if (activeEditor.document.languageId !== 'org') {
+      vscode.window.showWarningMessage('当前文件不是 Org-mode 文件。VOrg 最适合处理 .org 文件。');
+    }
+
+    const document = activeEditor.document;
+    const documentPath = document.uri.fsPath;
+    const documentDir = path.dirname(documentPath);
+    const documentName = path.basename(documentPath, path.extname(documentPath));
+    const defaultFileName = `${documentName}.html`;
+    const defaultUri = vscode.Uri.file(path.join(documentDir, defaultFileName));
+
+    // 显示保存对话框
+    const saveUri = await vscode.window.showSaveDialog({
+      defaultUri: defaultUri,
+      filters: {
+        'HTML': ['html'],
+        'All Files': ['*']
+      },
+      saveLabel: '导出预览'
+    });
+
+    if (!saveUri) {
+      // 用户取消了保存
+      return;
+    }
+
+    await this.savePreviewToFile(document, saveUri);
+  }
+
+  /**
+   * 直接导出预览到同一目录（不显示对话框）
+   */
+  public async exportPreviewToSameDirectory(document?: vscode.TextDocument): Promise<void> {
+    // 如果传入了文档，使用传入的文档；否则尝试从活动编辑器获取
+    let targetDocument = document;
+    
+    if (!targetDocument) {
+      const activeEditor = vscode.window.activeTextEditor;
+      if (!activeEditor) {
+        vscode.window.showErrorMessage('没有活动的编辑器。请先打开一个 Org-mode 文件。');
+        return;
+      }
+      targetDocument = activeEditor.document;
+    }
+
+    if (targetDocument.languageId !== 'org') {
+      vscode.window.showWarningMessage('当前文件不是 Org-mode 文件。VOrg 最适合处理 .org 文件。');
+      return;
+    }
+
+    const documentPath = targetDocument.uri.fsPath;
+    const documentDir = path.dirname(documentPath);
+    const documentName = path.basename(documentPath, path.extname(documentPath));
+    const fileName = `${documentName}.html`;
+    const saveUri = vscode.Uri.file(path.join(documentDir, fileName));
+
+    await this.savePreviewToFile(targetDocument, saveUri);
+  }
+
+  /**
+   * 保存预览到文件
+   */
+  private async savePreviewToFile(document: vscode.TextDocument, saveUri: vscode.Uri): Promise<void> {
+    try {
+      // 生成可导出的 HTML
+      const html = HtmlGenerator.generateExportableHtml(document);
+      
+      // 写入文件（使用 Buffer 编码为 UTF-8）
+      const data = Buffer.from(html, 'utf-8');
+      await vscode.workspace.fs.writeFile(saveUri, data);
+
+      // 显示成功消息
+      const fileName = path.basename(saveUri.fsPath);
+      vscode.window.showInformationMessage(`预览已成功导出到: ${fileName}`);
+    } catch (error) {
+      vscode.window.showErrorMessage(`导出预览时出错: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   public registerEventListeners(context: vscode.ExtensionContext): void {
