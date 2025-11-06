@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { TodoKeywordManager } from '../utils/todoKeywordManager';
+import { LinkUtils } from '../utils/linkUtils';
 
 export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.DefinitionProvider {
   private todoKeywordManager: TodoKeywordManager;
@@ -174,7 +174,7 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
       const endPos = document.positionAt(match.index + match[0].length);
       const range = new vscode.Range(startPos, endPos);
       
-      const uri = this.resolveFilePath(document, filePath);
+      const uri = LinkUtils.resolveFilePath(document, filePath);
       if (uri) {
         links.push(new vscode.DocumentLink(range, uri));
       }
@@ -197,7 +197,7 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
     // 处理文件链接
     if (linkTarget.startsWith('file:')) {
       const filePath = linkTarget.substring(5); // 移除 'file:' 前缀
-      return this.resolveFilePath(document, filePath);
+      return LinkUtils.resolveFilePath(document, filePath);
     }
 
     // 处理ID链接
@@ -207,56 +207,16 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
 
     // 处理内部标题链接
     if (!linkTarget.includes('/') && !linkTarget.includes('\\')) {
-      return this.findHeadlineByTitle(document, linkTarget);
-    }
-
-    return null;
-  }
-
-  /**
-   * 解析文件路径
-   */
-  private resolveFilePath(document: vscode.TextDocument, filePath: string): vscode.Uri | null {
-    try {
-      // 如果是绝对路径
-      if (path.isAbsolute(filePath)) {
-        return vscode.Uri.file(filePath);
+      const location = LinkUtils.findHeadlineByTitle(document, linkTarget);
+      if (location) {
+        return vscode.Uri.parse(`${location.uri.toString()}#L${location.range.start.line + 1}`);
       }
-
-      // 相对于当前文档的路径
-      const currentDir = path.dirname(document.uri.fsPath);
-      const resolvedPath = path.resolve(currentDir, filePath);
-      return vscode.Uri.file(resolvedPath);
-    } catch (error) {
       return null;
     }
-  }
-
-
-
-  /**
-   * 通过标题文本查找标题
-   */
-  private findHeadlineByTitle(document: vscode.TextDocument, title: string): vscode.Uri | null {
-    const text = document.getText();
-    const regex = new RegExp(OrgLinkProvider.LINK_PATTERNS.HEADING_PATTERN);
-    let match;
-
-    while ((match = regex.exec(text)) !== null) {
-      const headlineTitle = match[1].trim();
-      // 移除状态关键字 (TODO, DONE, etc.)
-      const allKeywords = this.todoKeywordManager.getAllKeywords();
-      const keywordRegex = new RegExp(`^(${allKeywords.map(k => k.keyword).join('|')})\\s+`);
-      const cleanTitle = headlineTitle.replace(keywordRegex, '');
-      
-      if (cleanTitle === title || headlineTitle === title) {
-        const position = document.positionAt(match.index);
-        return vscode.Uri.parse(`${document.uri.toString()}#L${position.line + 1}`);
-      }
-    }
 
     return null;
   }
+
 
   /**
    * 找到距离给定位置最近的标题
@@ -285,7 +245,7 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
       // 处理文件链接
       if (linkTarget.startsWith('file:')) {
         const filePath = linkTarget.substring(5); // 移除 'file:' 前缀
-        const uri = this.resolveFilePath(document, filePath);
+        const uri = LinkUtils.resolveFilePath(document, filePath);
         if (uri) {
           try {
             const targetDocument = await vscode.workspace.openTextDocument(uri);
@@ -300,14 +260,14 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
       // 处理ID链接
       if (linkTarget.startsWith('id:')) {
         const id = linkTarget.substring(3);
-        const location = await this.findHeadlineByIdLocation(document, id);
+        const location = await LinkUtils.findHeadlineById(document, id);
         return location;
       }
 
       // 处理内部标题链接 [[*heading]] 格式（org-mode标准）
       if (linkTarget.startsWith('*')) {
         const headingText = linkTarget.substring(1);
-        const location = this.findHeadlineByTitleLocation(document, headingText);
+        const location = LinkUtils.findHeadlineByTitle(document, headingText);
         return location;
       }
 
@@ -318,98 +278,4 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
     }
   }
 
-  /**
-   * 通过ID查找标题位置（支持跨文件搜索）
-   */
-  private async findHeadlineByIdLocation(document: vscode.TextDocument, id: string): Promise<vscode.Location | null> {
-    // 首先在当前文档中查找
-    const currentFileLocation = await this.findIdInDocument(document, id);
-    if (currentFileLocation) {
-      return currentFileLocation;
-    }
-
-    // 如果在当前文档中没找到，则在整个工作区的所有.org文件中查找
-    try {
-      const orgFiles = await vscode.workspace.findFiles('**/*.org', '**/node_modules/**', 100);
-      
-      for (const fileUri of orgFiles) {
-        // 跳过当前文档，因为已经搜索过了
-        if (fileUri.toString() === document.uri.toString()) {
-          continue;
-        }
-
-        try {
-          const fileDocument = await vscode.workspace.openTextDocument(fileUri);
-          const location = await this.findIdInDocument(fileDocument, id);
-          if (location) {
-            return location;
-          }
-        } catch (error) {
-          // 忽略无法打开的文件
-          console.warn(`Failed to open document ${fileUri.toString()}:`, error);
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to search for ID in workspace:', error);
-    }
-
-    return null;
-  }
-
-  /**
-   * 在指定文档中查找ID
-   */
-  private async findIdInDocument(document: vscode.TextDocument, id: string): Promise<vscode.Location | null> {
-    const text = document.getText();
-    const escapedId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const idPattern = new RegExp(`:ID:\\s+${escapedId}`, 'gm');
-    
-    const match = idPattern.exec(text);
-    
-    if (!match) {
-      return null;
-    }
-
-    const idPosition = document.positionAt(match.index);
-    
-    // 向上查找最近的标题
-    for (let i = idPosition.line; i >= 0; i--) {
-      const line = document.lineAt(i);
-      if (line.text.match(/^\*+\s+/)) {
-        return new vscode.Location(document.uri, new vscode.Position(i, 0));
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * 通过标题文本查找标题位置
-   */
-  private findHeadlineByTitleLocation(document: vscode.TextDocument, title: string): vscode.Location | null {
-    const text = document.getText();
-    const lines = text.split('\n');
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      // 匹配标题行：以一个或多个*开头，后跟空格，然后是标题文本
-      const headingMatch = line.match(/^(\*+)\s+(.+?)(?:\s+:[a-zA-Z0-9_@:]+:)?\s*$/);
-      
-      if (headingMatch) {
-        let headlineTitle = headingMatch[2].trim();
-        // 移除状态关键字 (TODO, DONE, etc.)
-        const allKeywords = this.todoKeywordManager.getAllKeywords();
-        const keywordRegex = new RegExp(`^(${allKeywords.map(k => k.keyword).join('|')})\\s+`);
-        const cleanTitle = headlineTitle.replace(keywordRegex, '');
-        
-        
-        
-        if (cleanTitle === title || headlineTitle === title) {
-          return new vscode.Location(document.uri, new vscode.Position(i, 0));
-        }
-      }
-    }
-
-    return null;
-  }
 } 
