@@ -4,7 +4,7 @@
 [![Downloads](https://img.shields.io/vscode-marketplace/d/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
 [![Rating](https://img.shields.io/vscode-marketplace/r/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
 
-**语言**: [中文](README-CN.md) | [English](README.md)
+**Language / 语言**: [中文](README-CN.md) | [English](README.md)
 
 VOrg 是一个简单的 VS Code 扩展，为在 VS Code 中实现基本可用的 Org-mode 功能而开发，并不考虑完全迁移 Emacs 上的 Org-mode 使用体验，因此很多功能并不会在组件中实现。相比于 Emacs 的 Org-mode 能称得上优势的功能就是预览体验。 
 
@@ -69,6 +69,8 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 | **展开标题** | `Ctrl+C Ctrl+Shift+Tab` | `Editor: Unfold` | 展开当前标题 |
 | **切换侧边栏** | `Ctrl+C Ctrl+X Ctrl+B` | `Toggle Sidebar` | 切换侧边栏显示 |
 | **添加注释** | `Ctrl+C Ctrl+;` | `Add Line Comment` | 添加行注释 |
+| **升级子树** | `Ctrl+C Ctrl+Shift+,` | `VOrg: Promote Subtree` | 类似 Emacs `C-c C-<`，减少标题级别 |
+| **降级子树** | `Ctrl+C Ctrl+Shift+.` | `VOrg: Demote Subtree` | 类似 Emacs `C-c C->`，增加标题级别 |
 | **文档大纲跳转** | `Ctrl+Shift+O` (Windows/Linux)<br>`Cmd+Shift+O` (Mac) | `Go to Symbol in Workspace` | 快速跳转到标题，查看侧边栏 "Outline" 面板 |
 
 
@@ -87,6 +89,21 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 
 - `|` 前为未完成状态，`|` 后为已完成状态
 - 示例：`"PreSale InDelivery HANGUP(@/!) End(@/!) | Terminated(@/!) DONE(@/!)"`
+
+### CodeLens 操作按钮
+
+控制是否在编辑器中显示操作按钮（如标题行的 Promote、Demote 等）：
+
+```json
+{
+  "vorg.showCodeLens": true
+}
+```
+
+- `true`（默认）：显示操作按钮
+- `false`：隐藏操作按钮
+
+当启用时，每个标题行上方会显示操作按钮，点击即可快速执行相应操作。
 
 ## 📁 支持的文件类型
 
@@ -127,10 +144,20 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 - [ ] 添加 headline 跳转功能
 - [ ] 添加图表支持（Mermaid）
 - [ ] 支持 refile 功能
-- [ ] 支持 headline 树操作
-  - [ ] org-promote/demote-subtree（标题提升/降级）
-  - [ ] cut-subtree（剪切子树）
-  - [ ] org-metadown/up（标题上下移动）
+- [ ] 支持 headline 的树操作
+  - [ ]  org-pro/demote-subtree
+  - [ ]  cut-subtree
+  - [ ]  org-metadown/up
+- [ ] todo 相关展示
+- [ ] 支持插件或自定义代码
+- [ ] 提示： 比如 headline 上，提示 promote或者 demote
+- [ ] 实现 Ctrl-c Ctrl-c 的功能
+- [ ] 补充单测
+- [ ] 支持 sql 查询
+- [ ] 当前 bug： 剪贴一个 list， 再复制时， 会多一个缩进
+- [ ] bug: 再表格中使用 meta-return 和 ctrl-return 目前的行为都不太对
+- [X] bug:vorg 预览时 checkbox 的 list 前没有一个点,导致样式对不上
+- [ ] 结构拆分： vorg-core 负责org 格式解析 vorg-publish 
 
 ---
 

@@ -48,6 +48,8 @@
     "onCommand:vorg.smartTab",
     "onCommand:vorg.smartShiftTab",
     "onCommand:vorg.setProperty",
+    "onCommand:vorg.promoteSubtree",
+    "onCommand:vorg.demoteSubtree",
     "onCommand:vorg.debug.refreshHighlighting"
   ],
   "main": "./out/extension.js",
@@ -65,6 +67,11 @@
           "type": "string",
           "default": "TODO",
           "description": "默认插入的TODO关键字，必须是todoKeywords配置中定义的关键字之一"
+        },
+        "vorg.showCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否在编辑器中显示操作按钮（CodeLens），如标题行的 Promote、Demote 等"
         }
       }
     },
@@ -86,6 +93,12 @@
         "language": "org",
         "scopeName": "source.org",
         "path": "./syntaxes/org.tmLanguage.json"
+      }
+    ],
+    "codeLensProviders": [
+      {
+        "language": "org",
+        "scheme": "file"
       }
     ],
     "commands": [
@@ -155,6 +168,16 @@
         "command": "vorg.setProperty",
         "title": "vorg: Set Property (org-set-property)",
         "icon": "$(symbol-property)"
+      },
+      {
+        "command": "vorg.promoteSubtree",
+        "title": "VOrg: Promote Subtree (org-promote-subtree)",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "vorg.demoteSubtree",
+        "title": "VOrg: Demote Subtree (org-demote-subtree)",
+        "icon": "$(arrow-down)"
       }
     ],
     "menus": {
@@ -260,6 +283,18 @@
         "command": "vorg.setProperty",
         "key": "ctrl+c ctrl+x p",
         "mac": "ctrl+c ctrl+x p",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "vorg.promoteSubtree",
+        "key": "ctrl+c ctrl+shift+,",
+        "mac": "ctrl+c ctrl+shift+,",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "vorg.demoteSubtree",
+        "key": "ctrl+c ctrl+shift+.",
+        "mac": "ctrl+c ctrl+shift+.",
         "when": "editorLangId == org"
       }
     ]

@@ -9,6 +9,7 @@ import { PreviewCommands } from './commands/previewCommands';
 import { LinkCommands } from './commands/linkCommands';
 import { EditingCommands } from './commands/editingCommands';
 import { DebugCommands } from './commands/debugCommands';
+import { HeadingCodeLensProvider } from './codelens/headingCodeLensProvider';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('VOrg extension is now active!');
@@ -38,6 +39,16 @@ export function activate(context: vscode.ExtensionContext) {
   const foldingProvider = new OrgFoldingProvider();
   context.subscriptions.push(
     vscode.languages.registerFoldingRangeProvider('org', foldingProvider)
+  );
+
+  // 注册 CodeLens 提供者（标题行的 Promote/Demote 按钮）
+  const codeLensProvider = new HeadingCodeLensProvider();
+  context.subscriptions.push(
+    vscode.languages.registerCodeLensProvider(
+      { language: 'org', scheme: 'file' },
+      codeLensProvider
+    ),
+    codeLensProvider
   );
 
   // 注册预览管理器

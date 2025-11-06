@@ -59,6 +59,16 @@ export class EditingCommands {
       EditingCommands.executeCtrlReturn();
     });
 
+    // 升级子树命令 (org-promote-subtree)
+    const promoteSubtreeCommand = vscode.commands.registerCommand('vorg.promoteSubtree', (lineNumber?: number) => {
+      EditingCommands.promoteSubtree(lineNumber);
+    });
+
+    // 降级子树命令 (org-demote-subtree)
+    const demoteSubtreeCommand = vscode.commands.registerCommand('vorg.demoteSubtree', (lineNumber?: number) => {
+      EditingCommands.demoteSubtree(lineNumber);
+    });
+
     context.subscriptions.push(
       metaReturnCommand,
       smartReturnCommand,
@@ -67,7 +77,9 @@ export class EditingCommands {
       smartTabCommand,
       smartShiftTabCommand,
       setPropertyCommand,
-      ctrlReturnCommand
+      ctrlReturnCommand,
+      promoteSubtreeCommand,
+      demoteSubtreeCommand
     );
   }
 
@@ -406,5 +418,43 @@ export class EditingCommands {
       // 普通换行
       editBuilder.insert(position, '\n');
     }
+  }
+
+  /**
+   * 升级子树
+   */
+  private static async promoteSubtree(lineNumber?: number) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'org') {
+      return;
+    }
+    
+    // 如果提供了行号，先移动光标到该行
+    if (lineNumber !== undefined) {
+      const position = new vscode.Position(lineNumber, 0);
+      editor.selection = new vscode.Selection(position, position);
+      editor.revealRange(new vscode.Range(position, position));
+    }
+    
+    await HeadingCommands.promoteSubtree(editor);
+  }
+
+  /**
+   * 降级子树
+   */
+  private static async demoteSubtree(lineNumber?: number) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'org') {
+      return;
+    }
+    
+    // 如果提供了行号，先移动光标到该行
+    if (lineNumber !== undefined) {
+      const position = new vscode.Position(lineNumber, 0);
+      editor.selection = new vscode.Selection(position, position);
+      editor.revealRange(new vscode.Range(position, position));
+    }
+    
+    await HeadingCommands.demoteSubtree(editor);
   }
 }

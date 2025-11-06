@@ -69,6 +69,8 @@ Supports intelligent navigation for multiple link types:
 | **Unfold Heading** | `Ctrl+C Ctrl+Shift+Tab` | `Editor: Unfold` | Unfold current heading |
 | **Toggle Sidebar** | `Ctrl+C Ctrl+X Ctrl+B` | `Toggle Sidebar` | Toggle sidebar display |
 | **Add Comment** | `Ctrl+C Ctrl+;` | `Add Line Comment` | Add line comment |
+| **Promote Subtree** | `Ctrl+C Ctrl+Shift+,` | `VOrg: Promote Subtree` | Similar to Emacs `C-c C-<`, decrease heading level |
+| **Demote Subtree** | `Ctrl+C Ctrl+Shift+.` | `VOrg: Demote Subtree` | Similar to Emacs `C-c C->`, increase heading level |
 | **Document Outline Jump** | `Ctrl+Shift+O` (Windows/Linux)<br>`Cmd+Shift+O` (Mac) | `Go to Symbol in Workspace` | Quick jump to headings, check "Outline" panel in sidebar |
 
 
@@ -87,6 +89,21 @@ You can customize TODO keywords in VS Code settings:
 
 - Before `|` are incomplete states, after `|` are completed states
 - Example: `"PreSale InDelivery HANGUP(@/!) End(@/!) | Terminated(@/!) DONE(@/!)"`
+
+### CodeLens Action Buttons
+
+Control whether to show action buttons (like Promote, Demote on heading lines) in the editor:
+
+```json
+{
+  "vorg.showCodeLens": true
+}
+```
+
+- `true` (default): Show action buttons
+- `false`: Hide action buttons
+
+When enabled, action buttons will appear above each heading line for quick access to operations.
 
 ## 📁 Supported File Types
 
@@ -128,11 +145,19 @@ If you encounter problems or have improvement suggestions:
 - [ ] Add chart support (Mermaid)
 - [ ] Support refile functionality
 - [ ] Support headline tree operations
-  - [ ] org-promote/demote-subtree
-  - [ ] cut-subtree
-  - [ ] org-metadown/up
-- [ ] Add TODO-related display features
+  - [ ]  org-pro/demote-subtree
+  - [ ]  cut-subtree
+  - [ ]  org-metadown/up
+- [ ] TODO-related display
 - [ ] Support plugins or custom code
+- [ ] Hints: e.g., on headlines, show hints for promote or demote
+- [ ] Implement Ctrl-c Ctrl-c functionality
+- [ ] Add unit tests
+- [ ] Support SQL queries
+- [ ] Current bug: When cutting a list and pasting it, it adds an extra indentation
+- [ ] Bug: In tables, using meta-return and ctrl-return currently doesn't behave correctly
+- [X] Bug: In vorg preview, checkbox lists don't have a dot in front, causing style mismatch
+- [ ] Structure split: vorg-core responsible for org format parsing, vorg-publish 
 
 ---
 

@@ -128,5 +128,142 @@ export class HeadingCommands {
     return '';
   }
 
+  /**
+   * 升级子树（减少标题级别，org-promote-subtree）
+   * 将整个子树的所有标题级别减少1，但不能小于1
+   */
+  static async promoteSubtree(editor: vscode.TextEditor): Promise<void> {
+    const position = editor.selection.active;
+    const document = editor.document;
+    
+    // 检查当前行是否就是标题行（只在 headline 行本身时生效）
+    const currentLine = document.lineAt(position.line);
+    const currentHeadingInfo = HeadingParser.parseHeading(currentLine.text);
+    if (currentHeadingInfo.level === 0) {
+      // 如果当前行不是标题行，不执行任何操作
+      return;
+    }
+    
+    // 查找当前标题（用于获取完整的标题信息）
+    const currentHeading = HeadingParser.findCurrentHeading(document, position);
+    if (!currentHeading) {
+      return;
+    }
+
+    const startLine = currentHeading.line.lineNumber;
+    const startLevel = currentHeading.headingInfo.level;
+    
+    // 如果已经是1级标题，不能再升级
+    if (startLevel <= 1) {
+      return;
+    }
+
+    // 找到子树结束行
+    const subtreeEnd = HeadingParser.findSubtreeEnd(document, currentHeading.line.range.start);
+    const endLine = subtreeEnd.line;
+
+    // 收集所有需要修改的标题行及其新级别
+    const edits: Array<{ line: number; newLevel: number; headingInfo: HeadingInfo }> = [];
+    
+    for (let lineNumber = startLine; lineNumber <= endLine; lineNumber++) {
+      const line = document.lineAt(lineNumber);
+      const headingInfo = HeadingParser.parseHeading(line.text);
+      
+      if (headingInfo.level > 0) {
+        // 计算相对级别差
+        const levelDiff = headingInfo.level - startLevel;
+        const newLevel = Math.max(1, startLevel - 1 + levelDiff);
+        
+        if (newLevel !== headingInfo.level) {
+          edits.push({ line: lineNumber, newLevel, headingInfo });
+        }
+      }
+    }
+
+    // 如果没有任何需要修改的行，直接返回
+    if (edits.length === 0) {
+      return;
+    }
+
+    // 执行编辑（从后向前编辑，避免行号偏移问题）
+    await editor.edit(editBuilder => {
+      for (let i = edits.length - 1; i >= 0; i--) {
+        const edit = edits[i];
+        const line = document.lineAt(edit.line);
+        const newLineText = HeadingParser.buildHeadingLine(
+          edit.newLevel,
+          edit.headingInfo.title,
+          edit.headingInfo.todoState
+        );
+        editBuilder.replace(line.range, newLineText);
+      }
+    });
+  }
+
+  /**
+   * 降级子树（增加标题级别，org-demote-subtree）
+   * 将整个子树的所有标题级别增加1
+   */
+  static async demoteSubtree(editor: vscode.TextEditor): Promise<void> {
+    const position = editor.selection.active;
+    const document = editor.document;
+    
+    // 检查当前行是否就是标题行（只在 headline 行本身时生效）
+    const currentLine = document.lineAt(position.line);
+    const currentHeadingInfo = HeadingParser.parseHeading(currentLine.text);
+    if (currentHeadingInfo.level === 0) {
+      // 如果当前行不是标题行，不执行任何操作
+      return;
+    }
+    
+    // 查找当前标题（用于获取完整的标题信息）
+    const currentHeading = HeadingParser.findCurrentHeading(document, position);
+    if (!currentHeading) {
+      return;
+    }
+
+    const startLine = currentHeading.line.lineNumber;
+    const startLevel = currentHeading.headingInfo.level;
+    
+    // 找到子树结束行
+    const subtreeEnd = HeadingParser.findSubtreeEnd(document, currentHeading.line.range.start);
+    const endLine = subtreeEnd.line;
+
+    // 收集所有需要修改的标题行及其新级别
+    const edits: Array<{ line: number; newLevel: number; headingInfo: HeadingInfo }> = [];
+    
+    for (let lineNumber = startLine; lineNumber <= endLine; lineNumber++) {
+      const line = document.lineAt(lineNumber);
+      const headingInfo = HeadingParser.parseHeading(line.text);
+      
+      if (headingInfo.level > 0) {
+        // 计算相对级别差
+        const levelDiff = headingInfo.level - startLevel;
+        const newLevel = startLevel + 1 + levelDiff;
+        
+        edits.push({ line: lineNumber, newLevel, headingInfo });
+      }
+    }
+
+    // 如果没有任何需要修改的行，直接返回
+    if (edits.length === 0) {
+      return;
+    }
+
+    // 执行编辑（从后向前编辑，避免行号偏移问题）
+    await editor.edit(editBuilder => {
+      for (let i = edits.length - 1; i >= 0; i--) {
+        const edit = edits[i];
+        const line = document.lineAt(edit.line);
+        const newLineText = HeadingParser.buildHeadingLine(
+          edit.newLevel,
+          edit.headingInfo.title,
+          edit.headingInfo.todoState
+        );
+        editBuilder.replace(line.range, newLineText);
+      }
+    });
+  }
+
 }
 

@@ -11,6 +11,8 @@
 | 跟随链接 | `Ctrl+C Ctrl+O` | `C-c C-o` |
 | 打开预览 | `Ctrl+C Ctrl+E` | `C-c C-e` |
 | 添加注释 | `Ctrl+C Ctrl+;` | `C-c C-;` |
+| 升级子树 | `Ctrl+C Ctrl+Shift+,` | `C-c C-<` |
+| 降级子树 | `Ctrl+C Ctrl+Shift+.` | `C-c C->` |
 | Meta Return | `Alt+Enter` | `M-RET` |
 | Ctrl Return | `Ctrl+Enter` | `C-RET` |
 | Smart Return | `Ctrl+Alt+Enter` | `C-M-RET` |
@@ -36,6 +38,10 @@
 - `Tab` - 智能Tab（折叠/展开、缩进）
 - `Shift+Tab` - 智能Shift+Tab（反向缩进、全局折叠）
 
+### 标题操作
+- `Ctrl+C Ctrl+Shift+,` - 升级子树 (类似 `C-c C-<`，减少标题级别)
+- `Ctrl+C Ctrl+Shift+.` - 降级子树 (类似 `C-c C->`，增加标题级别)
+
 ### 其他实用快捷键
 - `Ctrl+C Ctrl+;` - 添加注释 (类似 `C-c C-;`)
 - `Ctrl+C Ctrl+Tab` - 折叠当前节点
@@ -51,6 +57,8 @@
 | `C-c C-o` | `Ctrl+C Ctrl+O` | 跟随链接 |
 | `C-c C-e` | `Ctrl+C Ctrl+E` | 导出/预览 |
 | `C-c C-;` | `Ctrl+C Ctrl+;` | 添加注释 |
+| `C-c C-<` | `Ctrl+C Ctrl+Shift+,` | 升级子树 |
+| `C-c C->` | `Ctrl+C Ctrl+Shift+.` | 降级子树 |
 | `M-RET` | `Alt+Enter` | Meta Return |
 | `C-RET` | `Ctrl+Enter` | Ctrl Return |
 | `C-M-RET` | `Ctrl+Alt+Enter` | Smart Return |
