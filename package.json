@@ -37,6 +37,7 @@
     "onLanguage:org",
     "onCommand:vorg.preview",
     "onCommand:vorg.previewToSide",
+    "onCommand:vorg.exportPreview",
     "onCommand:vorg.followLink",
     "onCommand:vorg.insertLink",
     "onCommand:vorg.jumpToId",
@@ -115,6 +116,12 @@
         "enablement": "editorLangId == 'org'"
       },
       {
+        "command": "vorg.exportPreview",
+        "title": "VOrg: Export Preview as HTML",
+        "icon": "$(save-as)",
+        "enablement": "editorLangId == 'org'"
+      },
+      {
         "command": "vorg.followLink",
         "title": "VOrg: Follow Link",
         "icon": "$(link-external)"
@@ -190,6 +197,11 @@
         {
           "when": "editorLangId == 'org'",
           "command": "vorg.insertLink",
+          "group": "navigation"
+        },
+        {
+          "when": "editorLangId == 'org'",
+          "command": "vorg.exportPreview",
           "group": "navigation"
         }
       ]

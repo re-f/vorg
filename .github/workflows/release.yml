@@ -1,0 +1,54 @@
+name: Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # 当一个 v 开头的 tag 被推送时触发，例如 v1.0.0
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1. 设置 pnpm 环境
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.19.0 # 与 package.json 中的 packageManager 字段保持一致
+
+      # 2. 设置 Node.js 环境 (与 pnpm 配合使用)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # 建议使用 LTS 版本的 Node.js
+          cache: 'pnpm' # 为 pnpm 设置缓存，加快后续构建速度
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile # 使用 pnpm 安装依赖
+
+      # 3. 打包扩展文件（vsce package 会自动运行 vscode:prepublish 进行生产构建）
+      # 使用 --no-dependencies 与 package.json 中的 package 脚本保持一致
+      - name: Package Extension
+        run: pnpm exec vsce package --out extension.vsix --no-dependencies
+
+      # 4. 自动创建 GitHub Release 并上传 VSIX 文件
+      # 直接读取 release.md 文件的完整内容作为 Release 说明
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }} # 从触发工作流的 tag 获取名称（纯 tag 名称，不含 refs/tags/）
+          name: Release ${{ github.ref_name }} # Release 的标题，例如 "Release v1.0.1"
+          body_path: release.md # 直接读取 release.md 文件的完整内容
+          draft: false
+          prerelease: false
+          files: extension.vsix # 直接指定要上传的文件，action 会自动上传
+
+      # 6. 发布到市场
+      - name: Publish to Visual Studio Marketplace
+        run: pnpm exec vsce publish --packagePath extension.vsix -p ${{ secrets.VSCE_PAT }}
+
+      - name: Publish to Open VSX Registry
+        run: pnpm exec ovsx publish extension.vsix -p ${{ secrets.OVSX_PAT }}

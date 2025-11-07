@@ -15,6 +15,9 @@ export class HtmlGenerator {
     }
 
     try {
+      // 提取文档标题
+      const documentTitle = this.extractTitle(text);
+      
       // 首先解析 AST（只解析一次，后续重用）
       const parser = unified().use(uniorgParse as any);
       const ast = parser.parse(text);
@@ -39,7 +42,7 @@ export class HtmlGenerator {
       // 添加行号标记到 HTML 中以便滚动同步（重用 AST）
       const htmlWithLineMarkers = this.addLineMarkers(html, ast);
 
-      return this.generateStyledHtml(htmlWithLineMarkers || html, isDarkTheme, webview);
+      return this.generateStyledHtml(htmlWithLineMarkers || html, isDarkTheme, webview, documentTitle);
     } catch (error) {
       return this.generateErrorHtml(error);
     }
@@ -198,6 +201,21 @@ export class HtmlGenerator {
   }
 
   /**
+   * 从文档文本中提取 #+TITLE 元数据
+   */
+  private static extractTitle(text: string): string | null {
+    const lines = text.split('\n');
+    for (const line of lines) {
+      // 匹配 #+TITLE: 或 #+title:（不区分大小写）
+      const titleMatch = line.match(/^#\+title:\s*(.+)$/i);
+      if (titleMatch) {
+        return titleMatch[1].trim();
+      }
+    }
+    return null;
+  }
+
+  /**
    * 从 AST 节点中提取纯文本内容
    */
   private static extractTextFromNode(node: any): string {
@@ -299,8 +317,10 @@ export class HtmlGenerator {
     return html;
   }
 
-  private static generateStyledHtml(content: string, isDarkTheme: boolean, webview?: vscode.Webview): string {
+  private static generateStyledHtml(content: string, isDarkTheme: boolean, webview?: vscode.Webview, documentTitle?: string | null): string {
     const exportButtonHtml = webview ? this.getExportButtonHtml() : '';
+    const titleHtml = documentTitle ? `<h1 class="document-title">${this.escapeHtml(documentTitle)}</h1>` : '';
+    const pageTitle = documentTitle || 'Org Preview';
     
     return `
       <!DOCTYPE html>
@@ -308,6 +328,7 @@ export class HtmlGenerator {
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${this.escapeHtml(pageTitle)}</title>
           <style>
             ${this.getStyles(isDarkTheme)}
             ${this.getExportButtonStyles()}
@@ -316,6 +337,7 @@ export class HtmlGenerator {
         <body>
           ${exportButtonHtml}
           <div class="scroll-indicator" id="scrollIndicator"></div>
+          ${titleHtml}
           ${content}
           
           <script>
@@ -439,6 +461,9 @@ export class HtmlGenerator {
     }
 
     try {
+      // 提取文档标题
+      const documentTitle = this.extractTitle(text);
+      
       // 首先解析 AST（只解析一次，后续重用）
       const parser = unified().use(uniorgParse as any);
       const ast = parser.parse(text);
@@ -463,7 +488,7 @@ export class HtmlGenerator {
       // 添加行号标记到 HTML 中（导出版本不需要滚动同步，但保留标记以便将来可能使用）
       const htmlWithLineMarkers = this.addLineMarkers(html, ast);
 
-      return this.generateExportableStyledHtml(htmlWithLineMarkers || html, isDarkTheme);
+      return this.generateExportableStyledHtml(htmlWithLineMarkers || html, isDarkTheme, documentTitle);
     } catch (error) {
       return this.generateErrorHtml(error);
     }
@@ -472,12 +497,15 @@ export class HtmlGenerator {
   /**
    * 生成可导出的样式化 HTML（不包含 VS Code 特定脚本）
    */
-  private static generateExportableStyledHtml(content: string, isDarkTheme: boolean): string {
+  private static generateExportableStyledHtml(content: string, isDarkTheme: boolean, documentTitle?: string | null): string {
     // 移除滚动指示器（导出版本不需要）
     const contentWithoutScrollIndicator = content.replace(
       /<div class="scroll-indicator"[^>]*>.*?<\/div>/s,
       ''
     );
+    
+    const titleHtml = documentTitle ? `<h1 class="document-title">${this.escapeHtml(documentTitle)}</h1>` : '';
+    const pageTitle = documentTitle || 'Org Preview Export';
 
     return `
       <!DOCTYPE html>
@@ -485,7 +513,7 @@ export class HtmlGenerator {
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Org Preview Export</title>
+          <title>${this.escapeHtml(pageTitle)}</title>
           <style>
             ${this.getStyles(isDarkTheme)}
             /* 隐藏滚动指示器（如果存在） */
@@ -495,6 +523,7 @@ export class HtmlGenerator {
           </style>
         </head>
         <body>
+          ${titleHtml}
           ${contentWithoutScrollIndicator}
         </body>
       </html>
@@ -537,6 +566,16 @@ export class HtmlGenerator {
         font-size: 2em;
         border-bottom: 1px solid var(--border-color);
         padding-bottom: 0.3em;
+      }
+
+      /* 文档标题样式（来自 #+TITLE） */
+      .document-title {
+        margin-top: 0;
+        margin-bottom: 1.5em;
+        font-size: 2.5em;
+        font-weight: 700;
+        border-bottom: 2px solid var(--quote-border);
+        padding-bottom: 0.5em;
       }
 
       h2 {
@@ -782,5 +821,19 @@ export class HtmlGenerator {
       // 初始化滚动指示器
       updateScrollIndicator(0);
     `;
+  }
+
+  /**
+   * HTML 转义工具函数
+   */
+  private static escapeHtml(text: string): string {
+    const map: { [key: string]: string } = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, (m) => map[m]);
   }
 } 
