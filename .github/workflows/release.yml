@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*' # 当一个 v 开头的 tag 被推送时触发，例如 v1.0.0
 
+permissions:
+  contents: write # 授予创建 Release 和上传文件的权限
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -23,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18' # 建议使用 LTS 版本的 Node.js
+          node-version: '20' # 使用 Node.js 20 LTS 版本，解决 undici File API 兼容性问题
           cache: 'pnpm' # 为 pnpm 设置缓存，加快后续构建速度
 
       - name: Install dependencies
@@ -37,6 +40,7 @@ jobs:
       # 4. 自动创建 GitHub Release 并上传 VSIX 文件
       # 直接读取 release.md 文件的完整内容作为 Release 说明
       - name: Create GitHub Release
+        continue-on-error: true # 即使失败也不影响后续步骤
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }} # 从触发工作流的 tag 获取名称（纯 tag 名称，不含 refs/tags/）
@@ -46,9 +50,11 @@ jobs:
           prerelease: false
           files: extension.vsix # 直接指定要上传的文件，action 会自动上传
 
-      # 6. 发布到市场
+      # 5. 发布到市场
       - name: Publish to Visual Studio Marketplace
+        continue-on-error: true # 即使失败也不影响 Open VSX 发布
         run: pnpm exec vsce publish --packagePath extension.vsix -p ${{ secrets.VSCE_PAT }}
 
       - name: Publish to Open VSX Registry
+        continue-on-error: true # 即使失败也不影响其他步骤
         run: pnpm exec ovsx publish extension.vsix -p ${{ secrets.OVSX_PAT }}
