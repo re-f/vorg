@@ -147,7 +147,10 @@ async function runTests() {
       path.join(__dirname, 'listParser.test.js'),
       path.join(__dirname, 'propertyParser.test.js'),
       path.join(__dirname, 'tableParser.test.js'),
-      path.join(__dirname, 'linkParser.test.js')
+      path.join(__dirname, 'linkParser.test.js'),
+      
+      // 工具函数测试
+      path.join(__dirname, 'listRenumber.test.js')
     ];
     
     for (const testFile of testFiles) {

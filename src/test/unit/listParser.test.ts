@@ -203,6 +203,31 @@ suite('ListParser 列表解析测试', () => {
       
       assert.strictEqual(end.line, 1);
     });
+
+    test('应该在普通文本前停止', () => {
+      const content = `  1. 第一项
+  2. 第二项
+  3. 第三项
+  4. 第四项
+检查使用的术语是否正确`;
+      const doc = createMockDocument(content);
+      const pos = createPosition(3); // 光标在第4项
+      const end = ListParser.findListItemEnd(doc, pos, 2);
+      
+      // 应该在第四项的行尾停止，不应该继续到普通文本行
+      assert.strictEqual(end.line, 3);
+    });
+
+    test('应该在普通文本前停止（无缩进的普通文本）', () => {
+      const content = `  1. 列表项
+普通文本行`;
+      const doc = createMockDocument(content);
+      const pos = createPosition(0);
+      const end = ListParser.findListItemEnd(doc, pos, 2);
+      
+      // 应该在列表项的行尾停止
+      assert.strictEqual(end.line, 0);
+    });
   });
 
   suite('hasSubItems 测试', () => {
@@ -277,6 +302,227 @@ suite('ListParser 列表解析测试', () => {
     test('非标题行应返回 false', () => {
       assert.strictEqual(ListParser.isHeadingLine('- 列表项'), false);
       assert.strictEqual(ListParser.isHeadingLine('普通文本'), false);
+    });
+  });
+
+  suite('findFirstListItemAtLevel 测试', () => {
+    
+    test('应该找到同一级别的第一个列表项', () => {
+      const content = `  1. 第一项
+  - 第二项
+  - 第三项`;
+      const doc = createMockDocument(content);
+      const result = ListParser.findFirstListItemAtLevel(doc, 2, 2);
+      
+      assert.ok(result);
+      assert.strictEqual(result?.marker, '1.');
+      assert.strictEqual(result?.isOrdered, true);
+    });
+
+    test('应该跳过空行', () => {
+      const content = `  1. 第一项
+
+  - 第二项`;
+      const doc = createMockDocument(content);
+      const result = ListParser.findFirstListItemAtLevel(doc, 2, 2);
+      
+      assert.ok(result);
+      assert.strictEqual(result?.marker, '1.');
+    });
+
+    test('应该在遇到更高级别时停止', () => {
+      const content = `- 顶级项
+  1. 子项1
+  2. 子项2`;
+      const doc = createMockDocument(content);
+      const result = ListParser.findFirstListItemAtLevel(doc, 2, 2);
+      
+      assert.ok(result);
+      assert.strictEqual(result?.marker, '1.');
+    });
+
+    test('如果没有找到应返回 null', () => {
+      const content = `- 列表项
+普通文本`;
+      const doc = createMockDocument(content);
+      const result = ListParser.findFirstListItemAtLevel(doc, 1, 2);
+      
+      assert.strictEqual(result, null);
+    });
+  });
+
+  suite('findFirstListItemLineAtLevel 测试', () => {
+    
+    test('应该找到第一个列表项的行号', () => {
+      const content = `  1. 第一项
+  - 第二项
+  - 第三项`;
+      const doc = createMockDocument(content);
+      const result = ListParser.findFirstListItemLineAtLevel(doc, 2, 2);
+      
+      assert.strictEqual(result, 0);
+    });
+
+    test('应该跳过空行', () => {
+      const content = `  1. 第一项
+
+  - 第二项`;
+      const doc = createMockDocument(content);
+      const result = ListParser.findFirstListItemLineAtLevel(doc, 2, 2);
+      
+      assert.strictEqual(result, 0);
+    });
+
+    test('应该在遇到更高级别时停止', () => {
+      const content = `- 顶级项
+  1. 子项1
+  2. 子项2`;
+      const doc = createMockDocument(content);
+      const result = ListParser.findFirstListItemLineAtLevel(doc, 2, 2);
+      
+      assert.strictEqual(result, 1);
+    });
+
+    test('如果没有找到应返回 -1', () => {
+      const content = `- 列表项
+普通文本`;
+      const doc = createMockDocument(content);
+      const result = ListParser.findFirstListItemLineAtLevel(doc, 1, 2);
+      
+      assert.strictEqual(result, -1);
+    });
+  });
+
+  suite('countItemsAtLevel 测试', () => {
+    
+    test('应该统计同一级别的列表项数量', () => {
+      const content = `  1. 第一项
+  - 第二项
+  - 第三项`;
+      const doc = createMockDocument(content);
+      const result = ListParser.countItemsAtLevel(doc, 2, 2);
+      
+      assert.strictEqual(result, 3);
+    });
+
+    test('应该跳过空行', () => {
+      const content = `  1. 第一项
+
+  - 第二项`;
+      const doc = createMockDocument(content);
+      const result = ListParser.countItemsAtLevel(doc, 2, 2);
+      
+      assert.strictEqual(result, 2);
+    });
+
+    test('应该只统计同一级别的项', () => {
+      const content = `  1. 第一项
+    - 子项1
+    - 子项2
+  - 第二项`;
+      const doc = createMockDocument(content);
+      const result = ListParser.countItemsAtLevel(doc, 3, 2);
+      
+      assert.strictEqual(result, 2); // 只统计缩进为 2 的项
+    });
+
+    test('如果列表开始位置不存在应返回 0', () => {
+      const content = `- 列表项
+普通文本`;
+      const doc = createMockDocument(content);
+      const result = ListParser.countItemsAtLevel(doc, 1, 2);
+      
+      assert.strictEqual(result, 0);
+    });
+
+    test('应该正确处理混合有序和无序列表', () => {
+      const content = `  1. 有序项1
+  - 无序项1
+  - 无序项2
+  2. 有序项2`;
+      const doc = createMockDocument(content);
+      const result = ListParser.countItemsAtLevel(doc, 3, 2);
+      
+      assert.strictEqual(result, 4); // 所有同级项
+    });
+  });
+
+  suite('findItemsAtLevel 测试', () => {
+    
+    test('应该找到同一级别的所有列表项', () => {
+      const content = `  1. 第一项
+  - 第二项
+  - 第三项`;
+      const doc = createMockDocument(content);
+      const result = ListParser.findItemsAtLevel(doc, 0, 2);
+      
+      assert.strictEqual(result.length, 3);
+      assert.strictEqual(result[0].line, 0);
+      assert.strictEqual(result[0].listInfo.marker, '1.');
+      assert.strictEqual(result[1].line, 1);
+      assert.strictEqual(result[1].listInfo.marker, '-');
+      assert.strictEqual(result[2].line, 2);
+      assert.strictEqual(result[2].listInfo.marker, '-');
+    });
+
+    test('应该在遇到普通文本行时停止', () => {
+      const content = `  1. 第一项
+  - 第二项
+普通文本行
+  - 第三项`;
+      const doc = createMockDocument(content);
+      const result = ListParser.findItemsAtLevel(doc, 0, 2);
+      
+      assert.strictEqual(result.length, 2);
+      assert.strictEqual(result[0].line, 0);
+      assert.strictEqual(result[1].line, 1);
+    });
+
+    test('应该在遇到更高级别时停止', () => {
+      const content = `  1. 第一项
+  - 第二项
+- 顶级项
+  3. 第三项`;
+      const doc = createMockDocument(content);
+      const result = ListParser.findItemsAtLevel(doc, 0, 2);
+      
+      assert.strictEqual(result.length, 2);
+      assert.strictEqual(result[0].line, 0);
+      assert.strictEqual(result[1].line, 1);
+    });
+
+    test('应该跳过空行', () => {
+      const content = `  1. 第一项
+
+  - 第二项`;
+      const doc = createMockDocument(content);
+      const result = ListParser.findItemsAtLevel(doc, 0, 2);
+      
+      assert.strictEqual(result.length, 2);
+      assert.strictEqual(result[0].line, 0);
+      assert.strictEqual(result[1].line, 2);
+    });
+
+    test('应该包含子项之间的项', () => {
+      const content = `  1. 第一项
+    - 子项1
+    - 子项2
+  - 第二项`;
+      const doc = createMockDocument(content);
+      const result = ListParser.findItemsAtLevel(doc, 0, 2);
+      
+      assert.strictEqual(result.length, 2);
+      assert.strictEqual(result[0].line, 0);
+      assert.strictEqual(result[1].line, 3);
+    });
+
+    test('如果起始行不是列表项应返回空数组', () => {
+      const content = `普通文本
+  - 列表项`;
+      const doc = createMockDocument(content);
+      const result = ListParser.findItemsAtLevel(doc, 0, 2);
+      
+      assert.strictEqual(result.length, 0);
     });
   });
 });
