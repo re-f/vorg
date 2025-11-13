@@ -1,8 +1,6 @@
-# 更新日志
+# 更新日志 / Changelog
 
-所有关于 VOrg 扩展的重要更改都将记录在此文件中。
-
-## [0.0.6] - 2025-11-07
+## [0.0.6]
 
 ### ✨ 新增功能
 
@@ -21,7 +19,26 @@
   - 重构链接查找逻辑，提高代码可维护性
   - 支持文件级别的 property ID 链接
 
-## [0.0.5] - 2025-11-05
+---
+
+### ✨ Features
+
+- **HTML Export**: Export preview content as HTML files
+- **Headline Operations and CodeLens Button Support**:
+  - Display Promote/Demote operation buttons on headline lines
+  - Easily adjust headline levels
+
+### 🐛 Bug Fixes
+
+- **Fixed Preview Title Loss Issue**: Resolved incorrect title display in preview
+
+### ♻️ Code Refactoring
+
+- **Unified Link Lookup Logic with File-level Property ID Support**:
+  - Refactored link lookup logic to improve code maintainability
+  - Support file-level property ID links
+
+## [0.0.5]
 
 ### 🐛 Bug 修复
 
@@ -33,7 +50,19 @@
   - 删除不必要的按钮
   - 仅在编辑 org 文件时显示相关工具栏按钮
 
-## [0.0.4] - 2025-10-29
+---
+
+### 🐛 Bug Fixes
+
+- **Fixed Auto-indentation Issue on Headline Line Start**: Resolved auto-indentation when pressing Enter at the start of a headline
+
+### 🔧 Improvements
+
+- **Optimized File Top Toolbar**:
+  - Removed unnecessary buttons
+  - Show relevant toolbar buttons only when editing org files
+
+## [0.0.4]
 
 ### 🐛 Bug 修复
 
@@ -61,7 +90,35 @@
 - **分离 Parser 逻辑**：将解析逻辑从各个 Command 中提取到独立的 Parser 类
 - **按功能拆分 editingCommands.ts 模块**：拆分为 8 个独立功能模块
 
-## [0.0.3] - 2025-10-21
+---
+
+### 🐛 Bug Fixes
+
+- **Fixed List Copy-Paste Indentation Issue**: Resolved incorrect indentation when copying list items
+- **Fixed Large File Preview Issues**:
+  - Optimized preview performance for large org files
+  - Fixed preview position synchronization misalignment
+  - Unified checkbox and plain text list styles
+- **Fixed Asterisk Auto-closing Issue**: Resolved auto-closing when inserting `*`
+- **Unified org-id Link Styles and Navigation Handling**:
+  - ID links no longer create URIs through DocumentLinkProvider to avoid navigation errors
+  - Simplified SyntaxHighlighter link highlighting logic, unified handling of all link types
+  - Ensured consistent styles for ID links, HTTP links, file links, and internal headline links
+
+### ✨ Features
+
+- **Support for Meta-Return and Ctrl-Return**:
+  - `Alt+Enter`: Insert new item (Meta Return)
+  - `Ctrl+Alt+Enter`: Insert new item at end (Smart Return)
+  - `Ctrl+Enter`: Split current line (Ctrl Return)
+- **Webpack Build**: Improved build performance and code organization
+
+### ♻️ Code Refactoring
+
+- **Separated Parser Logic**: Extracted parsing logic from various Commands into independent Parser class
+- **Split editingCommands.ts Module by Function**: Split into 8 independent functional modules
+
+## [0.0.3]
 
 ### ✨ 新增功能
 
@@ -71,13 +128,27 @@
   - 智能添加新属性
   - 自动缩进对齐
   - 快捷键：`Ctrl+C Ctrl+X P`
-  
 - **Property 抽屉折叠支持**
   - 支持 `:PROPERTIES:`/`:END:` 抽屉的折叠和展开
   - 与标题、列表、代码块折叠功能一致
   - 使用 Tab 键智能切换折叠状态
 
-## [0.0.2] - 2025-10-20
+---
+
+### ✨ Features
+
+- **Property Management**: Complete implementation of `org-set-property` functionality
+  - Automatically create Property drawer (including unique ID)
+  - Intelligently update existing properties
+  - Intelligently add new properties
+  - Automatic indentation alignment
+  - Shortcut: `Ctrl+C Ctrl+X P`
+- **Property Drawer Folding Support**
+  - Support folding and unfolding of `:PROPERTIES:`/`:END:` drawers
+  - Consistent with headline, list, and code block folding functionality
+  - Use Tab key to intelligently toggle folding state
+
+## [0.0.2]
 
 ### ✨ 新增功能
 
@@ -95,7 +166,25 @@
 - 基于 uniorg 解析器
 - 支持 Org-mode 基本语法
 
-## [0.0.1] - 2025-10-15
+---
+
+### ✨ Features
+
+- **Basic Org-mode Functionality Implementation**
+  - Syntax highlighting support
+  - Outline view
+  - Smart editing
+  - TODO status management
+  - Link navigation
+  - Code block folding
+
+### 📦 Initial Release
+
+- Complete TypeScript implementation
+- Based on uniorg parser
+- Support for basic Org-mode syntax
+
+## [0.0.1]
 
 ### 🎉 首次发布
 
@@ -105,13 +194,21 @@
 
 ---
 
-**格式说明**
-- `✨` 新增功能
-- `🐛` Bug 修复
-- `📝` 文档更新
-- `🔧` 改进优化
-- `⚡` 性能提升
-- `🎨` 样式更新
-- `♻️` 代码重构
-- `🚀` 发布相关
+### 🎉 First Release
 
+- VOrg extension initial version
+- Basic preview functionality
+- Simple Org-mode support
+
+---
+
+**格式说明 / Format Legend**
+
+- `✨` 新增功能 / Features
+- `🐛` Bug 修复 / Bug Fixes
+- `📝` 文档更新 / Documentation Updates
+- `🔧` 改进优化 / Improvements
+- `⚡` 性能提升 / Performance Improvements
+- `🎨` 样式更新 / Style Updates
+- `♻️` 代码重构 / Code Refactoring
+- `🚀` 发布相关 / Release Related
