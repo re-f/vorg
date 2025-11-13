@@ -13,17 +13,25 @@ export class ScrollSync {
     
     if (visibleRanges.length > 0) {
       const firstVisibleLine = visibleRanges[0].start.line;
+      const lastVisibleLine = visibleRanges[visibleRanges.length - 1].end.line;
       const totalLines = editor.document.lineCount;
       
-      // 使用双重策略：同时发送行号和百分比
-      // 行号用于精确定位，百分比作为后备方案
-      const scrollPercentage = firstVisibleLine / Math.max(totalLines - 1, 1);
+      // 计算可见范围的中心行，用于更准确的定位
+      const centerVisibleLine = Math.floor((firstVisibleLine + lastVisibleLine) / 2);
+      
+      // 改进的百分比计算：考虑可见范围
+      // 使用可见范围的中心位置来计算百分比，更准确
+      const scrollPercentage = totalLines > 1 
+        ? Math.min(centerVisibleLine / (totalLines - 1), 1)
+        : 0;
       
       // 发送滚动位置到预览窗口
       panel.webview.postMessage({
         command: WEBVIEW_MESSAGES.UPDATE_SCROLL,
         scrollPercentage: scrollPercentage,
         lineNumber: firstVisibleLine,
+        centerLine: centerVisibleLine,
+        lastVisibleLine: lastVisibleLine,
         totalLines: totalLines
       });
     }

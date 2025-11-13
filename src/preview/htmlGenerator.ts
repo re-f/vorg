@@ -148,6 +148,9 @@ export class HtmlGenerator {
           if (paragraphText && paragraphText.length >= 10) {
             // 使用前50个字符作为键，提高匹配成功率
             lineMap.set(paragraphText.trim().substring(0, 50), lineNumber);
+          } else if (paragraphText && paragraphText.trim().length > 0) {
+            // 即使内容较短也记录，提高覆盖率
+            lineMap.set(paragraphText.trim(), lineNumber);
           }
         }
         
@@ -156,6 +159,35 @@ export class HtmlGenerator {
           const listText = this.extractTextFromNode(node);
           if (listText && listText.length >= 5) {
             lineMap.set(listText.trim().substring(0, 50), lineNumber);
+          } else if (listText && listText.trim().length > 0) {
+            lineMap.set(listText.trim(), lineNumber);
+          }
+        }
+        
+        // 处理代码块节点（src-block, example-block 等）
+        else if (node.type === 'src-block' || node.type === 'example-block') {
+          // 使用代码块的第一行内容作为标识
+          const codeText = node.value || '';
+          const firstLine = codeText.split('\n')[0];
+          if (firstLine && firstLine.trim().length > 0) {
+            lineMap.set(`code:${firstLine.trim().substring(0, 30)}`, lineNumber);
+          } else {
+            // 如果没有内容，使用类型作为标识
+            lineMap.set(`code:${node.type}`, lineNumber);
+          }
+        }
+        
+        // 处理表格节点
+        else if (node.type === 'table') {
+          // 使用表格的第一行内容作为标识
+          if (node.children && node.children.length > 0) {
+            const firstRow = node.children[0];
+            const rowText = this.extractTextFromNode(firstRow);
+            if (rowText && rowText.trim().length > 0) {
+              lineMap.set(`table:${rowText.trim().substring(0, 30)}`, lineNumber);
+            } else {
+              lineMap.set('table:', lineNumber);
+            }
           }
         }
       }
@@ -186,12 +218,55 @@ export class HtmlGenerator {
 
     // 为段落和列表项添加行号标记
     htmlWithLineMarkers = htmlWithLineMarkers.replace(
-      /(<(?:p|li)[^>]*>)([^<]{10,})/g,
+      /(<(?:p|li)[^>]*>)([^<]+)/g,
       (match, openTag, content) => {
-        const cleanContent = content.trim().substring(0, 50);
-        const lineNum = lineMap.get(cleanContent);
+        const cleanContent = content.trim();
+        // 尝试匹配完整内容
+        let lineNum = lineMap.get(cleanContent);
+        // 如果没找到，尝试匹配前50个字符
+        if (lineNum === undefined && cleanContent.length >= 10) {
+          lineNum = lineMap.get(cleanContent.substring(0, 50));
+        }
+        // 如果还是没找到，尝试匹配前5个字符（对于短内容）
+        if (lineNum === undefined && cleanContent.length >= 5) {
+          lineNum = lineMap.get(cleanContent.substring(0, 5));
+        }
         if (lineNum !== undefined) {
           return `${openTag}<span class="line-marker" data-line="${lineNum}"></span>${content}`;
+        }
+        return match;
+      }
+    );
+
+    // 为代码块添加行号标记
+    htmlWithLineMarkers = htmlWithLineMarkers.replace(
+      /(<pre[^>]*>)([\s\S]*?)(<\/pre>)/g,
+      (match, openTag, content, closeTag) => {
+        const cleanContent = content.trim();
+        const firstLine = cleanContent.split('\n')[0];
+        // 尝试匹配代码块
+        let lineNum = lineMap.get(`code:${firstLine.substring(0, 30)}`);
+        if (lineNum === undefined && firstLine.length > 0) {
+          lineNum = lineMap.get(`code:${firstLine}`);
+        }
+        if (lineNum !== undefined) {
+          return `${openTag}<span class="line-marker" data-line="${lineNum}"></span>${content}${closeTag}`;
+        }
+        return match;
+      }
+    );
+
+    // 为表格添加行号标记（在 table 标签后添加）
+    htmlWithLineMarkers = htmlWithLineMarkers.replace(
+      /(<table[^>]*>)([\s\S]*?<tr[^>]*>[\s\S]*?<\/tr>)/g,
+      (match, openTag, firstRow) => {
+        const rowText = firstRow.replace(/<[^>]+>/g, '').trim();
+        let lineNum = lineMap.get(`table:${rowText.substring(0, 30)}`);
+        if (lineNum === undefined && rowText.length > 0) {
+          lineNum = lineMap.get(`table:${rowText}`);
+        }
+        if (lineNum !== undefined) {
+          return `${openTag}<span class="line-marker" data-line="${lineNum}"></span>${firstRow}`;
         }
         return match;
       }
@@ -747,7 +822,12 @@ export class HtmlGenerator {
           
           switch (message.command) {
             case 'updateScroll':
-              updateScrollPosition(message.scrollPercentage, message.lineNumber);
+              updateScrollPosition(
+                message.scrollPercentage, 
+                message.lineNumber,
+                message.centerLine,
+                message.lastVisibleLine
+              );
               break;
           }
         });
@@ -763,8 +843,8 @@ export class HtmlGenerator {
         }
       }
       
-      function updateScrollPosition(percentage, lineNumber) {
-        // 尝试使用行号进行精确定位
+      function updateScrollPosition(percentage, lineNumber, centerLine, lastVisibleLine) {
+        // 优先使用行号进行精确定位
         if (lineNumber !== undefined) {
           const targetElement = findClosestElementByLine(lineNumber);
           if (targetElement) {
@@ -778,10 +858,32 @@ export class HtmlGenerator {
           }
         }
         
-        // 如果无法通过行号定位，使用百分比作为后备方案
+        // 如果无法通过行号定位，使用改进的百分比计算
         const body = document.body;
-        const documentHeight = body.scrollHeight - window.innerHeight;
-        const targetScrollTop = documentHeight * percentage;
+        const html = document.documentElement;
+        
+        // 计算实际可滚动高度（考虑 padding 和 margin）
+        const scrollHeight = Math.max(
+          body.scrollHeight,
+          body.offsetHeight,
+          html.clientHeight,
+          html.scrollHeight,
+          html.offsetHeight
+        );
+        const clientHeight = window.innerHeight || html.clientHeight;
+        const maxScrollTop = Math.max(0, scrollHeight - clientHeight);
+        
+        // 改进的百分比计算：确保在文件尾部能正确滚动到底部
+        // 当百分比接近 1 时，直接滚动到底部
+        let targetScrollTop;
+        if (percentage >= 0.99 || percentage >= 1) {
+          targetScrollTop = maxScrollTop;
+        } else {
+          targetScrollTop = maxScrollTop * percentage;
+        }
+        
+        // 确保滚动位置在有效范围内
+        targetScrollTop = Math.max(0, Math.min(targetScrollTop, maxScrollTop));
         
         window.scrollTo({
           top: targetScrollTop,
@@ -794,14 +896,28 @@ export class HtmlGenerator {
       function findClosestElementByLine(targetLine) {
         // 查找所有带有行号标记的元素
         const markers = document.querySelectorAll('.line-marker');
+        if (markers.length === 0) {
+          return null;
+        }
+        
         let closestMarker = null;
         let closestDistance = Infinity;
         
         markers.forEach(marker => {
           const line = parseInt(marker.getAttribute('data-line'), 10);
+          if (isNaN(line)) {
+            return;
+          }
+          
           const distance = Math.abs(line - targetLine);
           
-          if (distance < closestDistance) {
+          // 优先选择小于等于目标行号的最近元素（向上查找）
+          // 这样可以确保滚动位置不会超过编辑器中的位置
+          if (line <= targetLine && distance < closestDistance) {
+            closestDistance = distance;
+            closestMarker = marker;
+          } else if (!closestMarker && distance < closestDistance) {
+            // 如果没有找到小于等于目标行号的元素，则选择最近的
             closestDistance = distance;
             closestMarker = marker;
           }
