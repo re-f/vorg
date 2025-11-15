@@ -2,6 +2,21 @@ import * as vscode from 'vscode';
 import { TodoKeywordManager } from '../utils/todoKeywordManager';
 import { HeadingParser } from '../parsers/headingParser';
 
+/**
+ * 大纲提供器
+ * 
+ * 提供文档大纲和符号导航功能，实现 VS Code 的 DocumentSymbolProvider 接口。
+ * 解析 org-mode 文档的标题结构，生成层次化的大纲视图。
+ * 
+ * 功能包括：
+ * - 解析标题层级结构
+ * - 识别 TODO 状态
+ * - 处理文档元数据（#+TITLE, #+AUTHOR 等）
+ * - 生成符号树供 VS Code 大纲视图使用
+ * 
+ * @class OrgOutlineProvider
+ * @implements {vscode.DocumentSymbolProvider}
+ */
 export class OrgOutlineProvider implements vscode.DocumentSymbolProvider {
   private todoKeywordManager: TodoKeywordManager;
 

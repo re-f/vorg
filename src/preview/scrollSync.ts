@@ -1,6 +1,14 @@
 import * as vscode from 'vscode';
 import { WEBVIEW_MESSAGES } from '../utils/constants';
 
+/**
+ * 滚动同步功能模块
+ * 
+ * 处理编辑器和预览窗口之间的滚动同步。
+ * 当编辑器滚动时，同步更新预览窗口的滚动位置。
+ * 
+ * @class ScrollSync
+ */
 export class ScrollSync {
   
   public static syncScrollToPreview(panel: vscode.WebviewPanel | undefined): void {

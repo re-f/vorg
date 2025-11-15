@@ -4,7 +4,16 @@ import { TodoKeywordManager } from '../../utils/todoKeywordManager';
 import { HeadingParser } from '../../parsers/headingParser';
 
 /**
- * 标题相关命令
+ * 标题操作命令类
+ * 
+ * 提供 org-mode 标题的插入、解析、折叠等操作，包括：
+ * - 在标题子树之后插入同级标题（M-RET 语义）
+ * - 分割标题（C-RET 语义）
+ * - 插入 TODO 标题
+ * - 切换标题折叠状态
+ * - 升级/降级子树（org-promote-subtree / org-demote-subtree）
+ * 
+ * @class HeadingCommands
  */
 export class HeadingCommands {
   private static todoKeywordManager = TodoKeywordManager.getInstance();

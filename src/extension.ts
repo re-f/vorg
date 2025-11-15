@@ -1,3 +1,23 @@
+/**
+ * VOrg 扩展主入口文件
+ * 
+ * 负责激活扩展和注册所有功能模块，包括：
+ * - 大纲视图提供器（DocumentSymbolProvider）
+ * - 链接提供器（DocumentLinkProvider、DefinitionProvider）
+ * - 代码折叠提供器（FoldingRangeProvider）
+ * - CodeLens 提供器（标题行的 Promote/Demote 按钮）
+ * - 预览管理器
+ * - 各种命令（编辑、预览、链接、调试）
+ * - 语法高亮器
+ * 
+ * 设计原则：
+ * - 保持简洁，主要逻辑委托给各个模块
+ * - 单一职责：每个模块只负责特定的功能领域
+ * - 模块化：功能按照逻辑关系分组，便于维护和扩展
+ * 
+ * @module extension
+ */
+
 import * as vscode from 'vscode';
 import { OrgOutlineProvider } from './outline/orgOutlineProvider';
 import { OrgLinkProvider } from './links/orgLinkProvider';
@@ -11,6 +31,13 @@ import { EditingCommands } from './commands/editingCommands';
 import { DebugCommands } from './commands/debugCommands';
 import { HeadingCodeLensProvider } from './codelens/headingCodeLensProvider';
 
+/**
+ * 激活扩展
+ * 
+ * 当 VS Code 加载扩展时调用此函数，注册所有功能提供器和命令。
+ * 
+ * @param context - VS Code 扩展上下文，用于注册订阅和命令
+ */
 export function activate(context: vscode.ExtensionContext) {
   console.log('VOrg extension is now active!');
 
@@ -97,6 +124,11 @@ export function activate(context: vscode.ExtensionContext) {
   }
 }
 
+/**
+ * 停用扩展
+ * 
+ * 当 VS Code 卸载扩展时调用此函数，执行清理操作。
+ */
 export function deactivate() {
   console.log('VOrg extension is deactivated');
 } 

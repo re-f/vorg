@@ -2,6 +2,26 @@ import * as vscode from 'vscode';
 import { TodoKeywordManager } from '../utils/todoKeywordManager';
 import { LinkUtils } from '../utils/linkUtils';
 
+/**
+ * 链接提供器
+ * 
+ * 提供链接识别和跳转功能，实现 VS Code 的 DocumentLinkProvider 和 DefinitionProvider 接口。
+ * 
+ * 支持的链接类型：
+ * - 文件链接：file:path/to/file
+ * - ID 链接：id:UUID
+ * - URL 链接：http:// 或 https://
+ * - 内部标题链接：[[*heading]]
+ * 
+ * 功能包括：
+ * - 识别文档中的各种链接
+ * - 提供链接跳转功能（Ctrl+Click、F12）
+ * - 解析链接目标并导航
+ * 
+ * @class OrgLinkProvider
+ * @implements {vscode.DocumentLinkProvider}
+ * @implements {vscode.DefinitionProvider}
+ */
 export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.DefinitionProvider {
   private todoKeywordManager: TodoKeywordManager;
 

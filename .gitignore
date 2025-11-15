@@ -3,3 +3,6 @@ out/*
 
 **.vsix
 .vscode-test/**
+
+# 生成的文档
+docs/api/

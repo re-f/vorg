@@ -10,6 +10,23 @@ import {
 } from '../utils/constants';
 import { PreviewPanelManager } from '../types';
 
+/**
+ * 预览窗口管理模块
+ * 
+ * 管理预览窗口的生命周期，包括创建、更新、销毁。
+ * 支持两种预览模式：
+ * - 当前标签页预览
+ * - 侧边预览（并排显示）
+ * 
+ * 功能包括：
+ * - 创建和管理预览 WebView 面板
+ * - 实时更新预览内容
+ * - 处理滚动同步
+ * - 支持导出预览为 HTML 文件
+ * - 处理 WebView 恢复（VS Code reload 后）
+ * 
+ * @class PreviewManager
+ */
 export class PreviewManager {
   private panelManager: PreviewPanelManager = {
     currentPanel: undefined,

@@ -1,9 +1,32 @@
+/**
+ * 预览命令处理模块
+ * 
+ * 提供 org-mode 文档的实时预览功能，包括预览窗口管理、导出和滚动同步。
+ * 
+ * @module commands/previewCommands
+ */
+
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { PreviewManager } from '../preview/previewManager';
 import { HtmlGenerator } from '../preview/htmlGenerator';
 import { COMMANDS } from '../utils/constants';
 
+/**
+ * 预览命令处理类
+ * 
+ * 处理预览相关的命令注册和事件监听，管理预览窗口的生命周期。
+ * 
+ * 主要功能：
+ * - 预览命令：在当前标签页中打开预览
+ * - 并排预览命令：在侧边打开预览
+ * - 导出预览命令：将预览导出为 HTML 文件
+ * 
+ * 监听文档变化、活动编辑器变化和滚动事件，
+ * 实时更新预览内容并同步滚动位置。
+ * 
+ * @class PreviewCommands
+ */
 export class PreviewCommands {
   private previewManager: PreviewManager;
   private updateTimeout: NodeJS.Timeout | undefined;

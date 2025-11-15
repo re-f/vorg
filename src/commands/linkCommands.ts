@@ -1,9 +1,34 @@
+/**
+ * 链接命令处理模块
+ * 
+ * 提供 org-mode 链接的跳转和插入功能，支持文件链接、URL、ID 链接和内部标题链接。
+ * 
+ * @module commands/linkCommands
+ */
+
 import * as vscode from 'vscode';
 import { TodoKeywordManager } from '../utils/todoKeywordManager';
 import { HeadingParser } from '../parsers/headingParser';
 import { LinkParser } from '../parsers/linkParser';
 import { LinkUtils } from '../utils/linkUtils';
 
+/**
+ * 链接命令处理类
+ * 
+ * 处理链接跳转和导航相关命令，实现链接的解析和导航功能。
+ * 
+ * 主要功能：
+ * - 跟随链接：跳转到链接目标（文件、URL、ID、标题等）
+ * - 插入链接：交互式插入各种类型的链接
+ * 
+ * 支持的链接类型：
+ * - HTTP/HTTPS 链接：在浏览器中打开
+ * - 文件链接：打开文件或跳转到文件中的位置
+ * - ID 链接：通过 ID 跳转到标题
+ * - 内部标题链接：跳转到文档内的标题
+ * 
+ * @class LinkCommands
+ */
 export class LinkCommands {
   private static todoKeywordManager = TodoKeywordManager.getInstance();
   

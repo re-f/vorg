@@ -3,7 +3,14 @@ import { ContextInfo } from '../types/editingTypes';
 import { TableParser } from '../../parsers/tableParser';
 
 /**
- * 表格相关命令
+ * 表格操作命令类
+ * 
+ * 提供表格行插入和单元格导航功能，包括：
+ * - 插入表格行（M-RET 语义）
+ * - 移动到下一个单元格（TAB）
+ * - 移动到上一个单元格（Shift+TAB）
+ * 
+ * @class TableCommands
  */
 export class TableCommands {
   /**

@@ -1,3 +1,27 @@
+/**
+ * 编辑命令协调器模块
+ * 
+ * 提供 org-mode 编辑功能的命令注册和协调，模拟 Emacs org-mode 的编辑行为。
+ * 包括智能插入、分割、折叠、TODO 管理、Property 管理等编辑操作。
+ * 
+ * ## 为什么需要协调器？
+ * 
+ * 编辑命令需要根据当前编辑位置的上下文（标题、列表、表格、代码块等）智能执行不同的操作。
+ * 协调器的作用是：
+ * 1. **统一命令注册**：集中注册所有编辑相关的 VS Code 命令
+ * 2. **上下文分析**：使用 `ContextAnalyzer` 分析当前编辑位置的上下文
+ * 3. **路由分发**：根据上下文类型，将操作路由到对应的子命令模块
+ * 4. **统一接口**：为外部提供统一的命令接口，隐藏内部实现细节
+ * 
+ * ## 具体实现位置
+ * 
+ * 具体的编辑操作实现在 `editing/` 子目录下的各个命令类中：
+ * 
+ * 协调器通过 `ContextAnalyzer` 分析上下文后，调用相应子模块的静态方法执行具体操作。
+ * 
+ * @module commands/editingCommands
+ */
+
 import * as vscode from 'vscode';
 import { TodoKeywordManager } from '../utils/todoKeywordManager';
 import { ContextAnalyzer } from '../parsers/contextAnalyzer';
@@ -10,7 +34,22 @@ import { TableCommands } from './editing/tableCommands';
 import { CodeBlockCommands } from './editing/codeBlockCommands';
 
 /**
- * Org-mode 编辑命令，模拟 Emacs 中的 org-meta-return 等功能
+ * 编辑命令协调器
+ * 
+ * 根据当前编辑位置的上下文（标题、列表、表格、代码块等），
+ * 智能执行相应的编辑操作。协调各个子命令模块，实现统一的编辑命令接口。
+ * 
+ * 主要功能：
+ * - org-meta-return (M-RET): 根据上下文智能插入元素
+ * - org-ctrl-return (C-RET): 分割当前结构元素
+ * - 智能回车 (Ctrl+Meta+Enter): 在子树末尾插入同级元素
+ * - 智能 TAB: 根据上下文执行折叠或缩进
+ * - 智能 Shift+TAB: 反向缩进或移动到前一个单元格
+ * - TODO 状态管理
+ * - Property 管理
+ * - 子树升级/降级
+ * 
+ * @class EditingCommands
  */
 export class EditingCommands {
   private static todoKeywordManager = TodoKeywordManager.getInstance();

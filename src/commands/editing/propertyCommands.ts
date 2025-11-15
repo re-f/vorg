@@ -3,7 +3,14 @@ import { HeadingCommands } from './headingCommands';
 import { PropertyParser } from '../../parsers/propertyParser';
 
 /**
- * Property管理命令
+ * Property 管理命令类
+ * 
+ * 提供 Property 抽屉的创建、查找和更新功能，包括：
+ * - 设置 Property（模拟 org-set-property 行为）
+ * - 在当前标题下创建或更新 Property 抽屉
+ * - 查找和更新已存在的 Property 项
+ * 
+ * @class PropertyCommands
  */
 export class PropertyCommands {
   /**

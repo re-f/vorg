@@ -1,3 +1,12 @@
+/**
+ * 常量定义模块
+ * 
+ * 存放项目中使用的常量，如命令名称、面板类型等。
+ * 将魔法字符串提取为常量，便于维护和避免拼写错误。
+ * 
+ * @module constants
+ */
+
 export const PREVIEW_PANEL_TYPE = 'vorgPreview';
 export const SIDE_PANEL_TYPE = 'vorgSidePreview';
 export const PREVIEW_TITLE = 'Org Preview';

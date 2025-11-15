@@ -5,7 +5,14 @@ import { HeadingCommands } from './headingCommands';
 import { HeadingParser } from '../../parsers/headingParser';
 
 /**
- * TODO状态管理命令
+ * TODO 状态管理命令类
+ * 
+ * 提供 TODO 状态的设置和转换日志管理功能，包括：
+ * - 设置标题的 TODO 状态
+ * - 在状态转换时记录时间戳和日志
+ * - 支持自定义 TODO 关键字配置
+ * 
+ * @class TodoStateCommands
  */
 export class TodoStateCommands {
   private static todoKeywordManager = TodoKeywordManager.getInstance();

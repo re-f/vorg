@@ -3,7 +3,14 @@ import { ContextInfo } from '../types/editingTypes';
 import { ListParser } from '../../parsers/listParser';
 
 /**
- * 代码块相关命令
+ * 代码块操作命令类
+ * 
+ * 提供代码块的插入和折叠操作，包括：
+ * - 在代码块中插入行（保持缩进）
+ * - 切换代码块折叠状态
+ * - 切换 Property 抽屉折叠状态
+ * 
+ * @class CodeBlockCommands
  */
 export class CodeBlockCommands {
   /**

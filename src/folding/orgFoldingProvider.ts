@@ -1,6 +1,21 @@
 import * as vscode from 'vscode';
 import { HeadingParser } from '../parsers/headingParser';
 
+/**
+ * 代码折叠提供器
+ * 
+ * 提供代码折叠功能，实现 VS Code 的 FoldingRangeProvider 接口。
+ * 支持标题、列表、代码块等的智能折叠。
+ * 
+ * 功能包括：
+ * - 标题折叠：根据标题层级创建折叠区域
+ * - 列表折叠：折叠列表项及其子项
+ * - 代码块折叠：折叠代码块内容
+ * - Property 抽屉折叠：折叠 Property 抽屉内容
+ * 
+ * @class OrgFoldingProvider
+ * @implements {vscode.FoldingRangeProvider}
+ */
 export class OrgFoldingProvider implements vscode.FoldingRangeProvider {
   
   provideFoldingRanges(

@@ -1,6 +1,23 @@
 import * as vscode from 'vscode';
 import { parseTodoKeywords, getTodoKeywordRegexString, TodoKeywordConfig, DEFAULT_TODO_KEYWORDS } from './constants';
 
+/**
+ * TODO 关键字管理器
+ * 
+ * 管理 TODO 关键字配置和状态转换，使用单例模式确保全局唯一实例。
+ * 
+ * 功能包括：
+ * - 加载和解析 TODO 关键字配置
+ * - 监听配置变化并自动更新
+ * - 提供关键字查询和验证方法
+ * - 生成用于正则匹配的模式
+ * 
+ * 配置格式示例：
+ * "TODO NEXT WAITING | DONE CANCELLED"
+ * "PreSale InDelivery HANGUP(@/!) End(@/!) | Terminated(@/!) DONE(@/!)"
+ * 
+ * @class TodoKeywordManager
+ */
 export class TodoKeywordManager {
     private static instance: TodoKeywordManager;
     private todoKeywords: TodoKeywordConfig[] = [];

@@ -4,6 +4,21 @@ import uniorgParse from 'uniorg-parse';
 import uniorgRehype from 'uniorg-rehype';
 import rehypeStringify from 'rehype-stringify';
 
+/**
+ * HTML 生成器
+ * 
+ * 负责将 org 内容转换为 HTML，包括样式和脚本。
+ * 使用 uniorg 解析器将 org-mode 语法转换为 HTML。
+ * 
+ * 功能包括：
+ * - 生成预览 HTML（包含滚动同步标记）
+ * - 生成可导出的 HTML（独立文件）
+ * - 处理复选框交互
+ * - 添加行号标记用于滚动同步
+ * - 根据 VS Code 主题应用样式
+ * 
+ * @class HtmlGenerator
+ */
 export class HtmlGenerator {
   
   public static generatePreviewHtml(document: vscode.TextDocument, webview?: vscode.Webview): string {

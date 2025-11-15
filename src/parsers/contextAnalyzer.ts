@@ -4,7 +4,19 @@ import { HeadingParser } from './headingParser';
 
 /**
  * 上下文分析器
- * 负责分析当前编辑位置的上下文环境
+ * 
+ * 负责分析当前编辑位置的上下文环境，识别当前位置处于：
+ * - 标题（heading）
+ * - 列表项（list-item）
+ * - 复选框（checkbox）
+ * - 表格（table）
+ * - 代码块（code-block）
+ * - Property 抽屉（property-drawer）
+ * - 普通文本
+ * 
+ * 为编辑命令提供上下文信息，以便执行相应的智能操作。
+ * 
+ * @class ContextAnalyzer
  */
 export class ContextAnalyzer {
   /**

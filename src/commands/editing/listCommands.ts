@@ -15,7 +15,16 @@ interface RenumberedItem {
 }
 
 /**
- * 列表相关命令
+ * 列表操作命令类
+ * 
+ * 提供列表和复选框的插入、缩进、折叠操作，包括：
+ * - 插入列表项（M-RET 语义）
+ * - 分割列表项（C-RET 语义）
+ * - 插入复选框项
+ * - 智能缩进和折叠
+ * - 有序列表的自动重新编号
+ * 
+ * @class ListCommands
  */
 export class ListCommands {
   /**
