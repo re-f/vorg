@@ -47,4 +47,10 @@ VOrg 扩展现在支持类似 Emacs `org-meta-return` 的智能编辑功能，�
 ### TODO插入
 使用 Shift+Alt+Enter 可以快速插入TODO标题。
 
+### 上下文操作 (Ctrl+C Ctrl+C)
+类似 Emacs org-mode 的 `C-c C-c` 功能，根据当前上下文执行相应操作：
+
+- **Checkbox 切换**：在 checkbox 列表项上按 `Ctrl+C Ctrl+C` 可以循环切换 checkbox 状态
+  - `[ ]` (未完成) → `[X]` (完成) → `[-]` (部分完成) → `[ ]` (未完成)
+
 这些功能让在 VS Code 中编辑 Org-mode 文档变得更加高效和直观。 

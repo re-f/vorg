@@ -32,6 +32,7 @@ import { PropertyCommands } from './editing/propertyCommands';
 import { ListCommands } from './editing/listCommands';
 import { TableCommands } from './editing/tableCommands';
 import { CodeBlockCommands } from './editing/codeBlockCommands';
+import { ContextCommands } from './editing/contextCommands';
 
 /**
  * 编辑命令协调器
@@ -108,6 +109,11 @@ export class EditingCommands {
       EditingCommands.demoteSubtree(lineNumber);
     });
 
+    // Ctrl+C Ctrl+C 上下文命令
+    const ctrlCtrlCommand = vscode.commands.registerCommand('vorg.ctrlCtrl', () => {
+      ContextCommands.executeCtrlCtrl();
+    });
+
     context.subscriptions.push(
       metaReturnCommand,
       smartReturnCommand,
@@ -118,7 +124,8 @@ export class EditingCommands {
       setPropertyCommand,
       ctrlReturnCommand,
       promoteSubtreeCommand,
-      demoteSubtreeCommand
+      demoteSubtreeCommand,
+      ctrlCtrlCommand
     );
   }
 

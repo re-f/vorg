@@ -51,6 +51,7 @@
     "onCommand:vorg.setProperty",
     "onCommand:vorg.promoteSubtree",
     "onCommand:vorg.demoteSubtree",
+    "onCommand:vorg.ctrlCtrl",
     "onCommand:vorg.debug.refreshHighlighting"
   ],
   "main": "./out/extension.js",
@@ -185,6 +186,12 @@
         "command": "vorg.demoteSubtree",
         "title": "VOrg: Demote Subtree (org-demote-subtree)",
         "icon": "$(arrow-down)"
+      },
+      {
+        "command": "vorg.ctrlCtrl",
+        "title": "VOrg: Ctrl+C Ctrl+C (Context Action)",
+        "icon": "$(check)",
+        "enablement": "editorLangId == 'org'"
       }
     ],
     "menus": {
@@ -307,6 +314,12 @@
         "command": "vorg.demoteSubtree",
         "key": "ctrl+c ctrl+shift+.",
         "mac": "ctrl+c ctrl+shift+.",
+        "when": "editorLangId == org"
+      },
+      {
+        "command": "vorg.ctrlCtrl",
+        "key": "ctrl+c ctrl+c",
+        "mac": "ctrl+c ctrl+c",
         "when": "editorLangId == org"
       }
     ]

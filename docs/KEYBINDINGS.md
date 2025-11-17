@@ -7,6 +7,7 @@
 | 功能 | 快捷键 | 对应 Emacs |
 |------|---------|-----------|
 | 切换TODO状态 | `Ctrl+C Ctrl+T` | `C-c C-t` |
+| 上下文操作 | `Ctrl+C Ctrl+C` | `C-c C-c` |
 | 插入链接 | `Ctrl+C Ctrl+L` | `C-c C-l` |
 | 跟随链接 | `Ctrl+C Ctrl+O` | `C-c C-o` |
 | 打开预览 | `Ctrl+C Ctrl+E` | `C-c C-e` |
@@ -22,6 +23,10 @@
 ### TODO 项目管理
 - `Ctrl+C Ctrl+T` - 切换TODO状态 (类似 `C-c C-t`)
 - `Shift+Alt+Enter` - 插入新的TODO标题
+
+### 上下文操作
+- `Ctrl+C Ctrl+C` - 上下文操作 (类似 `C-c C-c`)
+  - 在 checkbox 上：切换完成/未完成状态
 
 ### 链接操作
 - `Ctrl+C Ctrl+L` - 插入链接 (类似 `C-c C-l`)
@@ -53,6 +58,7 @@
 | Emacs Org-mode | VOrg VSCode 扩展 | 功能说明 |
 |----------------|------------------|----------|
 | `C-c C-t` | `Ctrl+C Ctrl+T` | 切换TODO状态 |
+| `C-c C-c` | `Ctrl+C Ctrl+C` | 上下文操作（checkbox切换等） |
 | `C-c C-l` | `Ctrl+C Ctrl+L` | 插入链接 |
 | `C-c C-o` | `Ctrl+C Ctrl+O` | 跟随链接 |
 | `C-c C-e` | `Ctrl+C Ctrl+E` | 导出/预览 |
