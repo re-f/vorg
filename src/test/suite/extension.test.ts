@@ -39,11 +39,11 @@ suite('Extension Test Suite', () => {
         assert.ok(symbols);
         assert.ok(symbols.length > 0);
         
-        // 查找标题符号
+        // 查找标题符号（使用新的符号映射：Namespace, Class, Interface）
         const headingSymbols = symbols.filter(s => 
-            s.kind === vscode.SymbolKind.Module || 
+            s.kind === vscode.SymbolKind.Namespace || 
             s.kind === vscode.SymbolKind.Class || 
-            s.kind === vscode.SymbolKind.Method
+            s.kind === vscode.SymbolKind.Interface
         );
         
         assert.ok(headingSymbols.length > 0, 'Should have heading symbols');

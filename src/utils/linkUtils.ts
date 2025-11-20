@@ -108,8 +108,8 @@ export class LinkUtils {
       
       if (headingInfo.level > 0) {
         // 获取完整标题（包含 TODO 状态）
-        const fullTitle = headingInfo.todoState 
-          ? `${headingInfo.todoState} ${headingInfo.title}`
+        const fullTitle = headingInfo.todoKeyword 
+          ? `${headingInfo.todoKeyword} ${headingInfo.title}`
           : headingInfo.title;
         
         // 匹配标题文本（带或不带 TODO 状态）

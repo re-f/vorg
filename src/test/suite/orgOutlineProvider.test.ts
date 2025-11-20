@@ -52,10 +52,10 @@ suite('OrgOutlineProvider Test Suite', () => {
         assert.ok(titleSymbol, 'Should find TITLE metadata');
         assert.strictEqual(titleSymbol.kind, vscode.SymbolKind.Property);
         
-        // 查找第一个标题
+        // 查找第一个标题（Level 1 应为 Namespace）
         const firstHeading = symbols.find(s => s.name === '第一个标题');
         assert.ok(firstHeading, 'Should find first heading');
-        assert.strictEqual(firstHeading.kind, vscode.SymbolKind.Module);
+        assert.strictEqual(firstHeading.kind, vscode.SymbolKind.Namespace);
         
         // 验证子标题被正确嵌套
         assert.ok(firstHeading.children.length > 0, 'First heading should have children');
@@ -97,10 +97,10 @@ suite('OrgOutlineProvider Test Suite', () => {
         assert.ok(symbols);
         assert.ok(symbols.length > 0);
         
-        // 查找第一个标题
+        // 查找第一个标题（Level 1 应为 Namespace）
         const firstHeading = symbols.find(s => s.name === '第一个标题');
         assert.ok(firstHeading, 'Should find first heading');
-        assert.strictEqual(firstHeading.kind, vscode.SymbolKind.Module);
+        assert.strictEqual(firstHeading.kind, vscode.SymbolKind.Namespace);
         
         // 验证子标题被正确嵌套
         assert.ok(firstHeading.children.length > 0, 'First heading should have children');

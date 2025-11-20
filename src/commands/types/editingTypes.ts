@@ -17,9 +17,11 @@ export interface ContextInfo {
  * 标题信息接口
  */
 export interface HeadingInfo {
-  level: number;
-  stars: string;
-  todoState: string | null;
-  title: string;
+  level: number;              // 标题层级
+  stars: string;              // 星号
+  todoKeyword: string | null; // TODO 关键字（TODO、DONE 等）
+  title: string;            // 完整的标题的文本
+  tags?: string[];            // 标签数组
+  text?: string;              // 纯文本（不包含 TODO 关键字和标签）
 }
 

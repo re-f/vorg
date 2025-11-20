@@ -276,8 +276,8 @@ export class LinkCommands {
       
       if (headingInfo.level > 0) {
         // 构建完整的标题显示文本（包含 TODO 状态）
-        const fullTitle = headingInfo.todoState 
-          ? `${headingInfo.todoState} ${headingInfo.title}`
+        const fullTitle = headingInfo.todoKeyword 
+          ? `${headingInfo.todoKeyword} ${headingInfo.title}`
           : headingInfo.title;
         
         headings.push({

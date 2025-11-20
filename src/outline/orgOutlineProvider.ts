@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { TodoKeywordManager } from '../utils/todoKeywordManager';
 import { HeadingParser } from '../parsers/headingParser';
+import { HeadingSymbolUtils } from '../utils/headingSymbolUtils';
 
 /**
  * 大纲提供器
@@ -57,41 +58,46 @@ export class OrgOutlineProvider implements vscode.DocumentSymbolProvider {
         continue;
       }
       
-      // 处理标题行
-      const headingInfo = HeadingParser.parseHeading(line);
+      // 处理标题行（包含标签解析）
+      const headingInfo = HeadingParser.parseHeading(line, true);
       if (headingInfo.level > 0) {
         const level = headingInfo.level;
-        const titleText = headingInfo.title;
-        const todoStatus = headingInfo.todoState;
-        
-        // 解析标签
-        const { cleanTitle, tags } = this.parseHeadingTags(titleText);
+        const todoStatus = headingInfo.todoKeyword;
+        const pureTitle = headingInfo.text || headingInfo.title;
+        const tags = headingInfo.tags || [];
         
         // 确定符号类型
-        let kind = vscode.SymbolKind.Module;
-        if (level === 1) kind = vscode.SymbolKind.Module;
-        else if (level === 2) kind = vscode.SymbolKind.Class;
-        else if (level === 3) kind = vscode.SymbolKind.Method;
-        else if (level === 4) kind = vscode.SymbolKind.Function;
-        else if (level === 5) kind = vscode.SymbolKind.Variable;
-        else kind = vscode.SymbolKind.Constant;
+        const kind = HeadingSymbolUtils.getSymbolKind(level);
         
         // 构建显示名称
-        let displayName = cleanTitle;
-        if (todoStatus) {
-          displayName = `${todoStatus} ${displayName}`;
+        const displayName = HeadingParser.buildDisplayName(pureTitle, todoStatus, tags);
+        
+        // 计算标题的范围：从当前行到下一个同级或更高级标题之前
+        const headingRange = new vscode.Range(i, 0, i, line.length);
+        
+        // 查找子树的结束位置
+        let endLine = i;
+        const currentLevel = level;
+        for (let j = i + 1; j < lines.length; j++) {
+          const nextLineHeadingInfo = HeadingParser.parseHeading(lines[j]);
+          if (nextLineHeadingInfo.level > 0 && nextLineHeadingInfo.level <= currentLevel) {
+            endLine = j - 1;
+            break;
+          }
         }
-        if (tags.length > 0) {
-          displayName += ` :${tags.join(':')}:`;
+        // 如果没有找到下一个同级标题，则到文档末尾
+        if (endLine === i) {
+          endLine = lines.length - 1;
         }
         
-        const range = new vscode.Range(i, 0, i, line.length);
+        // 创建符号：range 包含整个子树，selectionRange 是标题行
+        const fullRange = new vscode.Range(i, 0, endLine, lines[endLine].length);
         const symbol = new vscode.DocumentSymbol(
           displayName,
           todoStatus || '',
           kind,
-          range,
-          range
+          fullRange,
+          headingRange  // selectionRange 用于面包屑和跳转
         );
         
         // 处理层级关系
@@ -125,27 +131,6 @@ export class OrgOutlineProvider implements vscode.DocumentSymbolProvider {
     }
     
     return symbols;
-  }
-  
-  /**
-   * 解析标题文本，提取标签
-   */
-  private parseHeadingTags(titleText: string): {
-    cleanTitle: string;
-    tags: string[];
-  } {
-    let cleanTitle = titleText.trim();
-    let tags: string[] = [];
-    
-    // 提取标签
-    const tagMatch = cleanTitle.match(/^(.+?)\s+(:[\w_@]+(?::[\w_@]+)*:)\s*$/);
-    if (tagMatch) {
-      cleanTitle = tagMatch[1].trim();
-      const tagString = tagMatch[2];
-      tags = tagString.slice(1, -1).split(':').filter(tag => tag.length > 0);
-    }
-    
-    return { cleanTitle, tags };
   }
   
   /**

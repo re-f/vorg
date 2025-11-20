@@ -37,7 +37,7 @@ suite('HeadingParser 标题解析测试', () => {
       assert.strictEqual(result.level, 1);
       assert.strictEqual(result.stars, '*');
       assert.strictEqual(result.title, '标题');
-      assert.strictEqual(result.todoState, null);
+      assert.strictEqual(result.todoKeyword, null);
     });
 
     test('应该解析二级标题', () => {
@@ -60,7 +60,7 @@ suite('HeadingParser 标题解析测试', () => {
       const result = HeadingParser.parseHeading('** TODO 完成任务');
       
       assert.strictEqual(result.level, 2);
-      assert.strictEqual(result.todoState, 'TODO');
+      assert.strictEqual(result.todoKeyword, 'TODO');
       assert.strictEqual(result.title, '完成任务');
     });
 
@@ -68,27 +68,27 @@ suite('HeadingParser 标题解析测试', () => {
       const result = HeadingParser.parseHeading('* DONE 已完成任务');
       
       assert.strictEqual(result.level, 1);
-      assert.strictEqual(result.todoState, 'DONE');
+      assert.strictEqual(result.todoKeyword, 'DONE');
       assert.strictEqual(result.title, '已完成任务');
     });
 
     test('应该解析带 NEXT 状态的标题', () => {
       const result = HeadingParser.parseHeading('*** NEXT 下一步');
       
-      assert.strictEqual(result.todoState, 'NEXT');
+      assert.strictEqual(result.todoKeyword, 'NEXT');
       assert.strictEqual(result.title, '下一步');
     });
 
     test('应该解析带 WAITING 状态的标题', () => {
       const result = HeadingParser.parseHeading('* WAITING 等待回复');
       
-      assert.strictEqual(result.todoState, 'WAITING');
+      assert.strictEqual(result.todoKeyword, 'WAITING');
     });
 
     test('应该解析带 CANCELLED 状态的标题', () => {
       const result = HeadingParser.parseHeading('** CANCELLED 已取消');
       
-      assert.strictEqual(result.todoState, 'CANCELLED');
+      assert.strictEqual(result.todoKeyword, 'CANCELLED');
     });
 
     test('应该解析空标题', () => {
@@ -104,12 +104,12 @@ suite('HeadingParser 标题解析测试', () => {
       assert.strictEqual(result.level, 1);
       // 注意：如果标题后面没有内容，TODO 可能被当作标题文本
       // 根据实际实现调整断言
-      if (result.todoState === null) {
+      if (result.todoKeyword === null) {
         // TODO 被当作标题内容
         assert.strictEqual(result.title, 'TODO');
       } else {
         // TODO 被识别为状态
-        assert.strictEqual(result.todoState, 'TODO');
+        assert.strictEqual(result.todoKeyword, 'TODO');
         assert.strictEqual(result.title, '');
       }
     });
@@ -120,7 +120,7 @@ suite('HeadingParser 标题解析测试', () => {
       assert.strictEqual(result.level, 0);
       assert.strictEqual(result.stars, '');
       assert.strictEqual(result.title, '这不是标题');
-      assert.strictEqual(result.todoState, null);
+      assert.strictEqual(result.todoKeyword, null);
     });
 
     test('星号后没有空格不应识别为标题', () => {
@@ -140,7 +140,7 @@ suite('HeadingParser 标题解析测试', () => {
       const result = HeadingParser.parseHeading('* TODO 任务 :tag1:tag2:');
       
       assert.strictEqual(result.level, 1);
-      assert.strictEqual(result.todoState, 'TODO');
+      assert.strictEqual(result.todoKeyword, 'TODO');
       assert.strictEqual(result.title, '任务 :tag1:tag2:');
     });
   });
@@ -432,7 +432,7 @@ suite('HeadingParser 标题解析测试', () => {
       const result = HeadingParser.findCurrentHeading(doc, pos);
       
       assert.ok(result);
-      assert.strictEqual(result!.headingInfo.todoState, 'TODO');
+      assert.strictEqual(result!.headingInfo.todoKeyword, 'TODO');
       assert.strictEqual(result!.headingInfo.title, '任务');
     });
   });

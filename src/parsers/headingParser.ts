@@ -11,8 +11,12 @@ export class HeadingParser {
 
   /**
    * 解析标题行
+   * 
+   * @param lineText - 标题行文本
+   * @param includeTags - 是否解析标签（默认为 true）
+   * @returns 标题信息，包含层级、TODO 状态、标题和标签
    */
-  static parseHeading(lineText: string): HeadingInfo {
+  static parseHeading(lineText: string, includeTags: boolean = true): HeadingInfo {
     const allKeywords = HeadingParser.todoKeywordManager.getAllKeywords();
     const keywordRegex = new RegExp(`^(\\*+)\\s+(?:(${allKeywords.map(k => k.keyword).join('|')})\\s+)?(.*)$`);
     const headingMatch = lineText.match(keywordRegex);
@@ -21,17 +25,79 @@ export class HeadingParser {
       return {
         level: 0,
         stars: '',
-        todoState: null,
+        todoKeyword: null,
         title: lineText
       };
     }
 
-    return {
+    const titleText = headingMatch[3] || '';
+    const result: HeadingInfo = {
       level: headingMatch[1].length,
       stars: headingMatch[1],
-      todoState: headingMatch[2] || null,
-      title: headingMatch[3] || ''
+      todoKeyword: headingMatch[2] || null,
+      title: titleText
     };
+
+    // 如果需要解析标签
+    if (includeTags) {
+      const { pureTitle, tags } = this.parseHeadingTags(titleText);
+      result.text = pureTitle;
+      result.tags = tags;
+    }
+
+    return result;
+  }
+
+  /**
+   * 解析标题文本，提取标签
+   * 
+   * @param titleText - 标题文本（可能包含标签）
+   * @returns 纯净标题和标签数组
+   */
+  static parseHeadingTags(titleText: string): {
+    pureTitle: string;
+    tags: string[];
+  } {
+    let pureTitle = titleText.trim();
+    let tags: string[] = [];
+    
+    // 提取标签（格式：:tag1:tag2:）
+    const tagMatch = pureTitle.match(/^(.+?)\s+(:[\w_@]+(?::[\w_@]+)*:)\s*$/);
+    if (tagMatch) {
+      pureTitle = tagMatch[1].trim();
+      const tagString = tagMatch[2];
+      tags = tagString.slice(1, -1).split(':').filter(tag => tag.length > 0);
+    }
+    
+    return { pureTitle, tags };
+  }
+
+  /**
+   * 构建标题的显示名称
+   * 
+   * 包含 TODO 状态和标签信息，用于在符号列表中显示。
+   * 
+   * @param pureTitle - 纯净的标题文本（不含标签）
+   * @param todoStatus - TODO 状态（可选）
+   * @param tags - 标签数组（可选）
+   * @returns 完整的显示名称
+   */
+  static buildDisplayName(
+    pureTitle: string,
+    todoStatus?: string | null,
+    tags?: string[]
+  ): string {
+    let displayName = pureTitle;
+    
+    if (todoStatus) {
+      displayName = `${todoStatus} ${displayName}`;
+    }
+    
+    if (tags && tags.length > 0) {
+      displayName += ` :${tags.join(':')}:`;
+    }
+    
+    return displayName;
   }
 
   /**

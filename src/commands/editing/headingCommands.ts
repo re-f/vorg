@@ -202,7 +202,7 @@ export class HeadingCommands {
         const newLineText = HeadingParser.buildHeadingLine(
           edit.newLevel,
           edit.headingInfo.title,
-          edit.headingInfo.todoState
+          edit.headingInfo.todoKeyword
         );
         editBuilder.replace(line.range, newLineText);
       }
@@ -267,7 +267,7 @@ export class HeadingCommands {
         const newLineText = HeadingParser.buildHeadingLine(
           edit.newLevel,
           edit.headingInfo.title,
-          edit.headingInfo.todoState
+          edit.headingInfo.todoKeyword
         );
         editBuilder.replace(line.range, newLineText);
       }

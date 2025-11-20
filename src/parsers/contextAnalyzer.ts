@@ -32,7 +32,7 @@ export class ContextAnalyzer {
       return {
         type: 'heading',
         level: headingInfo.level,
-        todoState: headingInfo.todoState,
+        todoState: headingInfo.todoKeyword,
         content: headingInfo.title
       };
     }

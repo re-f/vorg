@@ -3,6 +3,7 @@
  * 
  * 负责激活扩展和注册所有功能模块，包括：
  * - 大纲视图提供器（DocumentSymbolProvider）
+ * - 工作区符号提供器（WorkspaceSymbolProvider）
  * - 链接提供器（DocumentLinkProvider、DefinitionProvider）
  * - 代码折叠提供器（FoldingRangeProvider）
  * - CodeLens 提供器（标题行的 Promote/Demote 按钮）
@@ -20,6 +21,7 @@
 
 import * as vscode from 'vscode';
 import { OrgOutlineProvider } from './outline/orgOutlineProvider';
+import { OrgWorkspaceSymbolProvider } from './outline/orgWorkspaceSymbolProvider';
 import { OrgLinkProvider } from './links/orgLinkProvider';
 import { OrgFoldingProvider } from './folding/orgFoldingProvider';
 import { PreviewManager } from './preview/previewManager';
@@ -47,10 +49,16 @@ export function activate(context: vscode.ExtensionContext) {
   // 初始化语法高亮器
   const syntaxHighlighter = new SyntaxHighlighter();
 
-  // 注册大纲提供者
+  // 注册大纲提供者（单个文档的符号导航）
   const outlineProvider = new OrgOutlineProvider();
   context.subscriptions.push(
     vscode.languages.registerDocumentSymbolProvider('org', outlineProvider)
+  );
+
+  // 注册工作区符号提供者（整个工作区的符号搜索）
+  const workspaceSymbolProvider = new OrgWorkspaceSymbolProvider();
+  context.subscriptions.push(
+    vscode.languages.registerWorkspaceSymbolProvider(workspaceSymbolProvider)
   );
 
   // 注册链接提供者
@@ -77,6 +85,11 @@ export function activate(context: vscode.ExtensionContext) {
     ),
     codeLensProvider
   );
+
+  // 面包屑功能由 VS Code 基于 DocumentSymbolProvider 自动提供
+  // 通过 OrgOutlineProvider 已经实现了正确的符号层次结构
+  // 确保在 VS Code 设置中启用了面包屑功能：
+  // "breadcrumbs.enabled": true
 
   // 注册预览管理器
   const previewManager = new PreviewManager(context);

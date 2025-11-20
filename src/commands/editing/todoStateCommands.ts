@@ -94,7 +94,7 @@ export class TodoStateCommands {
         editor,
         line.lineNumber,
         keywordConfig,
-        headingInfo.todoState,
+        headingInfo.todoKeyword,
         newState
       );
     }
