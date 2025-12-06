@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { ContextInfo } from '../types/editingTypes';
 import { ListParser, ListItemInfo } from '../../parsers/listParser';
+import { Logger } from '../../utils/logger';
 
 /**
  * 列表项重新编号结果
@@ -226,7 +227,8 @@ export class ListCommands {
         editor.selection = new vscode.Selection(savedPosition, savedPosition);
       } catch (error) {
         // 如果折叠失败（例如VS Code还没识别到折叠范围），不做任何操作
-        console.log('折叠命令失败:', error);
+        Logger.warn('折叠命令失败');
+        Logger.error('折叠命令错误详情', error);
       }
     } else {
       // 没有子项：执行默认TAB行为（插入TAB字符）

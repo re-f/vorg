@@ -2,6 +2,7 @@
  * VOrg 扩展主入口文件
  * 
  * 负责激活扩展和注册所有功能模块，包括：
+ * - 符号索引服务（OrgSymbolIndexService）- 共享的标题索引缓存
  * - 大纲视图提供器（DocumentSymbolProvider）
  * - 工作区符号提供器（WorkspaceSymbolProvider）
  * - 链接提供器（DocumentLinkProvider、DefinitionProvider）
@@ -27,11 +28,13 @@ import { OrgFoldingProvider } from './folding/orgFoldingProvider';
 import { PreviewManager } from './preview/previewManager';
 import { SyntaxHighlighter } from './syntaxHighlighter';
 import { TodoKeywordManager } from './utils/todoKeywordManager';
+import { Logger } from './utils/logger';
 import { PreviewCommands } from './commands/previewCommands';
 import { LinkCommands } from './commands/linkCommands';
 import { EditingCommands } from './commands/editingCommands';
 import { DebugCommands } from './commands/debugCommands';
 import { HeadingCodeLensProvider } from './codelens/headingCodeLensProvider';
+import { OrgSymbolIndexService } from './services/orgSymbolIndexService';
 
 /**
  * 激活扩展
@@ -41,10 +44,16 @@ import { HeadingCodeLensProvider } from './codelens/headingCodeLensProvider';
  * @param context - VS Code 扩展上下文，用于注册订阅和命令
  */
 export function activate(context: vscode.ExtensionContext) {
-  console.log('VOrg extension is now active!');
+  // 初始化日志系统
+  Logger.initialize(context);
+  Logger.info('VOrg extension is now active!');
 
   // 初始化TODO关键字管理器
   const todoKeywordManager = TodoKeywordManager.getInstance();
+  
+  // 初始化符号索引服务（共享缓存，供多个功能使用）
+  const symbolIndexService = OrgSymbolIndexService.getInstance();
+  context.subscriptions.push(symbolIndexService);
   
   // 初始化语法高亮器
   const syntaxHighlighter = new SyntaxHighlighter();
@@ -143,5 +152,5 @@ export function activate(context: vscode.ExtensionContext) {
  * 当 VS Code 卸载扩展时调用此函数，执行清理操作。
  */
 export function deactivate() {
-  console.log('VOrg extension is deactivated');
+  Logger.info('VOrg extension is deactivated');
 } 

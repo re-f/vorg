@@ -3,6 +3,7 @@ import * as path from 'path';
 import { HeadingParser } from '../parsers/headingParser';
 import { PropertyParser } from '../parsers/propertyParser';
 import { TodoKeywordManager } from './todoKeywordManager';
+import { Logger } from './logger';
 
 /**
  * 链接工具类
@@ -82,11 +83,12 @@ export class LinkUtils {
           }
         } catch (error) {
           // 忽略无法打开的文件
-          console.warn(`Failed to open document ${fileUri.toString()}:`, error);
+          Logger.warn(`Failed to open document ${fileUri.toString()}`);
         }
       }
     } catch (error) {
-      console.warn('Failed to search for ID in workspace:', error);
+      Logger.warn('Failed to search for ID in workspace');
+      Logger.error('ID search error details', error);
     }
 
     return null;

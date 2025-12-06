@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { TodoKeywordManager } from '../utils/todoKeywordManager';
 import { LinkUtils } from '../utils/linkUtils';
+import { Logger } from '../utils/logger';
 
 /**
  * 链接提供器
@@ -293,7 +294,7 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
 
       return null;
     } catch (error) {
-      console.error('Error resolving link target:', error);
+      Logger.error('Error resolving link target', error);
       return null;
     }
   }
