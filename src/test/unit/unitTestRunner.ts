@@ -150,7 +150,11 @@ async function runTests() {
       path.join(__dirname, 'linkParser.test.js'),
       
       // 工具函数测试
-      path.join(__dirname, 'listRenumber.test.js')
+      path.join(__dirname, 'listRenumber.test.js'),
+      
+      // 自动补全提供器测试
+      path.join(__dirname, 'orgCompletionProvider.test.js'),
+      path.join(__dirname, 'orgCompletionProviderContent.test.js')
     ];
     
     for (const testFile of testFiles) {

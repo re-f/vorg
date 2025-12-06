@@ -30,6 +30,9 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 - `[[*heading]]` - 内部链接到同文件的标题
 - `[[id:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX][description]]` - 全局ID跳转（支持跨文件）
 
+### 🔗 自动补全
+- **ID 链接补全**：输入 `[[` 或 `[[id:` 触发自动补全，显示工作区中所有 org 文件的标题，支持模糊搜索过滤
+
 ### ⚡ org-like 编辑功能
 **类似 Emacs org-meta-return 的上下文感知编辑：**
 - 自动识别当前上下文（标题、列表、表格、Property 抽屉等）

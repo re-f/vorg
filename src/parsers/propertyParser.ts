@@ -222,5 +222,83 @@ export class PropertyParser {
     // 返回匹配位置的行号
     return document.positionAt(match.index).line;
   }
+
+  /**
+   * 获取指定标题的 ID，如果不存在则生成新 ID
+   * 
+   * @param document - 文档对象
+   * @param headingLine - 标题所在行号
+   * @returns 包含 ID 和是否需要插入的标记
+   */
+  static getOrGenerateIdForHeading(
+    document: vscode.TextDocument,
+    headingLine: number
+  ): { id: string; needsInsert: boolean } {
+    // 查找 Property 抽屉
+    const drawer = this.findPropertyDrawer(document, headingLine);
+    
+    if (drawer) {
+      // 在抽屉中查找 ID 属性
+      const idLine = this.findPropertyInDrawer(document, drawer, 'ID');
+      if (idLine !== null) {
+        const lineObj = document.lineAt(idLine);
+        const property = this.parseProperty(lineObj.text);
+        if (property && property.key.toUpperCase() === 'ID') {
+          const existingId = property.value.trim();
+          return { id: existingId, needsInsert: false };
+        }
+      }
+    }
+    
+    // 如果没有找到 ID，生成新 ID
+    const newId = this.generateUniqueId();
+    return { id: newId, needsInsert: true };
+  }
+
+  /**
+   * 准备插入 ID 到 Property 抽屉的编辑操作
+   * 
+   * @param uri - 文档 URI
+   * @param document - 文档对象
+   * @param headingLine - 标题所在行号
+   * @param id - 要插入的 ID
+   * @returns WorkspaceEdit 对象，包含插入 ID 的编辑操作
+   */
+  static prepareIdInsertionEdit(
+    uri: vscode.Uri,
+    document: vscode.TextDocument,
+    headingLine: number,
+    id: string
+  ): vscode.WorkspaceEdit {
+    const workspaceEdit = new vscode.WorkspaceEdit();
+    
+    // 查找 Property 抽屉
+    const drawer = this.findPropertyDrawer(document, headingLine);
+    
+    if (!drawer) {
+      // 如果没有 Property 抽屉，创建一个
+      const headingLineObj = document.lineAt(headingLine);
+      const headingIndent = this.parseIndent(headingLineObj.text);
+      const propertyIndent = headingIndent + '  ';
+      
+      const drawerText = this.buildPropertyDrawer(
+        [{ key: 'ID', value: id }],
+        propertyIndent
+      );
+      
+      const insertPosition = new vscode.Position(headingLine + 1, 0);
+      workspaceEdit.insert(uri, insertPosition, drawerText);
+    } else {
+      // 在 :END: 前插入 ID 属性
+      const endLine = document.lineAt(drawer.endLine);
+      const indent = this.getPropertyIndent(document, drawer);
+      const idPropertyLine = this.buildPropertyLine('ID', id, indent);
+      
+      workspaceEdit.insert(uri, endLine.range.start, idPropertyLine + '\n');
+    }
+    
+    return workspaceEdit;
+  }
+
 }
 

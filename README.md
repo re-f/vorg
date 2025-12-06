@@ -30,6 +30,9 @@ Supports intelligent navigation for multiple link types:
 - `[[*heading]]` - Internal links to headings in the same file
 - `[[id:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX][description]]` - Global ID navigation (supports cross-file)
 
+### 🔗 Auto Completion
+- **ID Link Completion**: Type `[[` or `[[id:` to trigger auto-completion, showing all available headings from workspace org files. Supports fuzzy search filtering.
+
 ### ⚡ Org-like Editing Features
 **Context-aware editing similar to Emacs org-meta-return:**
 - Automatically recognizes current context (headings, lists, tables, Property drawers, etc.)

@@ -169,6 +169,7 @@ code syntax-test.org
 - [ ] 发现的问题：xxx
 #+END_SRC
 
+[[id:id:PROJ-VORG-2024-1234-5678-9ABCDEF01234][VOrg 扩展项目]
 ---
 
 /这个测试数据集确保 VOrg 扩展的所有功能都能得到充分验证！/ 🎉 

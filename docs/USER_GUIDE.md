@@ -54,6 +54,8 @@
    - 点击 "Promote" 或 "Demote" 按钮即可快速执行操作
    - 更直观的操作方式，无需记忆快捷键
 
+#### ID 链接自动补全
+输入 `[[` 或 `[[id:` 触发自动补全，选择标题后自动插入链接格式。支持在 `[[id:` 后输入部分标题文本进行过滤搜索。
 ## 📝 Org-mode 语法指南
 
 ### 标题
@@ -123,7 +125,9 @@ function hello() {
 ```org
 [[https://orgmode.org][Org Mode 官网]]
 [[#标题][内部链接]]
+[[id:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX][全局ID链接]]
 ```
+
 
 ### 引用块
 ```org
