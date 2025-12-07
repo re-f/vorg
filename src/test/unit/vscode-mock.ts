@@ -159,6 +159,8 @@ export const vscode = {
   Position,
   Range,
   MarkdownString,
+  FoldingRange,
+  FoldingRangeKind,
   workspace: {
     ...workspace,
     openTextDocument: async (uri: any) => {

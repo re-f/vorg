@@ -17,13 +17,8 @@ const FoldingRangeKind = {
 };
 
 suite('OrgFoldingProvider Unit Tests', () => {
-  let provider: OrgFoldingProvider;
-  
-  setup(() => {
-    provider = new OrgFoldingProvider();
-  });
-  
   test('应该为简单标题创建折叠范围', () => {
+    const provider = new OrgFoldingProvider();
     const content = [
       '* 第一级标题',
       '这是内容1',
@@ -50,6 +45,7 @@ suite('OrgFoldingProvider Unit Tests', () => {
   });
   
   test('应该为嵌套标题创建正确的折叠范围', () => {
+    const provider = new OrgFoldingProvider();
     const content = [
       '* 第一级标题',
       '这是第一级内容',
@@ -100,6 +96,7 @@ suite('OrgFoldingProvider Unit Tests', () => {
   });
   
   test('应该为代码块创建折叠范围', () => {
+    const provider = new OrgFoldingProvider();
     const content = [
       '* 标题',
       '一些内容',
@@ -124,6 +121,7 @@ suite('OrgFoldingProvider Unit Tests', () => {
   });
   
   test('应该忽略空标题（没有内容的标题）', () => {
+    const provider = new OrgFoldingProvider();
     const content = [
       '* 标题1',
       '* 标题2', // 紧接着另一个标题，没有内容
@@ -142,6 +140,7 @@ suite('OrgFoldingProvider Unit Tests', () => {
   });
   
   test('应该为引用块创建折叠范围', () => {
+    const provider = new OrgFoldingProvider();
     const content = [
       '* 标题',
       '一些内容',
@@ -165,6 +164,7 @@ suite('OrgFoldingProvider Unit Tests', () => {
   });
   
   test('应该为示例块创建折叠范围', () => {
+    const provider = new OrgFoldingProvider();
     const content = [
       '* 标题',
       '一些内容',
@@ -188,6 +188,7 @@ suite('OrgFoldingProvider Unit Tests', () => {
   });
   
   test('应该处理混合的多级标题和代码块', () => {
+    const provider = new OrgFoldingProvider();
     const content = [
       '* 第一级标题',
       '第一级内容',
@@ -215,6 +216,7 @@ suite('OrgFoldingProvider Unit Tests', () => {
   });
   
   test('应该处理只有标题没有内容的文档', () => {
+    const provider = new OrgFoldingProvider();
     const content = [
       '* 标题1',
       '* 标题2',

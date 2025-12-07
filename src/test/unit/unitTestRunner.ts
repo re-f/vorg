@@ -130,7 +130,7 @@ async function runTests() {
     // 拦截require('vscode')调用
     Module.prototype.require = function(id: string) {
       if (id === 'vscode') {
-        return mockVscode;
+        return mockVscode.vscode;
       }
       return originalRequire.apply(this, arguments);
     };
