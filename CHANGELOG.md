@@ -1,5 +1,61 @@
 # 更新日志 / Changelog
 
+## [0.0.7] - 2025-12-07
+
+### ✨ 新增功能
+
+- **ID 链接自动补全功能**：实现 ID 链接的自动补全，提升编辑效率
+  - 在输入 `[[` 后自动触发补全
+  - 显示所有可用的 ID 链接，包括文件级别的 property ID
+  - 支持模糊搜索和快速选择
+- **工作区符号搜索功能**：支持在整个工作区中搜索 Org-mode 符号（标题、ID 等）
+  - 使用 `Cmd+T` (Mac) 或 `Ctrl+T` (Windows/Linux) 快捷键打开工作区符号搜索
+  - 支持模糊搜索，可搜索工作区中所有 .org 文件的标题
+  - 显示标题的层级和 TODO 状态
+  - 快速跳转到目标标题位置
+- **Ctrl+C Ctrl+C 上下文操作功能**：实现类似 Emacs Org-mode 的上下文相关操作
+  - 支持 checkbox 状态切换（未完成 ↔ 完成 ↔ 部分完成）
+  - 采用可扩展架构，为后续功能（TODO 状态切换、时间戳等）预留空间
+
+### 🔧 改进优化
+
+- **引入符号索引服务和统一日志系统**：
+  - 新增符号索引服务，提升符号查找性能
+  - 统一日志系统，改善调试和错误追踪
+
+### 🐛 Bug 修复
+
+- **改进 M-RET 对有序列表的支持和自动重新编号功能**：修复有序列表插入新项时的编号问题
+- **修复预览滚动问题**：优化预览窗口的滚动同步
+
+---
+
+### ✨ Features
+
+- **ID Link Auto-completion**: Implemented ID link auto-completion to improve editing efficiency
+  - Auto-triggered when typing `[[`
+  - Display all available ID links, including file-level property IDs
+  - Support fuzzy search and quick selection
+- **Workspace Symbol Search**: Support searching for Org-mode symbols (headlines, IDs, etc.) across the entire workspace
+  - Use `Cmd+T` (Mac) or `Ctrl+T` (Windows/Linux) to open workspace symbol search
+  - Support fuzzy search across all .org files in the workspace
+  - Display headline levels and TODO states
+  - Quick jump to target headline locations
+- **Ctrl+C Ctrl+C Context Action**: Implemented context-aware actions similar to Emacs Org-mode
+  - Support checkbox state toggling (unchecked ↔ checked ↔ partially checked)
+  - Extensible architecture for future features (TODO state switching, timestamps, etc.)
+
+### 🔧 Improvements
+
+- **Symbol Index Service and Unified Logging System**:
+  - Added symbol index service to improve symbol lookup performance
+  - Unified logging system for better debugging and error tracking
+
+### 🐛 Bug Fixes
+
+- **Improved M-RET Support for Ordered Lists and Auto-renumbering**: Fixed numbering issues when inserting new items in ordered lists
+- **Fixed Preview Scroll Issues**: Optimized scroll synchronization in preview window
+
 ## [0.0.6]
 
 ### ✨ 新增功能

@@ -10,6 +10,7 @@ VOrg Extension
 ├── Preview Engine          # 预览引擎 (src/preview/)
 ├── Outline Provider        # 大纲导航提供器 (src/outline/)
 ├── Command Manager         # 命令管理器 (src/commands/)
+├── Service Layer           # 服务层 (src/services/)
 └── Extension Entry         # 扩展入口 (src/extension.ts)
 ```
 
@@ -26,6 +27,8 @@ VOrg Extension
 ### VS Code 集成
 - **WebView API**: 用于预览窗口的 HTML 渲染和消息通信
 - **DocumentSymbolProvider**: 提供文档大纲和符号导航功能
+- **WorkspaceSymbolProvider**: 提供工作区级别的符号搜索功能
+- **FileSystemWatcher**: 监听文件变化，实现索引自动更新
 - **Extension API**: 命令注册、事件监听、面板管理
 
 *详细的 API 使用和实现逻辑分布在各模块的源代码中。*
@@ -38,6 +41,7 @@ VOrg Extension
 - `HtmlGenerator`: 专注文档转换和样式生成
 - `ScrollSync`: 专注编辑器与预览的滚动同步
 - `OrgOutlineProvider`: 专注文档结构解析和符号提供
+- `OrgSymbolIndexService`: 专注工作区级别的标题索引和搜索
 
 ### 2. 事件驱动
 基于 VS Code 事件系统实现响应式更新：
@@ -50,14 +54,31 @@ VOrg Extension
 ### 3. 状态管理
 使用轻量级状态管理模式：
 - `PreviewPanelManager`: 管理多个预览面板的状态
+- `OrgSymbolIndexService`: 管理工作区符号索引缓存
 - 常量集中管理：`src/utils/constants.ts`
 - 类型安全：`src/types/index.ts`
+
+### 4. 服务层架构
+提供可复用的核心服务，采用单例模式确保全局共享：
+- `OrgSymbolIndexService`: 工作区级别的标题符号索引服务
+  - **内存缓存机制**: 首次扫描后，所有标题信息缓存在内存中，实现快速搜索
+  - **自动更新机制**: 通过 FileSystemWatcher 监听文件变化，实时维护索引
+  - **单例模式**: 全局共享实例，避免重复索引，提升性能
+  - **高性能搜索**: 支持模糊匹配和多关键词搜索，响应时间 < 50ms
+  - **应用场景**: 工作区符号搜索（Cmd+T / Ctrl+T）、链接插入、引用导航等
+
+*详细的服务实现和使用方法参见 `src/services/orgSymbolIndexService.ts` 和 `src/services/README.md`。*
 
 ## 🔄 关键工作流程
 
 ### 扩展激活
 ```
-用户打开 .org 文件 → 扩展激活 → 注册命令和提供器 → 设置事件监听
+用户打开 .org 文件 → 扩展激活 → 初始化服务（符号索引服务等） → 注册命令和提供器 → 设置事件监听
+```
+
+### 符号索引构建
+```
+扩展激活 → 初始化 OrgSymbolIndexService → 首次搜索触发索引构建 → 扫描所有 .org 文件 → 提取标题信息 → 建立内存索引 → 文件变化时增量更新
 ```
 
 ### 预览生成
@@ -83,6 +104,8 @@ VOrg Extension
 - **智能清理**: WebView 面板销毁时自动清理资源
 - **订阅管理**: 统一管理 VS Code 事件订阅的生命周期
 - **Context 订阅**: 使用 `context.subscriptions` 确保资源正确释放
+- **索引缓存**: 符号索引服务使用内存缓存，首次构建后快速响应搜索请求
+- **文件监听优化**: 仅在文件变化时更新对应文件的索引，避免全量重建
 
 ## 🔒 错误处理策略
 
