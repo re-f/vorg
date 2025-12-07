@@ -144,20 +144,18 @@ If you encounter problems or have improvement suggestions:
 
 ## 🔮 Roadmap
 
-- [ ] Add headline navigation functionality
+- [X] Add headline navigation functionality
 - [ ] Add chart support (Mermaid)
 - [ ] Support refile functionality
 - [ ] Support headline tree operations
-  - [ ]  org-pro/demote-subtree
+  - [X]  org-pro/demote-subtree
   - [ ]  cut-subtree
   - [ ]  org-metadown/up
 - [ ] TODO-related display
 - [ ] Support plugins or custom code
-- [ ] Hints: e.g., on headlines, show hints for promote or demote
-- [ ] Implement Ctrl-c Ctrl-c functionality
-- [ ] Add unit tests
+- [X] Hints: e.g., on headlines, show hints for promote or demote
+- [X] Implement Ctrl-c Ctrl-c functionality
 - [ ] Support SQL queries
-- [ ] Current bug: When cutting a list and pasting it, it adds an extra indentation
 - [ ] Bug: In tables, using meta-return and ctrl-return currently doesn't behave correctly
 - [X] Bug: In vorg preview, checkbox lists don't have a dot in front, causing style mismatch
 - [ ] Structure split: vorg-core responsible for org format parsing, vorg-publish 

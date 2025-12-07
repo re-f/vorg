@@ -9,7 +9,7 @@ on:
       - '**' # PR 也会触发构建
 
 permissions:
-  contents: read # 只需要读取权限
+  contents: write # 需要写入权限以创建/更新 Release
 
 jobs:
   build:
@@ -35,6 +35,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile # 使用 pnpm 安装依赖
 
+      # 创建输出目录
+      - name: Create dist directory
+        run: mkdir -p dist
+
       # 提取构建信息
       - name: Extract build info
         id: build-info
@@ -43,12 +47,17 @@ jobs:
           BRANCH=$(echo ${{ github.ref }} | sed 's/refs\/heads\///' | sed 's/refs\/pull\///' | sed 's/\/merge//' | sed 's/\//-/g')
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-          echo "filename=vorg-$SHORT_SHA.vsix" >> $GITHUB_OUTPUT
+          echo "filename=dist/vorg-9.9.9.vsix" >> $GITHUB_OUTPUT
+          echo "release_filename=vorg-9.9.9.vsix" >> $GITHUB_OUTPUT
 
       # 3. 打包扩展文件（vsce package 会自动运行 vscode:prepublish 进行生产构建）
       # 使用 --no-dependencies 与 package.json 中的 package 脚本保持一致
       - name: Package Extension
         run: pnpm exec vsce package --out ${{ steps.build-info.outputs.filename }} --no-dependencies
+
+      # 复制文件到根目录用于 Release（获得固定下载链接）
+      - name: Copy file for release
+        run: cp ${{ steps.build-info.outputs.filename }} ${{ steps.build-info.outputs.release_filename }}
 
       # 4. 上传 VSIX 文件为 artifact，方便在 Actions 页面下载
       - name: Upload VSIX artifact
@@ -58,14 +67,46 @@ jobs:
           path: ${{ steps.build-info.outputs.filename }}
           retention-days: 30 # 保留 30 天
 
-      # 5. 输出构建信息
+      # 5. 创建/更新固定下载链接（通过 draft release）
+      - name: Create/Update Latest Build Release
+        continue-on-error: true # 即使失败也不影响构建
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: 9.9.9 # 固定 tag 名称
+          name: Latest Build (${{ steps.build-info.outputs.short_sha }})
+          body: |
+            ## 📦 最新构建
+            
+            - **分支**: ${{ steps.build-info.outputs.branch }}
+            - **提交**: ${{ steps.build-info.outputs.short_sha }}
+            - **构建时间**: ${{ github.event.head_commit.timestamp || github.run_started_at }}
+            
+            > 此 Release 会在每次构建时自动更新，提供固定的下载链接。
+            
+            ### 固定下载链接
+            ```
+            https://github.com/${{ github.repository }}/releases/download/9.9.9/vorg-9.9.9.vsix
+            ```
+          draft: false # 必须为 false 才能通过直接链接访问
+          prerelease: true # 标记为预发布版本，与正式版本区分
+          files: ${{ steps.build-info.outputs.release_filename }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # 6. 输出构建信息
       - name: Build Summary
         run: |
           echo "## 📦 构建完成" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **分支**: ${{ steps.build-info.outputs.branch }}" >> $GITHUB_STEP_SUMMARY
           echo "- **提交**: ${{ steps.build-info.outputs.short_sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **文件**: ${{ steps.build-info.outputs.filename }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **文件**: \`${{ steps.build-info.outputs.filename }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "VSIX 文件已上传为 artifact，可在 Actions 页面下载。" >> $GITHUB_STEP_SUMMARY
+          echo "### 📥 下载方式" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. **固定下载链接**（推荐）：" >> $GITHUB_STEP_SUMMARY
+          echo "   \`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "   https://github.com/${{ github.repository }}/releases/download/9.9.9/vorg-9.9.9.vsix" >> $GITHUB_STEP_SUMMARY
+          echo "   \`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Artifact 下载**：可在 Actions 页面下载 artifact" >> $GITHUB_STEP_SUMMARY
 

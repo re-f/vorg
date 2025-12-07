@@ -29,15 +29,34 @@ alwaysApply: false
   - `🐛 Bug 修复`
   - `✨ 新增功能`
   - `🔧 改进优化`
-  - `📝 文档更新`
   - `⚡ 性能提升`
   - `🎨 样式更新`
   - `♻️ 代码重构`
+- **重要规则**：
+  - **功能描述必须包含使用方法**：对于新增功能，特别是用户交互功能（如工作区符号搜索），必须说明如何使用（快捷键、操作步骤等）
+  - **不要写文档更新**：CHANGELOG 中不要包含 `📝 文档更新` 类别，文档更新不应作为版本发布内容
 - 从 git 历史中提取变更信息：
   ```bash
   git log --oneline --since="上次发布版本日期"
   git log 上次发布版本commit..HEAD --name-status
   git log 上次发布版本commit..HEAD --pretty=format:"%h - %s (%an, %ar)" --name-status
+  ```
+
+### 3.1. 更新 release.md
+- **必须更新 release.md 文件**：每次发布新版本时都要更新 `release.md`
+- **只写用户感受到的功能**：
+  - 只包含用户可以直接体验到的功能特性
+  - 不要包含技术实现细节（如"引入符号索引服务"、"统一日志系统"等）
+  - 不要包含内部优化和重构内容
+  - 专注于用户可见的功能改进和 Bug 修复
+- 格式参考：
+  ```markdown
+  # X.Y.Z 版本变更
+  ## 新增功能
+  - **功能名称**：简要描述和使用方法
+  
+  ## Bug 修复
+  - **修复内容**：简要描述
   ```
 
 ### 4. 构建和打包
@@ -50,7 +69,8 @@ alwaysApply: false
 ### 5. 验证清单
 发布前检查：
 - [ ] 版本号已更新
-- [ ] CHANGELOG.md 已更新
+- [ ] CHANGELOG.md 已更新（包含功能使用方法，不包含文档更新）
+- [ ] release.md 已更新（只包含用户可见功能）
 - [ ] 构建成功无错误
 - [ ] VSIX 文件已生成
 - [ ] Git 提交已创建
@@ -70,12 +90,13 @@ alwaysApply: false
 
 当用户说"发布新版本 X.Y.Z"时，应该：
 1. 更新 `package.json` 版本号
-2. 更新 `CHANGELOG.md`（从 git 历史提取变更）
-3. 运行 `pnpm run package`
-4. 确认生成的文件
-5. 创建 Git commit
-6. 创建 Git tag（格式：`vX.Y.Z`）
-7. 推送 commit 和 tag 到远程仓库
+2. 更新 `CHANGELOG.md`（从 git 历史提取变更，包含功能使用方法，不包含文档更新）
+3. 更新 `release.md`（只包含用户可见功能，不包含技术实现细节）
+4. 运行 `pnpm run package`
+5. 确认生成的文件
+6. 创建 Git commit
+7. 创建 Git tag（格式：`vX.Y.Z`）
+8. 推送 commit 和 tag 到远程仓库
 
 ## 代码编辑规范
 

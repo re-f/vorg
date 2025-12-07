@@ -148,17 +148,14 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 - [ ] 添加图表支持（Mermaid）
 - [ ] 支持 refile 功能
 - [ ] 支持 headline 的树操作
-  - [ ]  org-pro/demote-subtree
+  - [X]  org-pro/demote-subtree
   - [ ]  cut-subtree
   - [ ]  org-metadown/up
 - [ ] todo 相关展示
 - [ ] 支持插件或自定义代码
-- [ ] 提示： 比如 headline 上，提示 promote或者 demote
-- [ ] 实现 Ctrl-c Ctrl-c 的功能
-- [ ] 补充单测
+- [X] 提示： 比如 headline 上，提示 promote或者 demote
+- [X] 实现 Ctrl-c Ctrl-c 的功能
 - [ ] 支持 sql 查询
-- [ ] 当前 bug： 剪贴一个 list， 再复制时， 会多一个缩进
-- [ ] bug: 再表格中使用 meta-return 和 ctrl-return 目前的行为都不太对
 - [X] bug:vorg 预览时 checkbox 的 list 前没有一个点,导致样式对不上
 - [ ] 结构拆分： vorg-core 负责org 格式解析 vorg-publish 
 
