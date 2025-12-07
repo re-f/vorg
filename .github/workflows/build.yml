@@ -1,0 +1,71 @@
+name: Build Extension
+
+on:
+  push:
+    branches:
+      - '**' # 所有分支的 push 都会触发构建
+  pull_request:
+    branches:
+      - '**' # PR 也会触发构建
+
+permissions:
+  contents: read # 只需要读取权限
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1. 设置 pnpm 环境
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.19.0 # 与 package.json 中的 packageManager 字段保持一致
+
+      # 2. 设置 Node.js 环境 (与 pnpm 配合使用)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # 使用 Node.js 20 LTS 版本，解决 undici File API 兼容性问题
+          cache: 'pnpm' # 为 pnpm 设置缓存，加快后续构建速度
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile # 使用 pnpm 安装依赖
+
+      # 提取构建信息
+      - name: Extract build info
+        id: build-info
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          BRANCH=$(echo ${{ github.ref }} | sed 's/refs\/heads\///' | sed 's/refs\/pull\///' | sed 's/\/merge//' | sed 's/\//-/g')
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "filename=vorg-$SHORT_SHA.vsix" >> $GITHUB_OUTPUT
+
+      # 3. 打包扩展文件（vsce package 会自动运行 vscode:prepublish 进行生产构建）
+      # 使用 --no-dependencies 与 package.json 中的 package 脚本保持一致
+      - name: Package Extension
+        run: pnpm exec vsce package --out ${{ steps.build-info.outputs.filename }} --no-dependencies
+
+      # 4. 上传 VSIX 文件为 artifact，方便在 Actions 页面下载
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vorg-extension-${{ steps.build-info.outputs.short_sha }}
+          path: ${{ steps.build-info.outputs.filename }}
+          retention-days: 30 # 保留 30 天
+
+      # 5. 输出构建信息
+      - name: Build Summary
+        run: |
+          echo "## 📦 构建完成" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **分支**: ${{ steps.build-info.outputs.branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **提交**: ${{ steps.build-info.outputs.short_sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **文件**: ${{ steps.build-info.outputs.filename }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "VSIX 文件已上传为 artifact，可在 Actions 页面下载。" >> $GITHUB_STEP_SUMMARY
+

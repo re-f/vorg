@@ -32,10 +32,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile # 使用 pnpm 安装依赖
 
+      # 提取版本号（去掉 v 前缀）
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
       # 3. 打包扩展文件（vsce package 会自动运行 vscode:prepublish 进行生产构建）
       # 使用 --no-dependencies 与 package.json 中的 package 脚本保持一致
       - name: Package Extension
-        run: pnpm exec vsce package --out extension.vsix --no-dependencies
+        run: pnpm exec vsce package --out vorg-${{ steps.version.outputs.version }}.vsix --no-dependencies
 
       # 4. 自动创建 GitHub Release 并上传 VSIX 文件
       # 直接读取 release.md 文件的完整内容作为 Release 说明
@@ -48,13 +53,13 @@ jobs:
           body_path: release.md # 直接读取 release.md 文件的完整内容
           draft: false
           prerelease: false
-          files: extension.vsix # 直接指定要上传的文件，action 会自动上传
+          files: vorg-${{ steps.version.outputs.version }}.vsix # 直接指定要上传的文件，action 会自动上传
 
       # 5. 发布到市场
       - name: Publish to Visual Studio Marketplace
         continue-on-error: true # 即使失败也不影响 Open VSX 发布
-        run: pnpm exec vsce publish --packagePath extension.vsix -p ${{ secrets.VSCE_PAT }}
+        run: pnpm exec vsce publish --packagePath vorg-${{ steps.version.outputs.version }}.vsix -p ${{ secrets.VSCE_PAT }}
 
       - name: Publish to Open VSX Registry
         continue-on-error: true # 即使失败也不影响其他步骤
-        run: pnpm exec ovsx publish extension.vsix -p ${{ secrets.OVSX_PAT }}
+        run: pnpm exec ovsx publish vorg-${{ steps.version.outputs.version }}.vsix -p ${{ secrets.OVSX_PAT }}
