@@ -39,6 +39,9 @@ export class OrgWorkspaceSymbolProvider implements vscode.WorkspaceSymbolProvide
     token: vscode.CancellationToken
   ): Promise<vscode.SymbolInformation[]> {
     // 从索引服务搜索符号
+    // 注意：VS Code 的搜索会在客户端再次过滤，所以我们需要在服务端就完成所有匹配
+    // 如果传入空查询，VS Code 会显示所有符号，然后用户在输入框中输入时进行客户端过滤
+    // 为了支持拼音搜索，我们需要将拼音信息也包含在 name 中（类似 DocumentSymbol 的做法）
     const indexedSymbols = await this.indexService.searchSymbols(query, { token });
     
     // 转换为 VS Code 的 SymbolInformation 格式
@@ -47,8 +50,17 @@ export class OrgWorkspaceSymbolProvider implements vscode.WorkspaceSymbolProvide
       const location = new vscode.Location(symbol.uri, range);
       const containerName = `${symbol.relativePath} (Level ${symbol.level})`;
       
+      // 将拼音信息添加到 name 中，使用零宽空格分隔（不影响显示但能被搜索）
+      // VS Code 的客户端过滤会搜索 name 字段
+      const ZERO_WIDTH_SPACE = '\u200B';
+      let searchableName = symbol.displayName;
+      if (symbol.pinyinText || symbol.pinyinDisplayName) {
+        const pinyinInfo = [symbol.pinyinText, symbol.pinyinDisplayName].filter(p => p).join(' ');
+        searchableName = `${symbol.displayName}${ZERO_WIDTH_SPACE}${pinyinInfo}`;
+      }
+      
       return new vscode.SymbolInformation(
-        symbol.displayName,
+        searchableName,
         symbol.symbolKind,
         containerName,
         location

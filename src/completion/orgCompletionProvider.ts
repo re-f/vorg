@@ -135,10 +135,14 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
       // 用户只输入了 [[
       state = LinkInputState.EMPTY;
       query = '';
-    } else {
-      // 用户输入了其他内容（如 [[file: 或 [[haasdf）
-      // 只处理 id: 链接，其他类型不处理
+    } else if (linkContent.startsWith('file:') || linkContent.startsWith('http')) {
+      // 用户输入了其他类型的链接（如 [[file: 或 [[http），不处理
       return undefined;
+    } else {
+      // 用户输入了 [[ 后直接输入文本（如 [[lqd），将其作为查询文本
+      // 这种情况应该被识别为 ID_PREFIX 状态，因为最终会生成 id: 链接
+      state = LinkInputState.ID_PREFIX;
+      query = linkContent.trim().toLowerCase();
     }
 
     return {
@@ -151,6 +155,10 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
 
   /**
    * 过滤符号列表，只保留匹配查询的符号
+   * 
+   * 支持字符串匹配和拼音搜索：
+   * - 字符串直接匹配（原有功能）：匹配 text 和 displayName
+   * - 拼音匹配：匹配缓存的拼音字段（全拼和首字母）
    */
   private filterSymbolsByQuery(
     symbols: IndexedHeadingSymbol[],
@@ -164,7 +172,25 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
     return symbols.filter(symbol => {
       const symbolText = symbol.text.toLowerCase();
       const symbolDisplayName = symbol.displayName.toLowerCase();
-      return symbolText.includes(queryLower) || symbolDisplayName.includes(queryLower);
+      
+      // 字符串匹配（原有功能）
+      if (symbolText.includes(queryLower) || symbolDisplayName.includes(queryLower)) {
+        return true;
+      }
+      
+      // 拼音匹配（使用缓存的拼音字段）
+      // 安全检查：确保拼音字段存在且不为空
+      const pinyinText = symbol.pinyinText || '';
+      const pinyinDisplayName = symbol.pinyinDisplayName || '';
+      if (pinyinText || pinyinDisplayName) {
+        const symbolPinyinText = pinyinText.toLowerCase();
+        const symbolPinyinDisplayName = pinyinDisplayName.toLowerCase();
+        if (symbolPinyinText.includes(queryLower) || symbolPinyinDisplayName.includes(queryLower)) {
+          return true;
+        }
+      }
+      
+      return false;
     });
   }
 
@@ -287,12 +313,15 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
   ): vscode.Range {
     let startPos: vscode.Position;
 
-    if (inputInfo.state === LinkInputState.ID_PREFIX) {
-      // 用户已经输入了 [[id:，从 ':' 之后开始替换
+    // 检查是否真的包含 [[id:
+    const hasIdPrefix = textBeforeCursor.includes('[[id:');
+    
+    if (inputInfo.state === LinkInputState.ID_PREFIX && hasIdPrefix) {
+      // 用户真正输入了 [[id:xxx，从 ':' 之后开始替换
       const idColonIndex = textBeforeCursor.lastIndexOf('[[id:') + 5; // '[[id:' 的长度是 5
       startPos = new vscode.Position(position.line, idColonIndex);
     } else {
-      // 用户只输入了 [[，从第二个 '[' 之后开始替换
+      // 用户只输入了 [[ 或 [[xxx（直接输入文本），从第二个 '[' 之后开始替换
       startPos = new vscode.Position(position.line, inputInfo.bracketIndex);
     }
 
@@ -335,8 +364,24 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
     );
 
     // 设置 filterText：用于 VS Code 客户端过滤
-    // VS Code 会将用户输入的文本（去掉 [[id: 前缀后）与 filterText 进行模糊匹配
-    completionItem.filterText = symbol.text;
+    // VS Code 会将 range 范围内的用户输入文本与 filterText 进行模糊匹配
+    // 关键：filterText 必须只包含用于匹配的文本，不能包含特殊字符
+    // 1. 清理文本：移除 markdown 格式字符（如 *）
+    const cleanText = symbol.text.replace(/\*/g, '').trim();
+    // 2. 清理拼音：移除拼音信息中可能包含的特殊字符
+    const cleanPinyinText = (symbol.pinyinText || '').replace(/[^\w\s]/g, '').trim(); // 只保留字母、数字和空格
+    const cleanPinyinDisplayName = (symbol.pinyinDisplayName || '').replace(/[^\w\s]/g, '').trim();
+    // 3. 构建 filterText：清理后的文本 + 清理后的拼音
+    let filterText = cleanText;
+    if (cleanPinyinText || cleanPinyinDisplayName) {
+      // 合并拼音信息（去重）
+      const pinyinParts = [cleanPinyinText, cleanPinyinDisplayName]
+        .filter(p => p && p !== cleanPinyinText) // 如果相同则只保留一个
+        .filter((p, i, arr) => arr.indexOf(p) === i); // 去重
+      const pinyinInfo = [cleanPinyinText, ...pinyinParts].filter(p => p).join(' ');
+      filterText = `${cleanText} ${pinyinInfo}`.trim();
+    }
+    completionItem.filterText = filterText;
     
     // 设置 sortText：控制排序（按标题字母顺序）
     completionItem.sortText = symbol.text.toLowerCase();

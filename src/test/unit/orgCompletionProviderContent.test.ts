@@ -3,6 +3,7 @@ import { OrgCompletionProvider } from '../../completion/orgCompletionProvider';
 import { OrgSymbolIndexService, IndexedHeadingSymbol } from '../../services/orgSymbolIndexService';
 import { PropertyParser } from '../../parsers/propertyParser';
 import { Logger } from '../../utils/logger';
+import { getPinyinString } from '../../utils/pinyinUtils';
 
 /**
  * OrgCompletionProvider 补全插入内容测试
@@ -67,10 +68,19 @@ suite('OrgCompletionProvider 补全插入内容测试', () => {
     }
     
     // 创建 mock symbols
+    const text1 = 'Test Headline';
+    const displayName1 = 'Test Headline';
+    const text2 = 'Project Task';
+    const displayName2 = 'Project Task';
+    const text3 = '重要任务';
+    const displayName3 = '重要任务';
+    
     mockSymbols = [
       {
-        displayName: 'Test Headline',
-        text: 'Test Headline',
+        displayName: displayName1,
+        text: text1,
+        pinyinText: getPinyinString(text1),
+        pinyinDisplayName: getPinyinString(displayName1),
         level: 1,
         todoKeyword: null,
         tags: [],
@@ -80,8 +90,10 @@ suite('OrgCompletionProvider 补全插入内容测试', () => {
         relativePath: 'test.org'
       },
       {
-        displayName: 'Project Task',
-        text: 'Project Task',
+        displayName: displayName2,
+        text: text2,
+        pinyinText: getPinyinString(text2),
+        pinyinDisplayName: getPinyinString(displayName2),
         level: 2,
         todoKeyword: 'TODO',
         tags: ['work'],
@@ -91,8 +103,10 @@ suite('OrgCompletionProvider 补全插入内容测试', () => {
         relativePath: 'test.org'
       },
       {
-        displayName: '重要任务',
-        text: '重要任务',
+        displayName: displayName3,
+        text: text3,
+        pinyinText: getPinyinString(text3),
+        pinyinDisplayName: getPinyinString(displayName3),
         level: 1,
         todoKeyword: null,
         tags: [],

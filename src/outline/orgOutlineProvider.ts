@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { TodoKeywordManager } from '../utils/todoKeywordManager';
 import { HeadingParser } from '../parsers/headingParser';
 import { HeadingSymbolUtils } from '../utils/headingSymbolUtils';
+import { getPinyinString } from '../utils/pinyinUtils';
 
 /**
  * 大纲提供器
@@ -72,6 +73,23 @@ export class OrgOutlineProvider implements vscode.DocumentSymbolProvider {
         // 构建显示名称
         const displayName = HeadingParser.buildDisplayName(pureTitle, todoStatus, tags);
         
+        // 计算拼音（用于搜索）
+        const pinyinText = getPinyinString(pureTitle);
+        const pinyinDisplayName = getPinyinString(displayName);
+        
+        // 将拼音信息添加到 name 中（用零宽空格分隔，不影响显示但能被搜索）
+        // VS Code 的文档符号搜索主要搜索 name 字段
+        const ZERO_WIDTH_SPACE = '\u200B'; // 零宽空格
+        let searchableName = displayName;
+        if (pinyinText || pinyinDisplayName) {
+          const pinyinInfo = [pinyinText, pinyinDisplayName].filter(p => p).join(' ');
+          // 在 name 中添加拼音，用零宽空格分隔，这样既不影响显示，又能被搜索到
+          searchableName = `${displayName}${ZERO_WIDTH_SPACE}${pinyinInfo}`;
+        }
+        
+        // detail 保持原有的 TODO 状态
+        const detail = todoStatus || '';
+        
         // 计算标题的范围：从当前行到下一个同级或更高级标题之前
         const headingRange = new vscode.Range(i, 0, i, line.length);
         
@@ -93,8 +111,8 @@ export class OrgOutlineProvider implements vscode.DocumentSymbolProvider {
         // 创建符号：range 包含整个子树，selectionRange 是标题行
         const fullRange = new vscode.Range(i, 0, endLine, lines[endLine].length);
         const symbol = new vscode.DocumentSymbol(
-          displayName,
-          todoStatus || '',
+          searchableName,  // 包含拼音的搜索名称
+          detail,
           kind,
           fullRange,
           headingRange  // selectionRange 用于面包屑和跳转

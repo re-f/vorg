@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { HeadingParser } from '../parsers/headingParser';
 import { HeadingSymbolUtils } from '../utils/headingSymbolUtils';
 import { Logger } from '../utils/logger';
+import { getPinyinString } from '../utils/pinyinUtils';
 
 /**
  * 标题符号信息
@@ -13,6 +14,10 @@ export interface IndexedHeadingSymbol {
   displayName: string;
   /** 纯净的标题文本（不含 TODO 状态和标签） */
   text: string;
+  /** 标题的拼音字符串（全拼和首字母，用于拼音搜索） */
+  pinyinText: string;
+  /** 显示名称的拼音字符串（用于拼音搜索） */
+  pinyinDisplayName: string;
   /** 标题层级 */
   level: number;
   /** TODO 状态 */
@@ -193,12 +198,18 @@ export class OrgSymbolIndexService implements vscode.Disposable {
         // 构建显示名称
         const displayName = HeadingParser.buildDisplayName(text, todoKeyword, tags);
         
+        // 计算拼音（用于拼音搜索）
+        const pinyinText = getPinyinString(text);
+        const pinyinDisplayName = getPinyinString(displayName);
+        
         // 确定符号类型
         const symbolKind = HeadingSymbolUtils.getSymbolKind(headingInfo.level);
         
         symbols.push({
           displayName,
           text,
+          pinyinText,
+          pinyinDisplayName,
           level: headingInfo.level,
           todoKeyword,
           tags,
@@ -243,6 +254,32 @@ export class OrgSymbolIndexService implements vscode.Disposable {
     // 确保索引已构建
     await this.ensureIndexed();
     
+    // 检查缓存中的符号是否包含拼音字段（兼容旧版本缓存）
+    // 如果发现缺少拼音字段，重建索引
+    if (this.symbolCache.size > 0) {
+      const firstSymbols = this.symbolCache.values().next().value;
+      if (firstSymbols && firstSymbols.length > 0) {
+        const firstSymbol = firstSymbols[0];
+        // 检查是否缺少拼音字段（旧版本缓存）
+        if (firstSymbol.pinyinText === undefined || firstSymbol.pinyinDisplayName === undefined) {
+          Logger.info('[OrgSymbolIndex] 检测到旧版本缓存，重建索引以支持拼音搜索...');
+          await this.rebuildIndex();
+        } else if (query && query.length > 0) {
+          // 调试：检查拼音匹配（仅当有查询时）
+          const testSymbol = firstSymbols.find((s: IndexedHeadingSymbol) => 
+            s.pinyinText && s.pinyinText.length > 0
+          );
+          if (testSymbol) {
+            const lowerQuery = query.toLowerCase();
+            const lowerPinyinText = (testSymbol.pinyinText || '').toLowerCase();
+            const lowerPinyinDisplayName = (testSymbol.pinyinDisplayName || '').toLowerCase();
+            const matches = lowerPinyinText.includes(lowerQuery) || lowerPinyinDisplayName.includes(lowerQuery);
+            Logger.info(`[OrgSymbolIndex] 搜索测试: 查询="${query}", 示例符号="${testSymbol.text}", 拼音="${testSymbol.pinyinText}", 匹配=${matches}`);
+          }
+        }
+      }
+    }
+    
     const results: IndexedHeadingSymbol[] = [];
     const maxResults = options?.maxResults || Number.MAX_SAFE_INTEGER;
     
@@ -259,7 +296,7 @@ export class OrgSymbolIndexService implements vscode.Disposable {
         }
         
         // 如果没有查询或符号匹配查询，添加到结果
-        if (!query || this.matchesQuery(symbol.displayName, query)) {
+        if (!query || this.matchesQuery(symbol, query)) {
           results.push(symbol);
         }
       }
@@ -287,6 +324,19 @@ export class OrgSymbolIndexService implements vscode.Disposable {
   async getAllSymbols(): Promise<IndexedHeadingSymbol[]> {
     await this.ensureIndexed();
     
+    // 检查缓存中的符号是否包含拼音字段（兼容旧版本缓存）
+    if (this.symbolCache.size > 0) {
+      const firstSymbols = this.symbolCache.values().next().value;
+      if (firstSymbols && firstSymbols.length > 0) {
+        const firstSymbol = firstSymbols[0];
+        // 检查是否缺少拼音字段（旧版本缓存）
+        if (firstSymbol.pinyinText === undefined || firstSymbol.pinyinDisplayName === undefined) {
+          Logger.info('[OrgSymbolIndex] 检测到旧版本缓存，重建索引以支持拼音搜索...');
+          await this.rebuildIndex();
+        }
+      }
+    }
+    
     const allSymbols: IndexedHeadingSymbol[] = [];
     for (const symbols of this.symbolCache.values()) {
       allSymbols.push(...symbols);
@@ -295,23 +345,57 @@ export class OrgSymbolIndexService implements vscode.Disposable {
   }
 
   /**
-   * 检查文本是否匹配查询
+   * 检查符号是否匹配查询
    * 
-   * 支持不区分大小写的模糊匹配和多关键词匹配
+   * 支持不区分大小写的模糊匹配、多关键词搜索和拼音搜索
+   * - 字符串直接匹配（原有功能）：匹配 text 和 displayName
+   * - 拼音匹配：匹配缓存的拼音字段（全拼和首字母）
    */
-  private matchesQuery(text: string, query: string): boolean {
-    const lowerText = text.toLowerCase();
+  private matchesQuery(symbol: IndexedHeadingSymbol, query: string): boolean {
     const lowerQuery = query.toLowerCase();
+    const lowerText = symbol.text.toLowerCase();
+    const lowerDisplayName = symbol.displayName.toLowerCase();
     
-    // 简单包含匹配
-    if (lowerText.includes(lowerQuery)) {
+    // 简单包含匹配（原有功能，优先检查）
+    if (lowerText.includes(lowerQuery) || lowerDisplayName.includes(lowerQuery)) {
       return true;
+    }
+    
+    // 拼音匹配（如果查询文本匹配拼音字段）
+    // 安全检查：确保拼音字段存在且不为空
+    const pinyinText = symbol.pinyinText || '';
+    const pinyinDisplayName = symbol.pinyinDisplayName || '';
+    if (pinyinText || pinyinDisplayName) {
+      const lowerPinyinText = pinyinText.toLowerCase();
+      const lowerPinyinDisplayName = pinyinDisplayName.toLowerCase();
+      
+      // 拼音字段格式是 "全拼 首字母"，例如 "ceshi cs" 或 "gongzuojilu gzjl"
+      // 需要检查查询是否匹配全拼或首字母部分
+      // 例如："gz" 应该匹配 "gongzuojilu gzjl" 中的 "gzjl" 部分
+      if (lowerPinyinText.includes(lowerQuery) || lowerPinyinDisplayName.includes(lowerQuery)) {
+        Logger.info(`[拼音匹配成功] 查询: "${query}" 匹配符号: "${symbol.text}", 拼音: "${pinyinText}"`);
+        return true;
+      }
     }
     
     // 支持空格分隔的多个关键词匹配
     const queryWords = lowerQuery.split(/\s+/).filter(word => word.length > 0);
     if (queryWords.length > 1) {
-      return queryWords.every(word => lowerText.includes(word));
+      // 每个关键词都要匹配（可以是文本匹配或拼音匹配）
+      return queryWords.every(word => {
+        if (lowerText.includes(word) || lowerDisplayName.includes(word)) {
+          return true;
+        }
+        // 如果拼音字段存在，也检查拼音匹配
+        if (pinyinText || pinyinDisplayName) {
+          const lowerPinyinText = pinyinText.toLowerCase();
+          const lowerPinyinDisplayName = pinyinDisplayName.toLowerCase();
+          if (lowerPinyinText.includes(word) || lowerPinyinDisplayName.includes(word)) {
+            return true;
+          }
+        }
+        return false;
+      });
     }
     
     return false;
