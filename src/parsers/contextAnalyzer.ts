@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { ContextInfo } from '../commands/types/editingTypes';
 import { HeadingParser } from './headingParser';
+import { ListParser } from './listParser';
 
 /**
  * 上下文分析器
@@ -54,6 +55,70 @@ export class ContextAnalyzer {
         content: hasCheckbox ? hasCheckbox[2] : listMatch[3],
         checkboxState: hasCheckbox ? hasCheckbox[1] : null
       };
+    }
+
+    // 检查是否在列表项的子内容中（缩进的文本行）
+    // Emacs org-mode 规则：
+    // 1. 当前行缩进必须严格大于列表项的缩进
+    // 2. 如果遇到2个或更多连续空行，列表项内容结束
+    // 3. 如果遇到同级或更高级的列表项、标题，列表项结束
+    if (lineText.trim() !== '') {
+      const currentIndent = ListParser.getIndentLevel(lineText);
+      let consecutiveEmptyLines = 0;
+      
+      // 向上查找最近的列表项
+      for (let i = position.line - 1; i >= 0; i--) {
+        const prevLine = document.lineAt(i);
+        const prevLineText = prevLine.text;
+        
+        // 处理空行：记录连续空行数
+        if (prevLineText.trim() === '') {
+          consecutiveEmptyLines++;
+          // 如果遇到2个或更多连续空行，列表项内容结束（Emacs 行为）
+          if (consecutiveEmptyLines >= 2) {
+            break;
+          }
+          continue;
+        } else {
+          // 遇到非空行，重置连续空行计数
+          consecutiveEmptyLines = 0;
+        }
+        
+        // 检查是否是标题，如果是标题则停止查找
+        if (HeadingParser.parseHeading(prevLineText).level > 0) {
+          break;
+        }
+        
+        // 检查是否是列表项
+        const prevListMatch = prevLineText.match(/^(\s*)([-+*]|\d+\.)\s+(.*)$/);
+        if (prevListMatch) {
+          const prevIndent = prevListMatch[1].length;
+          
+          // 如果当前行的缩进严格大于列表项的缩进，说明是列表项的子内容
+          if (currentIndent > prevIndent) {
+            const hasCheckbox = prevListMatch[3].match(/^\[([ X-])\]\s+(.*)$/);
+            return {
+              type: hasCheckbox ? 'checkbox' : 'list-item',
+              indent: prevIndent,
+              marker: prevListMatch[2],
+              content: hasCheckbox ? hasCheckbox[2] : prevListMatch[3],
+              checkboxState: hasCheckbox ? hasCheckbox[1] : null
+            };
+          } else {
+            // 如果遇到同级或更高级的列表项，停止查找
+            break;
+          }
+        } else {
+          // 如果遇到非列表项
+          const prevIndent = ListParser.getIndentLevel(prevLineText);
+          
+          // 如果缩进小于等于当前行的缩进，说明不是列表项的子内容，停止查找
+          if (prevIndent <= currentIndent) {
+            break;
+          }
+          // 如果缩进大于当前行，可能是其他列表项的子内容，继续向上查找
+        }
+      }
     }
 
     // 检查是否在表格中
