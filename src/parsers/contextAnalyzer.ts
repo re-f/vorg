@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { ContextInfo } from '../commands/types/editingTypes';
 import { HeadingParser } from './headingParser';
-import { ListParser } from './listParser';
 
 /**
  * 上下文分析器
@@ -57,70 +56,6 @@ export class ContextAnalyzer {
       };
     }
 
-    // 检查是否在列表项的子内容中（缩进的文本行）
-    // Emacs org-mode 规则：
-    // 1. 当前行缩进必须严格大于列表项的缩进
-    // 2. 如果遇到2个或更多连续空行，列表项内容结束
-    // 3. 如果遇到同级或更高级的列表项、标题，列表项结束
-    if (lineText.trim() !== '') {
-      const currentIndent = ListParser.getIndentLevel(lineText);
-      let consecutiveEmptyLines = 0;
-      
-      // 向上查找最近的列表项
-      for (let i = position.line - 1; i >= 0; i--) {
-        const prevLine = document.lineAt(i);
-        const prevLineText = prevLine.text;
-        
-        // 处理空行：记录连续空行数
-        if (prevLineText.trim() === '') {
-          consecutiveEmptyLines++;
-          // 如果遇到2个或更多连续空行，列表项内容结束（Emacs 行为）
-          if (consecutiveEmptyLines >= 2) {
-            break;
-          }
-          continue;
-        } else {
-          // 遇到非空行，重置连续空行计数
-          consecutiveEmptyLines = 0;
-        }
-        
-        // 检查是否是标题，如果是标题则停止查找
-        if (HeadingParser.parseHeading(prevLineText).level > 0) {
-          break;
-        }
-        
-        // 检查是否是列表项
-        const prevListMatch = prevLineText.match(/^(\s*)([-+*]|\d+\.)\s+(.*)$/);
-        if (prevListMatch) {
-          const prevIndent = prevListMatch[1].length;
-          
-          // 如果当前行的缩进严格大于列表项的缩进，说明是列表项的子内容
-          if (currentIndent > prevIndent) {
-            const hasCheckbox = prevListMatch[3].match(/^\[([ X-])\]\s+(.*)$/);
-            return {
-              type: hasCheckbox ? 'checkbox' : 'list-item',
-              indent: prevIndent,
-              marker: prevListMatch[2],
-              content: hasCheckbox ? hasCheckbox[2] : prevListMatch[3],
-              checkboxState: hasCheckbox ? hasCheckbox[1] : null
-            };
-          } else {
-            // 如果遇到同级或更高级的列表项，停止查找
-            break;
-          }
-        } else {
-          // 如果遇到非列表项
-          const prevIndent = ListParser.getIndentLevel(prevLineText);
-          
-          // 如果缩进小于等于当前行的缩进，说明不是列表项的子内容，停止查找
-          if (prevIndent <= currentIndent) {
-            break;
-          }
-          // 如果缩进大于当前行，可能是其他列表项的子内容，继续向上查找
-        }
-      }
-    }
-
     // 检查是否在表格中
     if (lineText.match(/^\s*\|.*\|\s*$/)) {
       return { type: 'table' };
@@ -130,14 +65,14 @@ export class ContextAnalyzer {
     if (lineText.match(/^\s*:PROPERTIES:\s*$/)) {
       return { type: 'property-drawer-header' };
     }
-    
+
     if (lineText.match(/^\s*:END:\s*$/)) {
       return { type: 'property-drawer-end' };
     }
-    
+
     if (lineText.match(/^\s*:\w+:\s*.*$/)) {
       const propertyMatch = lineText.match(/^\s*:(\w+):\s*(.*)$/);
-      return { 
+      return {
         type: 'property-item',
         propertyKey: propertyMatch ? propertyMatch[1] : '',
         propertyValue: propertyMatch ? propertyMatch[2] : ''
@@ -154,6 +89,12 @@ export class ContextAnalyzer {
       return { type: 'code-block' };
     }
 
+    // 检查是否在列表项的延续行中（缩进超过父列表项）
+    const listContext = ContextAnalyzer.findParentListItem(document, position);
+    if (listContext) {
+      return listContext;
+    }
+
     return { type: 'text' };
   }
 
@@ -162,7 +103,7 @@ export class ContextAnalyzer {
    */
   static isInPropertyDrawer(document: vscode.TextDocument, position: vscode.Position): boolean {
     let inPropertyDrawer = false;
-    
+
     for (let i = 0; i <= position.line; i++) {
       const line = document.lineAt(i).text.trim();
       if (line === ':PROPERTIES:') {
@@ -171,7 +112,7 @@ export class ContextAnalyzer {
         inPropertyDrawer = false;
       }
     }
-    
+
     return inPropertyDrawer;
   }
 
@@ -180,7 +121,7 @@ export class ContextAnalyzer {
    */
   static isInCodeBlock(document: vscode.TextDocument, position: vscode.Position): boolean {
     let inCodeBlock = false;
-    
+
     for (let i = 0; i < position.line; i++) {
       const line = document.lineAt(i).text;
       if (line.match(/^\s*#\+BEGIN_SRC/i)) {
@@ -189,8 +130,74 @@ export class ContextAnalyzer {
         inCodeBlock = false;
       }
     }
-    
+
     return inCodeBlock;
+  }
+
+  /**
+   * 向上查找父列表项，确定当前行是否属于某个列表项的延续行
+   */
+  private static findParentListItem(document: vscode.TextDocument, position: vscode.Position): ContextInfo | null {
+    const currentLine = document.lineAt(position.line);
+    const currentLineTrimmed = currentLine.text.trim();
+
+    // 如果是标题行，不可能是列表延续
+    if (HeadingParser.parseHeading(currentLine.text).level > 0) {
+      return null;
+    }
+
+    // 获取当前行的起始缩进
+    const indentMatch = currentLine.text.match(/^(\s*)/);
+    const currentIndent = indentMatch ? indentMatch[1].length : 0;
+
+    // 向上查找
+    for (let i = position.line - 1; i >= 0; i--) {
+      const line = document.lineAt(i);
+      const lineText = line.text;
+      const trimmed = lineText.trim();
+
+      if (trimmed === '') continue;
+
+      // 如果遇到标题，停止查找
+      if (HeadingParser.parseHeading(lineText).level > 0) {
+        break;
+      }
+
+      // 检查是否是列表行
+      const listMatch = lineText.match(/^(\s*)([-+*]|\d+\.)\s+(.*)$/);
+      if (listMatch) {
+        const markerIndent = listMatch[1].length;
+        // 如果当前行的缩进大于列表项标记的缩进，说明当前行属于该列表项的延续
+        // 注意：如果是空行，通常不适合这种简单的缩进判断，但在 analyzeContext 中已经排除了空行由其他逻辑处理的情况
+        if (currentIndent > markerIndent) {
+          const content = listMatch[3];
+          const hasCheckbox = content.match(/^\[([ X-])\]\s+(.*)$/);
+          return {
+            type: hasCheckbox ? 'checkbox' : 'list-item',
+            indent: markerIndent,
+            marker: listMatch[2],
+            content: hasCheckbox ? hasCheckbox[2] : content,
+            checkboxState: hasCheckbox ? hasCheckbox[1] : null
+          };
+        } else if (currentIndent <= markerIndent && trimmed !== '') {
+          // 遇到更低或同级缩进且带内容的行，如果是列表项则继续向上，如果不是则可能中断？
+          // 在 Org-mode 中，如果遇到非列表项且缩进不大于 markerIndent，则列表结束
+          if (!lineText.match(/^(\s*)([-+*]|\d+\.)\s+/)) {
+            break;
+          }
+        }
+      } else {
+        // 非列表行，检查其缩进
+        const lineIndentMatch = lineText.match(/^(\s*)/);
+        const lineIndent = lineIndentMatch ? lineIndentMatch[1].length : 0;
+        if (lineIndent < currentIndent) {
+          // 遇到了缩进更小的非列表行，可能已经离开了列表上下文
+          // 但在 Org 中，这种情况比较复杂。简单处理：如果不是标题，继续向上找直到找到标题或列表
+        }
+      }
+    }
+
+    return null;
   }
 }
 

@@ -12,15 +12,17 @@ VOrg 扩展现在支持类似 Emacs `org-meta-return` 的智能编辑功能，�
 - **表格上下文**：插入新表格行
 - **代码块上下文**：保持缩进插入新行
 - **普通文本**：在空行转换为标题，其他情况插入换行
+- **回车行为**：在表格中智能对齐并移动到下一行，在普通文本中换行
 
 ## 快捷键
 
 | 功能 | Windows/Linux | Mac | 说明 |
 |------|---------------|-----|------|
-| 智能插入 | Alt+Enter | Alt+Enter | 在当前元素外部插入同级元素 |
-| 分割元素 | Ctrl+Enter | Ctrl+Enter | 在光标处分割当前元素 |
+| 智能插入 | Alt+Enter | Alt+Enter | 在当前位置分割并插入同级元素 |
+| 尊重内容插入 | Ctrl+Enter | Ctrl+Enter | 在当前结构末尾插入同级元素，不分割内容 |
 | 智能回车 | Ctrl+Alt+Enter | Cmd+Ctrl+Enter | 在子树末尾插入同级元素 |
 | TODO标题 | Shift+Alt+Enter | Shift+Alt+Enter | 插入TODO标题 |
+| 智能换行 | Enter | Enter | 普通换行，表格内自动对齐并切换到下一行 |
 
 ## 使用示例
 

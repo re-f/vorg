@@ -37,11 +37,12 @@
 - `Ctrl+C Ctrl+K` - 在侧边打开预览
 
 ### 编辑和导航
-- `Alt+Enter` - Meta Return（在当前元素外部插入同级元素）
-- `Ctrl+Enter` - Ctrl Return（在光标处分割当前元素）
+- `Alt+Enter` - Meta Return（在当前位置分割并插入同级元素）
+- `Ctrl+Enter` - Ctrl Return（在当前结构末尾插入同级元素，不分割）
 - `Ctrl+Alt+Enter` - Smart Return（在子树末尾插入）
-- `Tab` - 智能Tab（折叠/展开、缩进）
-- `Shift+Tab` - 智能Shift+Tab（反向缩进、全局折叠）
+- `Enter` - 智能回车（普通换行、表格内自动对齐并切换到下一行）
+- `Tab` - 智能Tab（折叠/展开、缩进、表格内切换单元格）
+- `Shift+Tab` - 智能Shift+Tab（反向缩进、全局折叠、表格内切换到上一个单元格）
 
 ### 标题操作
 - `Ctrl+C Ctrl+Shift+,` - 升级子树 (类似 `C-c C-<`，减少标题级别)

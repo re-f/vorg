@@ -19,8 +19,29 @@ export class HeadingCommands {
   private static todoKeywordManager = TodoKeywordManager.getInstance();
 
   /**
-   * 在标题子树之后插入同级标题 (M-RET 语义)
-   * 返回光标应该移动到的位置
+   * 在当前标题下方立即插入同级标题（不分割内容）
+   * 用于 M-RET 在行首/行尾
+   */
+  static insertHeadingImmediate(
+    editBuilder: vscode.TextEditorEdit,
+    editor: vscode.TextEditor,
+    context: ContextInfo
+  ): vscode.Position {
+    const position = editor.selection.active;
+    const document = editor.document;
+    const line = document.lineAt(position.line);
+    const stars = '*'.repeat(context.level || 1);
+    
+    // 在当前行之后插入新标题
+    editBuilder.insert(line.range.end, `\n${stars} `);
+    
+    // 返回光标位置
+    return new vscode.Position(position.line + 1, stars.length + 1);
+  }
+
+  /**
+   * 在当前标题所属子树之后插入同级标题（不分割内容）
+   * 对应 C-RET (respect-content)
    */
   static insertHeadingAfterSubtree(
     editBuilder: vscode.TextEditorEdit,
@@ -42,8 +63,8 @@ export class HeadingCommands {
   }
 
   /**
-   * 分割标题 (C-RET 语义)
-   * 返回光标应该移动到的位置
+   * 在当前位置分割标题并立即在下方创建新标题
+   * 对应 M-RET (在标题行中间按下)
    */
   static splitHeading(
     editBuilder: vscode.TextEditorEdit,
@@ -61,14 +82,11 @@ export class HeadingCommands {
     // 删除光标后的内容
     editBuilder.delete(new vscode.Range(position, line.range.end));
     
-    // 找到子树结束位置
-    const subtreeEnd = HeadingParser.findSubtreeEnd(document, position);
-    
-    // 在子树末尾插入新标题
-    editBuilder.insert(subtreeEnd, `\n${stars} ${restOfLine}`);
+    // 立即在当前行之后插入新标题
+    editBuilder.insert(line.range.end, `\n${stars} ${restOfLine}`);
     
     // 返回光标应该移动到的位置（新标题的内容开始位置）
-    return new vscode.Position(subtreeEnd.line + 1, stars.length + 1);
+    return new vscode.Position(position.line + 1, stars.length + 1);
   }
 
   /**

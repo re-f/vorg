@@ -34,7 +34,7 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 - **ID 链接补全**：输入 `[[` 或 `[[id:` 触发自动补全，显示工作区中所有 org 文件的标题，支持模糊搜索过滤
 
 ### ⚡ org-like 编辑功能
-**类似 Emacs org-meta-return 的上下文感知编辑：**
+**类似 Emacs org-meta-return 和 ctrl-return的 的上下文感知编辑：**
 - 自动识别当前上下文（标题、列表、表格、Property 抽屉等）
 - 智能插入新元素（标题、列表项、表格行、Property 项等）
 - 保持正确的层级和格式
@@ -66,6 +66,7 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 | **跟随链接** | `Ctrl+C Ctrl+O` | `VOrg: Follow Link` | 类似 Emacs `C-c C-o`，或使用 `Ctrl+Click` (Windows/Linux) / `Cmd+Click` (Mac) |
 | **插入链接** | `Ctrl+C Ctrl+L` | `VOrg: Insert Link` | 类似 Emacs `C-c C-l` |
 | **智能插入新元素** | `Alt+Enter` | `VOrg: Insert New Item` | 类似 Emacs `M-RET`，上下文感知编辑 |
+| **分割当前元素** | `Ctrl+Enter` | `VOrg: Ctrl Return (Split)` | 在光标处分割当前结构 |
 | **子树末尾插入同级元素** | `Ctrl+Alt+Enter` | `VOrg: Insert New Item at End` | 类似 Emacs `C-M-RET` |
 | **智能TAB折叠** | `Tab`/`Shift+Tab` | - | 主要用于可见性控制（折叠/展开切换） |
 | **折叠标题** | `Ctrl+C Ctrl+Tab` | `Editor: Fold` | 折叠当前标题 |
@@ -75,6 +76,7 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 | **升级子树** | `Ctrl+C Ctrl+Shift+,` | `VOrg: Promote Subtree` | 类似 Emacs `C-c C-<`，减少标题级别 |
 | **降级子树** | `Ctrl+C Ctrl+Shift+.` | `VOrg: Demote Subtree` | 类似 Emacs `C-c C->`，增加标题级别 |
 | **文档大纲跳转** | `Ctrl+Shift+O` (Windows/Linux)<br>`Cmd+Shift+O` (Mac) | `Go to Symbol in Workspace` | 快速跳转到标题，查看侧边栏 "Outline" 面板 |
+| **更多快捷键** | - | - | 详见 [快捷键文档](docs/KEYBINDINGS.md) 和 [编辑特性](docs/EDITING_FEATURES.md) |
 
 
 ## 🛠️ 配置选项
