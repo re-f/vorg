@@ -1,5 +1,29 @@
 # 更新日志 / Changelog
 
+## [0.0.8] - 2026-01-23
+
+### ✨ 新增功能
+
+- **智能编辑增强 (Alt+Enter & Ctrl+Enter)**：重构了智能编辑逻辑，使其行为与 Emacs Org-mode 保持一致
+  - `Alt+Enter` (Meta Return)：在当前位置插入新项，智能处理 checkbox 状态，并在非标题/列表位置支持将当前行转换为标题
+  - `Ctrl+Enter` (Ctrl Return)：在当前子树/列表后插入新标题或列表项，或在文本中智能分割并插入新标题
+  - 优化了 `ContextAnalyzer` 对复杂结构的解析，提升了编辑体验的连贯性
+- **中文标题拼音搜索支持**：支持在工作区符号搜索和自动补全中使用拼音查找中文标题
+  - 使用 `Cmd+T` (Mac) 或 `Ctrl+T` (Windows/Linux) 打开工作区符号搜索，输入拼音首字母或全拼即可找到对应的中文标题
+  - 提升了对包含大量中文内容的 Org 文件的检索效率 
+
+---
+
+### ✨ Features
+
+- **Smart Editing Enhancements (Alt+Enter & Ctrl+Enter)**: Refactored smart editing logic to match Emacs Org-mode behavior
+  - `Alt+Enter` (Meta Return): Insert new item at current position, intelligently handle checkbox states, and support converting current line to headline in non-headline/list areas
+  - `Ctrl+Enter` (Ctrl Return): Insert new headline/list item after current subtree/list, or intelligently split text and insert new headline
+  - Optimized `ContextAnalyzer` for complex structures, improving overall editing consistency
+- **Pinyin Search for Chinese Headlines**: Support finding Chinese headlines using Pinyin in workspace symbol search and auto-completion
+  - Open workspace symbol search with `Cmd+T` (Mac) or `Ctrl+T` (Windows) and type Pinyin initials or full Pinyin to find corresponding Chinese headlines
+  - Improved retrieval efficiency for Org files containing extensive Chinese content
+
 ## [0.0.7] - 2025-12-07
 
 ### ✨ 新增功能

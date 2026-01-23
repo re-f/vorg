@@ -34,10 +34,11 @@ Supports intelligent navigation for multiple link types:
 - **ID Link Completion**: Type `[[` or `[[id:` to trigger auto-completion, showing all available headings from workspace org files. Supports fuzzy search filtering.
 
 ### ⚡ Org-like Editing Features
-**Context-aware editing similar to Emacs org-meta-return:**
+**Context-aware editing matching Emacs Org-mode (Alt+Enter & Ctrl+Enter):**
 - Automatically recognizes current context (headings, lists, tables, Property drawers, etc.)
-- Intelligently inserts new elements (headings, list items, table rows, Property items, etc.)
-- Maintains correct hierarchy and formatting
+- `Alt+Enter` (Meta Return): Insert new item below current line, intelligently handle checkbox states, and support converting non-headline lines to headlines
+- `Ctrl+Enter` (Ctrl Return): Insert new headline/item at the end of current subtree/list, or intelligently split lines and insert headlines
+- Maintains correct hierarchy, indentation, and formatting
 
 **TAB Smart Folding (similar to Emacs org-mode TAB behavior):**
 - On headings: Toggle fold/expand state
@@ -65,8 +66,9 @@ Supports intelligent navigation for multiple link types:
 | **Set Property** | `Ctrl+C Ctrl+X P` | `VOrg: Set Property` | Similar to Emacs `C-c C-x p`, set/update heading properties |
 | **Follow Link** | `Ctrl+C Ctrl+O` | `VOrg: Follow Link` | Similar to Emacs `C-c C-o`, or use `Ctrl+Click` (Windows/Linux) / `Cmd+Click` (Mac) |
 | **Insert Link** | `Ctrl+C Ctrl+L` | `VOrg: Insert Link` | Similar to Emacs `C-c C-l` |
-| **Smart Insert New Element** | `Alt+Enter` | `VOrg: Insert New Item` | Similar to Emacs `M-RET`, context-aware editing |
-| **Insert Sibling at End** | `Ctrl+Alt+Enter` | `VOrg: Insert New Item at End` | Similar to Emacs `C-M-RET` |
+| **Smart Insert New Item** | `Alt+Enter` | `VOrg: Insert New Item` | Matches Emacs `M-RET`, inserts heading, list, or checkbox |
+| **End Insert or Split** | `Ctrl+Enter` | `VOrg: Ctrl Return (Split)` | Matches Emacs `C-RET`, insert at subtree end or split headline |
+| **Insert Sibling at End** | `Ctrl+Alt+Enter` | `VOrg: Insert New Item at End` | Matches Emacs `C-M-RET` |
 | **Smart TAB Folding** | `Tab`/`Shift+Tab` | - | Mainly for visibility control (fold/expand toggle) |
 | **Fold Heading** | `Ctrl+C Ctrl+Tab` | `Editor: Fold` | Fold current heading |
 | **Unfold Heading** | `Ctrl+C Ctrl+Shift+Tab` | `Editor: Unfold` | Unfold current heading |

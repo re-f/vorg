@@ -34,10 +34,11 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 - **ID 链接补全**：输入 `[[` 或 `[[id:` 触发自动补全，显示工作区中所有 org 文件的标题，支持模糊搜索过滤
 
 ### ⚡ org-like 编辑功能
-**类似 Emacs org-meta-return 和 ctrl-return的 的上下文感知编辑：**
+**高度还原 Emacs Org-mode 的上下文感知编辑 (Alt+Enter & Ctrl+Enter)：**
 - 自动识别当前上下文（标题、列表、表格、Property 抽屉等）
-- 智能插入新元素（标题、列表项、表格行、Property 项等）
-- 保持正确的层级和格式
+- `Alt+Enter` (Meta Return)：在当前行下方插入同级项，支持 checkbox 智能切换，支持非标题行快速转标题
+- `Ctrl+Enter` (Ctrl Return)：在当前子树/列表末尾插入新项，或智能分割行并插入标题
+- 保持正确的层级、缩进和格式
 
 **TAB 智能折叠（类似 Emacs org-mode TAB 行为）：**
 - 在标题上：切换折叠/展开状态
@@ -65,9 +66,9 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 | **设置属性** | `Ctrl+C Ctrl+X P` | `VOrg: Set Property` | 类似 Emacs `C-c C-x p`，设置/更新标题属性 |
 | **跟随链接** | `Ctrl+C Ctrl+O` | `VOrg: Follow Link` | 类似 Emacs `C-c C-o`，或使用 `Ctrl+Click` (Windows/Linux) / `Cmd+Click` (Mac) |
 | **插入链接** | `Ctrl+C Ctrl+L` | `VOrg: Insert Link` | 类似 Emacs `C-c C-l` |
-| **智能插入新元素** | `Alt+Enter` | `VOrg: Insert New Item` | 类似 Emacs `M-RET`，上下文感知编辑 |
-| **分割当前元素** | `Ctrl+Enter` | `VOrg: Ctrl Return (Split)` | 在光标处分割当前结构 |
-| **子树末尾插入同级元素** | `Ctrl+Alt+Enter` | `VOrg: Insert New Item at End` | 类似 Emacs `C-M-RET` |
+| **智能插入新项** | `Alt+Enter` | `VOrg: Insert New Item` | 对应 Emacs `M-RET`，智能插入标题、列表项或 checkbox |
+| **末尾插入或分割** | `Ctrl+Enter` | `VOrg: Ctrl Return (Split)` | 对应 Emacs `C-RET`，在子树末尾插入或智能分割标题 |
+| **子树末尾插入** | `Ctrl+Alt+Enter` | `VOrg: Insert New Item at End` | 对应 Emacs `C-M-RET` |
 | **智能TAB折叠** | `Tab`/`Shift+Tab` | - | 主要用于可见性控制（折叠/展开切换） |
 | **折叠标题** | `Ctrl+C Ctrl+Tab` | `Editor: Fold` | 折叠当前标题 |
 | **展开标题** | `Ctrl+C Ctrl+Shift+Tab` | `Editor: Unfold` | 展开当前标题 |

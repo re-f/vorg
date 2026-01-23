@@ -2,7 +2,7 @@
   "name": "vorg",
   "displayName": "VOrg - Org-mode Preview",
   "description": "A VS Code extension providing basic Org-mode support: real-time preview, smart editing, link navigation, and TODO management. Implements fundamental Org-mode editing features in VS Code.",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "publisher": "vorg",
   "license": "MIT",
   "packageManager": "pnpm@10.19.0",
