@@ -17,7 +17,8 @@ const config = {
   },
   devtool: 'nosources-source-map', // 生成 source map 但不包含源代码
   externals: {
-    vscode: 'commonjs vscode' // vscode 模块不打包，由 VSCode 运行时提供
+    vscode: 'commonjs vscode', // vscode 模块不打包，由 VSCode 运行时提供
+    'better-sqlite3': 'commonjs better-sqlite3' // native 模块不打包，保持为外部依赖
   },
   resolve: {
     extensions: ['.ts', '.js'] // 支持的文件扩展名

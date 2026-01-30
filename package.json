@@ -339,6 +339,7 @@
     "docs:serve": "pnpm run docs && open docs/api/index.html"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/glob": "^7.1.3",
     "@types/minimatch": "^6.0.0",
     "@types/mocha": "^8.2.2",
@@ -359,6 +360,7 @@
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
+    "better-sqlite3": "^12.6.2",
     "pinyin-pro": "^3.27.0",
     "rehype-stringify": "^9.0.3",
     "unified": "^11.0.5",
