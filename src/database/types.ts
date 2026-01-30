@@ -169,6 +169,9 @@ export interface OrgFile {
 
     /** Content hash for change detection */
     hash: string;
+
+    /** When this file was first indexed */
+    createdAt: Date;
 }
 
 /**

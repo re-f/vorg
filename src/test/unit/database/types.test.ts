@@ -233,38 +233,42 @@ describe('Database Types', () => {
     });
 
     describe('OrgFile', () => {
-        it('should create valid file with required fields', () => {
+        it('should have required fields', () => {
             const file: OrgFile = {
-                uri: '/test.org',
+                uri: '/path/to/file.org',
                 properties: {},
                 tags: [],
                 headings: [],
                 updatedAt: new Date(),
-                hash: 'abc123'
+                hash: 'abc123',
+                createdAt: new Date()
             };
 
-            assert.strictEqual(file.uri, '/test.org');
+            assert.strictEqual(file.uri, '/path/to/file.org');
             assert.strictEqual(file.hash, 'abc123');
             assert.strictEqual(file.headings.length, 0);
+            assert.ok(file.createdAt instanceof Date);
         });
 
-        it('should support file-level metadata', () => {
+        it('should support optional properties', () => {
             const file: OrgFile = {
-                uri: '/test.org',
-                title: 'Test Document',
+                uri: '/path/to/file.org',
+                title: 'My Document',
                 properties: {
-                    'AUTHOR': 'Test User',
-                    'DATE': '2026-01-28'
+                    'AUTHOR': 'John Doe',
+                    'DATE': '2024-01-01'
                 },
-                tags: ['project', 'documentation'],
+                tags: ['project', 'important'],
                 headings: [],
                 updatedAt: new Date(),
-                hash: 'def456'
+                hash: 'def456',
+                createdAt: new Date()
             };
 
-            assert.strictEqual(file.title, 'Test Document');
-            assert.strictEqual(file.properties['AUTHOR'], 'Test User');
-            assert.deepStrictEqual(file.tags, ['project', 'documentation']);
+            assert.strictEqual(file.title, 'My Document');
+            assert.strictEqual(file.properties['AUTHOR'], 'John Doe');
+            assert.deepStrictEqual(file.tags, ['project', 'important']);
+            assert.ok(file.createdAt instanceof Date);
         });
     });
 

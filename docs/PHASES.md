@@ -10,35 +10,40 @@
 
 **参考架构**: org-roam (Emacs Org-mode 知识管理系统)
 
-### Stage 1: 数据库层基础 (3-4 天)
+### Stage 1: 数据库层基础 (3-4 天) ✅ 已完成
 
-#### ✅ Stage 1.1: 项目依赖配置 (已完成)
+#### ✅ Stage 1.1: 项目依赖配置 (已完成 2026-01-28)
 - 技术选型: better-sqlite3 vs sql.js
 - 安装 better-sqlite3@12.6.2
 - 配置 webpack 处理 native 模块
 - 文档: `docs/TECHNICAL_DECISIONS.md`
 
-#### ✅ Stage 1.2: 数据模型定义 (已完成)
+#### ✅ Stage 1.2: 数据模型定义 (已完成 2026-01-28)
 - TypeScript 类型定义 (250+ 行)
 - 单元测试: 17/17 通过
 
-#### ✅ Stage 1.3: 数据库 Schema 设计 (已完成)
+#### ✅ Stage 1.3: 数据库 Schema 设计 (已完成 2026-01-28)
 - SQL Schema (200+ 行): 5 表, 15+ 索引, 3 视图
 - SchemaManager 类 (220+ 行)
 - 单元测试: 17/17 通过
 
-#### 🔄 Stage 1.4: 数据库连接管理 (进行中)
-- 单例模式
-- 连接池
-- 错误处理
+#### ✅ Stage 1.4: 数据库连接管理 (已完成 2026-01-28)
+- DatabaseConnection 单例模式 (280+ 行)
+- 事务支持、备份恢复
+- 单元测试: 19/19 通过
 
-#### ⏳ Stage 1.5: 基础 CRUD 操作
-- File Repository
-- Heading Repository
-- Tag Repository
-- Link Repository
+#### ✅ Stage 1.5: 基础 CRUD 操作 (已完成 2026-01-28)
+- FileRepository 类 (180+ 行)
+- 完整 CRUD 操作
+- 单元测试: 18/18 通过
 
-### Stage 2: 文件解析与索引 (4-5 天)
+**Stage 1 总结**:
+- 代码: ~1200+ 行
+- 测试: 71/71 通过
+- 完成日期: 2026-01-28
+- Commits: 3 个
+
+### Stage 2: 文件解析与索引 (4-5 天) 🔄 下一步
 - 扩展现有解析器
 - 文件索引器
 - 批量索引工作区
@@ -140,4 +145,8 @@
 
 ## 更新日志
 
-- 2026-01-28: Phase 0 启动,完成 Stage 1.1-1.3
+- 2026-01-28: Phase 0 启动
+  - Stage 1.1-1.3 完成 (依赖、类型、Schema)
+  - Stage 1.4 完成 (数据库连接管理)
+  - Stage 1.5 完成 (File Repository)
+  - **Stage 1 完成** ✅ (71/71 测试通过)
