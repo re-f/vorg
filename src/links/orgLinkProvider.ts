@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { TodoKeywordManager } from '../utils/todoKeywordManager';
 import { LinkUtils } from '../utils/linkUtils';
 import { Logger } from '../utils/logger';
 
@@ -24,12 +23,8 @@ import { Logger } from '../utils/logger';
  * @implements {vscode.DefinitionProvider}
  */
 export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.DefinitionProvider {
-  private todoKeywordManager: TodoKeywordManager;
+  constructor() { }
 
-  constructor() {
-    this.todoKeywordManager = TodoKeywordManager.getInstance();
-  }
-  
   // 各种链接的正则表达式
   private static readonly LINK_PATTERNS = {
     // [[link][description]] 或 [[link]]
@@ -65,18 +60,18 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
   private findLinkAtPosition(document: vscode.TextDocument, position: vscode.Position): { linkTarget: string; range: vscode.Range } | null {
     const line = document.lineAt(position);
     const lineText = line.text;
-    
+
     // 检查方括号链接 [[link][description]] 或 [[link]]
     const bracketRegex = /\[\[([^\]]+)\](?:\[([^\]]*)\])?\]/g;
     let match;
-    
+
     while ((match = bracketRegex.exec(lineText)) !== null) {
       const startCol = match.index;
       const endCol = match.index + match[0].length;
-      
+
       if (position.character >= startCol && position.character <= endCol) {
-        return { 
-          linkTarget: match[1], 
+        return {
+          linkTarget: match[1],
           range: new vscode.Range(
             new vscode.Position(position.line, startCol),
             new vscode.Position(position.line, endCol)
@@ -90,10 +85,10 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
     while ((match = httpRegex.exec(lineText)) !== null) {
       const startCol = match.index;
       const endCol = match.index + match[1].length;
-      
+
       if (position.character >= startCol && position.character <= endCol) {
-        return { 
-          linkTarget: match[1], 
+        return {
+          linkTarget: match[1],
           range: new vscode.Range(
             new vscode.Position(position.line, startCol),
             new vscode.Position(position.line, endCol)
@@ -107,10 +102,10 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
     while ((match = fileRegex.exec(lineText)) !== null) {
       const startCol = match.index;
       const endCol = match.index + match[0].length;
-      
+
       if (position.character >= startCol && position.character <= endCol) {
-        return { 
-          linkTarget: match[0], 
+        return {
+          linkTarget: match[0],
           range: new vscode.Range(
             new vscode.Position(position.line, startCol),
             new vscode.Position(position.line, endCol)
@@ -118,7 +113,7 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
         };
       }
     }
-    
+
     return null;
   }
 
@@ -131,10 +126,10 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
 
     // 处理方括号链接 [[link][description]] 或 [[link]]
     this.addBracketLinks(document, text, links);
-    
+
     // 处理HTTP链接
     this.addHttpLinks(document, text, links);
-    
+
     // 处理文件链接
     this.addFileLinks(document, text, links);
 
@@ -147,13 +142,13 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
   private addBracketLinks(document: vscode.TextDocument, text: string, links: vscode.DocumentLink[]) {
     let match;
     const regex = new RegExp(OrgLinkProvider.LINK_PATTERNS.BRACKET_LINK);
-    
+
     while ((match = regex.exec(text)) !== null) {
       const linkTarget = match[1];
       const startPos = document.positionAt(match.index);
       const endPos = document.positionAt(match.index + match[0].length);
       const range = new vscode.Range(startPos, endPos);
-      
+
       const uri = this.createUriFromLink(document, linkTarget);
       if (uri) {
         links.push(new vscode.DocumentLink(range, uri));
@@ -167,12 +162,12 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
   private addHttpLinks(document: vscode.TextDocument, text: string, links: vscode.DocumentLink[]) {
     let match;
     const regex = new RegExp(OrgLinkProvider.LINK_PATTERNS.HTTP_LINK);
-    
+
     while ((match = regex.exec(text)) !== null) {
       const startPos = document.positionAt(match.index);
       const endPos = document.positionAt(match.index + match[0].length);
       const range = new vscode.Range(startPos, endPos);
-      
+
       try {
         const uri = vscode.Uri.parse(match[1]);
         links.push(new vscode.DocumentLink(range, uri));
@@ -188,13 +183,13 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
   private addFileLinks(document: vscode.TextDocument, text: string, links: vscode.DocumentLink[]) {
     let match;
     const regex = new RegExp(OrgLinkProvider.LINK_PATTERNS.FILE_LINK);
-    
+
     while ((match = regex.exec(text)) !== null) {
       const filePath = match[1];
       const startPos = document.positionAt(match.index);
       const endPos = document.positionAt(match.index + match[0].length);
       const range = new vscode.Range(startPos, endPos);
-      
+
       const uri = LinkUtils.resolveFilePath(document, filePath);
       if (uri) {
         links.push(new vscode.DocumentLink(range, uri));

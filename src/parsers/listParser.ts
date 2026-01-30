@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import * as core from '../types/core';
 import { HeadingParser } from './headingParser';
 
 /**
@@ -11,6 +11,15 @@ export interface ListItemInfo {
   isOrdered: boolean;
   hasCheckbox: boolean;
   checkboxState?: string;
+}
+
+/**
+ * 列表项同步结果
+ */
+export interface SyncItem {
+  originalLine: number;
+  newMarker: string;
+  listInfo: ListItemInfo;
 }
 
 /**
@@ -31,10 +40,10 @@ export class ListParser {
     const marker = listMatch[2];
     const content = listMatch[3];
     const isOrdered = /^\d+\.$/.test(marker);
-    
+
     // 检查是否有复选框
     const checkboxMatch = content.match(/^\[([ X-])\]\s+(.*)$/);
-    
+
     return {
       indent,
       marker,
@@ -90,82 +99,82 @@ export class ListParser {
    * 查找列表项的结束位置（包括其所有子内容）
    */
   static findListItemEnd(
-    document: vscode.TextDocument,
-    position: vscode.Position,
+    document: core.TextDocument,
+    position: core.Position,
     currentIndent: number
-  ): vscode.Position {
+  ): core.Position {
     let lastNonEmptyLine = position.line;
-    
+
     // 从当前行的下一行开始查找
     for (let i = position.line + 1; i < document.lineCount; i++) {
       const line = document.lineAt(i);
       const lineText = line.text;
-      
+
       // 跳过空行，但记录上一个非空行
       if (lineText.trim() === '') {
         continue;
       }
-      
+
       // 检查缩进
       const lineIndent = this.getIndentLevel(lineText);
-      
+
       // 检查是否是列表项
       const isListItem = this.isListLine(lineText);
       // 检查是否是标题
       const isHeading = this.isHeadingLine(lineText);
-      
+
       // 如果遇到同级或更高级的列表项，或者遇到标题，说明当前列表项结束
       if ((isListItem && lineIndent <= currentIndent) || isHeading) {
-        return new vscode.Position(lastNonEmptyLine, document.lineAt(lastNonEmptyLine).text.length);
+        return { line: lastNonEmptyLine, character: document.lineAt(lastNonEmptyLine).text.length };
       }
-      
+
       // 如果遇到普通文本（非列表项，非标题）且缩进小于等于当前级别，说明当前列表项结束
       if (!isListItem && !isHeading && lineIndent <= currentIndent) {
-        return new vscode.Position(lastNonEmptyLine, document.lineAt(lastNonEmptyLine).text.length);
+        return { line: lastNonEmptyLine, character: document.lineAt(lastNonEmptyLine).text.length };
       }
-      
+
       // 更新最后一个非空行
       lastNonEmptyLine = i;
     }
-    
+
     // 如果没找到，返回文档末尾
-    return new vscode.Position(document.lineCount - 1, document.lineAt(document.lineCount - 1).text.length);
+    return { line: document.lineCount - 1, character: document.lineAt(document.lineCount - 1).text.length };
   }
 
   /**
    * 检查列表项是否有子项
    */
   static hasSubItems(
-    document: vscode.TextDocument,
+    document: core.TextDocument,
     lineNumber: number,
     currentIndent: number
   ): boolean {
     for (let i = lineNumber + 1; i < document.lineCount; i++) {
       const line = document.lineAt(i);
       const lineText = line.text.trim();
-      
+
       // 如果是空行，跳过
       if (lineText === '') {
         continue;
       }
-      
+
       // 检查缩进
       const lineIndent = this.getIndentLevel(line.text);
-      
+
       // 如果缩进大于当前级别，说明有子内容
       if (lineIndent > currentIndent && lineText !== '') {
         return true;
       }
-      
+
       // 如果遇到同级或更高级的结构，停止查找
       const isListItem = this.isListLine(line.text);
       const isHeading = this.isHeadingLine(line.text);
-      
+
       if ((isListItem && lineIndent <= currentIndent) || isHeading || (lineIndent <= currentIndent && lineText !== '')) {
         break;
       }
     }
-    
+
     return false;
   }
 
@@ -191,23 +200,23 @@ export class ListParser {
    * 从指定行向上查找，找到第一个缩进级别相同的列表项
    */
   static findFirstListItemAtLevel(
-    document: vscode.TextDocument,
+    document: core.TextDocument,
     lineNumber: number,
     indent: number
   ): ListItemInfo | null {
     let firstItem: ListItemInfo | null = null;
     let firstItemLine = -1;
-    
+
     // 从指定行向上查找，找到所有同级项，记录第一个
     for (let i = lineNumber; i >= 0; i--) {
       const line = document.lineAt(i);
       const lineText = line.text.trim();
-      
+
       // 跳过空行
       if (lineText === '') {
         continue;
       }
-      
+
       // 检查是否是列表项
       if (!this.isListLine(line.text)) {
         // 如果遇到非列表项且缩进小于等于当前级别，停止查找
@@ -217,15 +226,15 @@ export class ListParser {
         }
         continue;
       }
-      
+
       // 检查缩进级别
       const lineIndent = this.getIndentLevel(line.text);
-      
+
       // 如果缩进小于当前级别，说明已经超出范围
       if (lineIndent < indent) {
         break;
       }
-      
+
       // 如果缩进等于当前级别，记录这个项
       if (lineIndent === indent) {
         const listInfo = this.parseListItem(line.text);
@@ -235,7 +244,7 @@ export class ListParser {
         }
       }
     }
-    
+
     return firstItem;
   }
 
@@ -243,22 +252,22 @@ export class ListParser {
    * 查找第一个列表项的行号
    */
   static findFirstListItemLineAtLevel(
-    document: vscode.TextDocument,
+    document: core.TextDocument,
     lineNumber: number,
     indent: number
   ): number {
     let firstItemLine = -1;
-    
+
     // 从指定行向上查找，找到所有同级项，记录第一个的行号
     for (let i = lineNumber; i >= 0; i--) {
       const line = document.lineAt(i);
       const lineText = line.text.trim();
-      
+
       // 跳过空行
       if (lineText === '') {
         continue;
       }
-      
+
       // 检查是否是列表项
       if (!this.isListLine(line.text)) {
         // 如果遇到非列表项且缩进小于等于当前级别，停止查找
@@ -268,21 +277,21 @@ export class ListParser {
         }
         continue;
       }
-      
+
       // 检查缩进级别
       const lineIndent = this.getIndentLevel(line.text);
-      
+
       // 如果缩进小于当前级别，说明已经超出范围
       if (lineIndent < indent) {
         break;
       }
-      
+
       // 如果缩进等于当前级别，记录这个项的行号
       if (lineIndent === indent) {
         firstItemLine = i;
       }
     }
-    
+
     return firstItemLine;
   }
 
@@ -291,7 +300,7 @@ export class ListParser {
    * 从第一个同级项开始，统计所有同级项（直到遇到更高级别/非列表项）
    */
   static countItemsAtLevel(
-    document: vscode.TextDocument,
+    document: core.TextDocument,
     lineNumber: number,
     indent: number
   ): number {
@@ -300,19 +309,19 @@ export class ListParser {
     if (firstLine === -1) {
       return 0;
     }
-    
+
     let count = 0;
-    
+
     // 从第一个同级项开始，向下统计所有同级项
     for (let i = firstLine; i < document.lineCount; i++) {
       const line = document.lineAt(i);
       const lineText = line.text.trim();
-      
+
       // 跳过空行
       if (lineText === '') {
         continue;
       }
-      
+
       // 检查是否是列表项
       if (!this.isListLine(line.text)) {
         // 如果遇到非列表项且缩进小于等于当前级别，停止统计
@@ -322,21 +331,21 @@ export class ListParser {
         }
         continue;
       }
-      
+
       // 检查缩进级别
       const lineIndent = this.getIndentLevel(line.text);
-      
+
       // 如果缩进小于当前级别，说明已经超出范围
       if (lineIndent < indent) {
         break;
       }
-      
+
       // 如果缩进等于当前级别，计数加一
       if (lineIndent === indent) {
         count++;
       }
     }
-    
+
     return count;
   }
 
@@ -345,22 +354,22 @@ export class ListParser {
    * 返回包含行号和列表信息的数组
    */
   static findItemsAtLevel(
-    document: vscode.TextDocument,
+    document: core.TextDocument,
     startLine: number,
     indent: number
   ): Array<{ line: number; listInfo: ListItemInfo }> {
     const items: Array<{ line: number; listInfo: ListItemInfo }> = [];
-    
+
     // 从起始行开始向下查找
     for (let i = startLine; i < document.lineCount; i++) {
       const line = document.lineAt(i);
       const lineText = line.text.trim();
-      
+
       // 跳过空行
       if (lineText === '') {
         continue;
       }
-      
+
       // 检查是否是列表项
       if (!this.isListLine(line.text)) {
         // 如果遇到非列表项且缩进小于等于当前级别，停止查找
@@ -370,15 +379,15 @@ export class ListParser {
         }
         continue;
       }
-      
+
       // 检查缩进级别
       const lineIndent = this.getIndentLevel(line.text);
-      
+
       // 如果缩进小于当前级别，说明已经超出范围
       if (lineIndent < indent) {
         break;
       }
-      
+
       // 如果缩进等于当前级别，添加到结果中
       if (lineIndent === indent) {
         const listInfo = this.parseListItem(line.text);
@@ -387,8 +396,43 @@ export class ListParser {
         }
       }
     }
-    
+
     return items;
+  }
+
+  /**
+   * 计算新项的编号标记
+   */
+  static calculateNewItemNumber(index: number): string {
+    return `${index + 1}.`;
+  }
+
+  /**
+   * 重新计算有序列表的标记
+   * @param items 列表项集合
+   * @param newItemLine 新插入项的行号（如果有）
+   */
+  static renumberOrderedListItems(
+    items: Array<{ line: number; listInfo: ListItemInfo }>,
+    newItemLine: number
+  ): Array<SyncItem> {
+    const result: Array<SyncItem> = [];
+
+    // 按行号排序，确保处理顺序正确
+    const sortedItems = [...items].sort((a, b) => a.line - b.line);
+
+    sortedItems.forEach((item, index) => {
+      const logicalIndex = (newItemLine !== -1 && item.line >= newItemLine) ? (index + 1) : index;
+      const expectedMarker = this.calculateNewItemNumber(logicalIndex);
+
+      result.push({
+        originalLine: item.line,
+        newMarker: expectedMarker,
+        listInfo: item.listInfo
+      });
+    });
+
+    return result;
   }
 }
 

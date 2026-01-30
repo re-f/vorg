@@ -1,16 +1,7 @@
 import * as vscode from 'vscode';
 import { ContextInfo } from '../types/editingTypes';
-import { ListParser, ListItemInfo } from '../../parsers/listParser';
+import { ListParser, ListItemInfo, SyncItem } from '../../parsers/listParser';
 import { Logger } from '../../utils/logger';
-
-/**
- * 列表项同步结果
- */
-interface SyncItem {
-  originalLine: number;
-  newMarker: string;
-  listInfo: ListItemInfo;
-}
 
 /**
  * 列表操作命令类
@@ -102,7 +93,8 @@ export class ListCommands {
     }
 
     // 插入新项
-    editBuilder.insert(itemEnd, `\n${indent}${marker} `);
+    const insertPosition = new vscode.Position(newItemLine, indent.length + marker.length + 1);
+    editBuilder.insert(new vscode.Position(itemEnd.line, itemEnd.character), `\n${indent}${marker} `);
 
     // 同步整个列表块
     this.syncListMarkers(editBuilder, document, firstItemLine, newItemLine, currentIndent, isOrderedContext, leaderMarker);
@@ -128,7 +120,7 @@ export class ListCommands {
     marker = ListParser.getNextMarker(marker);
 
     const itemEnd = ListParser.findListItemEnd(document, position, currentIndent);
-    editBuilder.insert(itemEnd, `\n${indent}${marker} [ ] `);
+    editBuilder.insert(new vscode.Position(itemEnd.line, itemEnd.character), `\n${indent}${marker} [ ] `);
 
     return new vscode.Position(itemEnd.line + 1, indent.length + marker.length + 5);
   }
@@ -211,7 +203,9 @@ export class ListCommands {
     const document = editor.document;
     const line = document.lineAt(position.line);
     const listInfo = ListParser.parseListItem(line.text);
-    if (!listInfo) return;
+    if (!listInfo) {
+      return;
+    }
 
     const newCursorChar = position.character + 2;
 
@@ -237,7 +231,9 @@ export class ListCommands {
     const document = editor.document;
     const line = document.lineAt(position.line);
     const listInfo = ListParser.parseListItem(line.text);
-    if (!listInfo) return;
+    if (!listInfo) {
+      return;
+    }
 
     const newIndentLength = Math.max(0, listInfo.indent - 2);
     const indentReduction = listInfo.indent - newIndentLength;
@@ -259,6 +255,23 @@ export class ListCommands {
   }
 
   /**
+   * @deprecated 使用 ListParser.calculateNewItemNumber
+   */
+  public static calculateNewItemNumber(index: number): string {
+    return ListParser.calculateNewItemNumber(index);
+  }
+
+  /**
+   * @deprecated 使用 ListParser.renumberOrderedListItems
+   */
+  public static renumberOrderedListItems(
+    items: Array<{ line: number; listInfo: ListItemInfo }>,
+    newItemLine: number
+  ): Array<SyncItem> {
+    return ListParser.renumberOrderedListItems(items, newItemLine);
+  }
+
+  /**
    * 同步或修复整个列表块的标记
    */
   private static syncListMarkers(
@@ -270,16 +283,19 @@ export class ListCommands {
     isOrdered: boolean,
     leaderMarker: string
   ) {
+    if (firstItemLine === -1) {
+      return;
+    }
     const itemsInBlock = ListParser.findItemsAtLevel(document, firstItemLine, indent);
-    // 统计新项插入位置之前的项数
-    const itemsBeforeNew = itemsInBlock.filter(item => item.line < newItemLine).length;
+
+    // 使用新实现的工具函数
+    const renumbered = isOrdered ? ListParser.renumberOrderedListItems(itemsInBlock, newItemLine) : [];
 
     itemsInBlock.forEach((item, index) => {
       let expectedMarker = '';
       if (isOrdered) {
-        // 计算正确序号：如果是新行之后的项，索引要加 2
-        const posInList = item.line < newItemLine ? (index + 1) : (index + 2);
-        expectedMarker = `${posInList}.`;
+        const currentSyncItem = renumbered.find(si => si.originalLine === item.line);
+        expectedMarker = currentSyncItem ? currentSyncItem.newMarker : item.listInfo.marker;
       } else {
         expectedMarker = leaderMarker;
       }

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { HeadingCommands } from './headingCommands';
 import { PropertyParser } from '../../parsers/propertyParser';
+import { getConfigService } from '../../services/configService';
 
 /**
  * Property 管理命令类
@@ -20,9 +21,13 @@ export class PropertyCommands {
   static async orgSetProperty(editor: vscode.TextEditor) {
     const position = editor.selection.active;
     const document = editor.document;
-    
+
+    // 获取关键词配置
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+
     // 查找当前位置所属的标题
-    const headingLineInfo = HeadingCommands.findCurrentHeading(document, position);
+    const headingLineInfo = HeadingCommands.findCurrentHeading(document, position, todoKeywords);
     if (!headingLineInfo) {
       vscode.window.showInformationMessage('请将光标放在标题或其内容区域内');
       return;
@@ -55,33 +60,33 @@ export class PropertyCommands {
 
     // 检查标题下是否已经存在Property抽屉 - 使用PropertyParser
     const drawerInfo = PropertyParser.findPropertyDrawer(document, headingLineNumber);
-    
+
     if (drawerInfo) {
       // 已存在property抽屉，检查属性是否存在 - 使用PropertyParser
       const existingPropertyLine = PropertyParser.findPropertyInDrawer(document, drawerInfo, propertyKeyUpper);
-      
+
       if (existingPropertyLine !== null) {
         // 属性已存在，更新其值 - 使用PropertyParser
         const line = document.lineAt(existingPropertyLine);
         const propertyInfo = PropertyParser.parseProperty(line.text);
-        
+
         if (propertyInfo) {
           const newLineText = PropertyParser.buildPropertyLine(
             propertyKeyUpper,
             propertyValue,
             propertyInfo.indent
           );
-          
+
           await editor.edit(editBuilder => {
             editBuilder.replace(line.range, newLineText);
           });
-          
+
           vscode.window.showInformationMessage(`已更新属性 ${propertyKeyUpper}`);
         }
       } else {
         // 属性不存在，在:END:之前添加新属性 - 使用PropertyParser
         const referenceIndent = PropertyParser.getPropertyIndent(document, drawerInfo, '  ');
-        
+
         const insertLine = drawerInfo.endLine;
         const insertPosition = new vscode.Position(insertLine, 0);
         const newPropertyLine = PropertyParser.buildPropertyLine(
@@ -89,20 +94,20 @@ export class PropertyCommands {
           propertyValue,
           referenceIndent
         );
-        
+
         await editor.edit(editBuilder => {
           editBuilder.insert(insertPosition, `${newPropertyLine}\n`);
         });
-        
+
         vscode.window.showInformationMessage(`已添加属性 ${propertyKeyUpper}`);
       }
     } else {
       // 不存在property抽屉，创建新的 - 使用PropertyParser
       const insertPosition = new vscode.Position(headingLineNumber + 1, 0);
-      
+
       // 生成唯一的 ID
       const uniqueId = PropertyParser.generateUniqueId();
-      
+
       // 创建包含 ID 和用户输入属性的 Property 抽屉
       const propertyDrawer = PropertyParser.buildPropertyDrawer(
         [
@@ -115,7 +120,7 @@ export class PropertyCommands {
       await editor.edit(editBuilder => {
         editBuilder.insert(insertPosition, propertyDrawer);
       });
-      
+
       vscode.window.showInformationMessage(`已创建Property抽屉并添加属性 ${propertyKeyUpper}`);
     }
   }
@@ -126,17 +131,20 @@ export class PropertyCommands {
   static insertPropertyItem(
     editBuilder: vscode.TextEditorEdit,
     editor: vscode.TextEditor
-  ) {
+  ): vscode.Position {
     const position = editor.selection.active;
     const document = editor.document;
     const line = document.lineAt(position.line);
     const lineEnd = line.range.end;
     const lineText = line.text;
-    
+
     // 检测当前行的缩进 - 使用PropertyParser
     const indent = PropertyParser.parseIndent(lineText) || '  ';
-    
-    editBuilder.insert(lineEnd, `\n${indent}:`);
+
+    editBuilder.insert(lineEnd, `\n${indent}: :`);
+
+    // 返回新位置
+    return new vscode.Position(position.line + 1, indent.length + 1);
   }
 
 }

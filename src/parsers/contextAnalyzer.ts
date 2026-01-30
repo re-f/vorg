@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import * as core from '../types/core';
 import { ContextInfo } from '../commands/types/editingTypes';
 import { HeadingParser } from './headingParser';
 
@@ -22,12 +22,12 @@ export class ContextAnalyzer {
   /**
    * 分析当前位置的上下文
    */
-  static analyzeContext(document: vscode.TextDocument, position: vscode.Position): ContextInfo {
+  static analyzeContext(document: core.TextDocument, position: core.Position, todoKeywords?: string[]): ContextInfo {
     const line = document.lineAt(position.line);
     const lineText = line.text;
 
     // 检查是否在标题中 - 使用HeadingParser来解析
-    const headingInfo = HeadingParser.parseHeading(lineText);
+    const headingInfo = HeadingParser.parseHeading(lineText, true, todoKeywords);
     if (headingInfo.level > 0) {
       return {
         type: 'heading',
@@ -101,7 +101,7 @@ export class ContextAnalyzer {
   /**
    * 检查是否在property抽屉中
    */
-  static isInPropertyDrawer(document: vscode.TextDocument, position: vscode.Position): boolean {
+  static isInPropertyDrawer(document: core.TextDocument, position: core.Position): boolean {
     let inPropertyDrawer = false;
 
     for (let i = 0; i <= position.line; i++) {
@@ -119,7 +119,7 @@ export class ContextAnalyzer {
   /**
    * 检查是否在代码块中
    */
-  static isInCodeBlock(document: vscode.TextDocument, position: vscode.Position): boolean {
+  static isInCodeBlock(document: core.TextDocument, position: core.Position): boolean {
     let inCodeBlock = false;
 
     for (let i = 0; i < position.line; i++) {
@@ -137,7 +137,7 @@ export class ContextAnalyzer {
   /**
    * 向上查找父列表项，确定当前行是否属于某个列表项的延续行
    */
-  private static findParentListItem(document: vscode.TextDocument, position: vscode.Position): ContextInfo | null {
+  private static findParentListItem(document: core.TextDocument, position: core.Position): ContextInfo | null {
     const currentLine = document.lineAt(position.line);
     const currentLineTrimmed = currentLine.text.trim();
 
@@ -156,7 +156,9 @@ export class ContextAnalyzer {
       const lineText = line.text;
       const trimmed = lineText.trim();
 
-      if (trimmed === '') continue;
+      if (trimmed === '') {
+        continue;
+      }
 
       // 如果遇到标题，停止查找
       if (HeadingParser.parseHeading(lineText).level > 0) {

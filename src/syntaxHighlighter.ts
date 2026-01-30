@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { TodoKeywordManager } from './utils/todoKeywordManager';
+import { getConfigService } from './services/configService';
+import { TodoKeywordConfig } from './utils/constants';
 
 /**
  * 语法高亮器类
@@ -7,10 +8,8 @@ import { TodoKeywordManager } from './utils/todoKeywordManager';
  */
 export class SyntaxHighlighter {
     private decorationTypes: Map<string, vscode.TextEditorDecorationType> = new Map();
-    private todoKeywordManager: TodoKeywordManager;
 
     constructor() {
-        this.todoKeywordManager = TodoKeywordManager.getInstance();
         this.initializeDecorationTypes();
     }
 
@@ -19,7 +18,7 @@ export class SyntaxHighlighter {
      */
     private getThemeColors(): { [key: string]: { color: string; background: string } } {
         const currentTheme = vscode.window.activeColorTheme.kind;
-        
+
         switch (currentTheme) {
             case vscode.ColorThemeKind.Dark:
             case vscode.ColorThemeKind.HighContrast:
@@ -161,7 +160,7 @@ export class SyntaxHighlighter {
      */
     public refreshHighlighting(): void {
         this.initializeDecorationTypes();
-        
+
         // 重新应用高亮到所有可见的org编辑器
         vscode.window.visibleTextEditors
             .filter(editor => editor.document.languageId === 'org')
@@ -201,17 +200,18 @@ export class SyntaxHighlighter {
     private applyTodoHighlighting(editor: vscode.TextEditor, lines: string[]): void {
         const todoRanges: vscode.Range[] = [];
         const doneRanges: vscode.Range[] = [];
-        
-        const todoKeywords = this.todoKeywordManager.getTodoKeywords();
-        const doneKeywords = this.todoKeywordManager.getDoneKeywords();
-        
-        const todoRegex = new RegExp(`\\b(${todoKeywords.map(k => k.keyword).join('|')})\\b`, 'g');
-        const doneRegex = new RegExp(`\\b(${doneKeywords.map(k => k.keyword).join('|')})\\b`, 'g');
+
+        const config = getConfigService();
+        const todoKeywords = config.getTodoKeywords();
+        const doneKeywords = config.getDoneKeywords();
+
+        const todoRegex = new RegExp(`\\b(${todoKeywords.map((k: TodoKeywordConfig) => k.keyword).join('|')})\\b`, 'g');
+        const doneRegex = new RegExp(`\\b(${doneKeywords.map((k: TodoKeywordConfig) => k.keyword).join('|')})\\b`, 'g');
 
         lines.forEach((line, lineIndex) => {
             // 获取当前行中所有链接的位置范围，用于排除链接内的TODO/DONE匹配
             const linkRanges: { start: number; end: number }[] = [];
-            
+
             // 查找所有链接 [[...]] 或 [[...][...]]
             const allLinkMatches = Array.from(line.matchAll(/\[\[([^\]]+)\](?:\[([^\]]*)\])?\]/g));
             for (const match of allLinkMatches) {
@@ -220,12 +220,12 @@ export class SyntaxHighlighter {
                     end: match.index! + match[0].length
                 });
             }
-            
+
             // 检查位置是否在链接内
             const isInLink = (position: number): boolean => {
                 return linkRanges.some(range => position >= range.start && position < range.end);
             };
-            
+
             // 匹配TODO状态，排除链接内的匹配
             let todoMatch;
             while ((todoMatch = todoRegex.exec(line)) !== null) {
@@ -235,7 +235,7 @@ export class SyntaxHighlighter {
                     todoRanges.push(new vscode.Range(startPos, endPos));
                 }
             }
-            
+
             // 匹配DONE状态，排除链接内的匹配
             let doneMatch;
             while ((doneMatch = doneRegex.exec(line)) !== null) {
@@ -250,7 +250,7 @@ export class SyntaxHighlighter {
         // 应用装饰
         const todoType = this.decorationTypes.get('todo')!;
         const doneType = this.decorationTypes.get('done')!;
-        
+
         editor.setDecorations(todoType, todoRanges);
         editor.setDecorations(doneType, doneRanges);
     }
@@ -304,7 +304,7 @@ export class SyntaxHighlighter {
         lines.forEach((line, lineIndex) => {
             // 匹配所有链接格式：[[url][description]] 或 [[url]]
             const allLinkMatches = Array.from(line.matchAll(/\[\[([^\]]+)\](?:\[([^\]]*)\])?\]/g));
-            
+
             for (const match of allLinkMatches) {
                 // 高亮整个链接
                 const startPos = new vscode.Position(lineIndex, match.index!);
@@ -323,7 +323,9 @@ export class SyntaxHighlighter {
      */
     private applyPropertyHighlighting(editor: vscode.TextEditor, lines: string[]): void {
         const decorationType = this.decorationTypes.get('property');
-        if (!decorationType) return;
+        if (!decorationType) {
+            return;
+        }
 
         const decorations: vscode.DecorationOptions[] = [];
         const propertyRegex = /^\s*:([A-Z_]+):\s*(.*)$/;
@@ -347,7 +349,9 @@ export class SyntaxHighlighter {
      */
     private applyKeywordHighlighting(editor: vscode.TextEditor, lines: string[]): void {
         const decorationType = this.decorationTypes.get('keyword');
-        if (!decorationType) return;
+        if (!decorationType) {
+            return;
+        }
 
         const decorations: vscode.DecorationOptions[] = [];
         const keywordRegex = /^\s*#\+(\w+):/;
@@ -371,7 +375,9 @@ export class SyntaxHighlighter {
      */
     private applyCommentHighlighting(editor: vscode.TextEditor, lines: string[]): void {
         const decorationType = this.decorationTypes.get('comment');
-        if (!decorationType) return;
+        if (!decorationType) {
+            return;
+        }
 
         const decorations: vscode.DecorationOptions[] = [];
         const commentRegex = /^\s*#.*$/;
@@ -395,7 +401,9 @@ export class SyntaxHighlighter {
      */
     private applyPriorityHighlighting(editor: vscode.TextEditor, lines: string[]): void {
         const decorationType = this.decorationTypes.get('priority');
-        if (!decorationType) return;
+        if (!decorationType) {
+            return;
+        }
 
         const decorations: vscode.DecorationOptions[] = [];
         const priorityRegex = /\[#[ABC]\]/g;

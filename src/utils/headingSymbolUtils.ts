@@ -25,11 +25,21 @@ export class HeadingSymbolUtils {
    * @returns VS Code 符号类型
    */
   static getSymbolKind(level: number): vscode.SymbolKind {
-    if (level === 1) return vscode.SymbolKind.Namespace;
-    if (level === 2) return vscode.SymbolKind.Class;
-    if (level === 3) return vscode.SymbolKind.Interface;
-    if (level === 4) return vscode.SymbolKind.Function;
-    if (level === 5) return vscode.SymbolKind.Field;
+    if (level === 1) {
+      return vscode.SymbolKind.Namespace;
+    }
+    if (level === 2) {
+      return vscode.SymbolKind.Class;
+    }
+    if (level === 3) {
+      return vscode.SymbolKind.Interface;
+    }
+    if (level === 4) {
+      return vscode.SymbolKind.Function;
+    }
+    if (level === 5) {
+      return vscode.SymbolKind.Field;
+    }
     return vscode.SymbolKind.Property;
   }
 }

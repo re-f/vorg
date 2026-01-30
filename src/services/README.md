@@ -16,6 +16,9 @@ Org-mode 标题符号索引服务，提供高性能的标题搜索和导航功�
 ### 使用示例
 
 ```typescript
+import * as vscode from 'vscode';
+import { OrgSymbolIndexService } from './services/orgSymbolIndexService';
+
 // 获取服务实例
 const indexService = OrgSymbolIndexService.getInstance();
 
@@ -23,6 +26,7 @@ const indexService = OrgSymbolIndexService.getInstance();
 const symbols = await indexService.searchSymbols('project meeting');
 
 // 获取指定文件的所有标题
+const uri = vscode.Uri.file('/path/to/file.org');
 const fileSymbols = await indexService.getSymbolsForFile(uri);
 
 // 获取所有标题
@@ -67,4 +71,5 @@ console.log(`已索引 ${stats.fileCount} 个文件，共 ${stats.symbolCount} �
 - 首次搜索时会触发索引构建（仅一次）
 - 扩展卸载时会自动清理资源
 - 不要手动调用 `dispose()`，由 VS Code 管理
+
 

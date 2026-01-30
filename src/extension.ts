@@ -24,7 +24,7 @@ import { OrgLinkProvider } from './links/orgLinkProvider';
 import { OrgFoldingProvider } from './folding/orgFoldingProvider';
 import { PreviewManager } from './preview/previewManager';
 import { SyntaxHighlighter } from './syntaxHighlighter';
-import { TodoKeywordManager } from './utils/todoKeywordManager';
+import { ConfigService } from './services/configService';
 import { Logger } from './utils/logger';
 import { PreviewCommands } from './commands/previewCommands';
 import { LinkCommands } from './commands/linkCommands';
@@ -34,6 +34,7 @@ import { HeadingCodeLensProvider } from './codelens/headingCodeLensProvider';
 import { OrgSymbolIndexService } from './services/orgSymbolIndexService';
 import { OrgCompletionProvider } from './completion/orgCompletionProvider';
 import { PropertyParser } from './parsers/propertyParser';
+import { PropertyService } from './services/propertyService';
 
 /**
  * 补全 ID 处理辅助函数
@@ -54,10 +55,10 @@ async function getOrGenerateIdForCompletion(
   providedId?: string
 ): Promise<{ id: string; needsInsert: boolean }> {
   const result = PropertyParser.getOrGenerateIdForHeading(targetDocument, symbolLine);
-  
-    // 如果提供了真实 ID，检查是否与文档中的 ID 一致
-    // 如果不一致，使用文档中的 ID（静默处理，不需要日志）
-  
+
+  // 如果提供了真实 ID，检查是否与文档中的 ID 一致
+  // 如果不一致，使用文档中的 ID（静默处理，不需要日志）
+
   return result;
 }
 
@@ -91,16 +92,16 @@ function fixClosingBrackets(text: string): string {
     pos++;
   }
 
-    if (bracketCount > 2) {
-      // 有多余的 ]，移除多余的，只保留 ]]
-      const beforeBrackets = text.substring(0, firstDoubleBracket + 2);
-      const afterBrackets = text.substring(pos);
-      return beforeBrackets + afterBrackets;
-    } else if (bracketCount < 2) {
-      // 缺少 ]，添加 ]
-      const fixed = text.substring(0, firstDoubleBracket + bracketCount) + ']' + text.substring(firstDoubleBracket + bracketCount);
-      return fixed;
-    }
+  if (bracketCount > 2) {
+    // 有多余的 ]，移除多余的，只保留 ]]
+    const beforeBrackets = text.substring(0, firstDoubleBracket + 2);
+    const afterBrackets = text.substring(pos);
+    return beforeBrackets + afterBrackets;
+  } else if (bracketCount < 2) {
+    // 缺少 ]，添加 ]
+    const fixed = text.substring(0, firstDoubleBracket + bracketCount) + ']' + text.substring(firstDoubleBracket + bracketCount);
+    return fixed;
+  }
 
   return text;
 }
@@ -116,7 +117,7 @@ function replaceIdInText(currentText: string, idToUse: string): string {
   // 匹配模式：[[id:UUID][标题]]
   const idPattern = /(\[\[id:)([^\]]+)(\]\[)/;
   const match = currentText.match(idPattern);
-  
+
   if (!match) {
     Logger.warn(`[CompletionProvider] 未找到 ID 模式，当前文本: "${currentText}"`);
     return currentText;
@@ -124,10 +125,10 @@ function replaceIdInText(currentText: string, idToUse: string): string {
 
   // 替换 ID 部分
   let newText = currentText.replace(idPattern, `$1${idToUse}$3`);
-  
+
   // 修复闭合括号
   newText = fixClosingBrackets(newText);
-  
+
   return newText;
 }
 
@@ -140,14 +141,14 @@ function replaceIdInText(currentText: string, idToUse: string): string {
 function moveCursorAfterLink(editor: vscode.TextEditor, lineNumber: number): void {
   const lineText = editor.document.lineAt(lineNumber).text;
   const lastBracketIndex = lineText.lastIndexOf(']]');
-  
+
   if (lastBracketIndex !== -1) {
     const newCursorPosition = new vscode.Position(
       lineNumber,
       lastBracketIndex + 2 // ]] 的长度是 2
     );
-      editor.selection = new vscode.Selection(newCursorPosition, newCursorPosition);
-    }
+    editor.selection = new vscode.Selection(newCursorPosition, newCursorPosition);
+  }
 }
 
 /**
@@ -168,8 +169,8 @@ async function insertIdToTargetDocument(
   symbolLine: number,
   idToUse: string
 ): Promise<void> {
-  // 使用 PropertyParser 准备编辑操作（只处理 orgmode 元素）
-  const workspaceEdit = PropertyParser.prepareIdInsertionEdit(
+  // 使用 PropertyService 准备编辑操作
+  const workspaceEdit = PropertyService.prepareIdInsertionEdit(
     symbolUri,
     targetDocument,
     symbolLine,
@@ -187,7 +188,7 @@ async function insertIdToTargetDocument(
   const targetEditor = vscode.window.visibleTextEditors.find(
     editor => editor.document.uri.toString() === symbolUri.toString()
   );
-  
+
   if (targetEditor) {
     // 如果目标文件已经在编辑器中打开，保存它
     await targetEditor.document.save();
@@ -210,13 +211,22 @@ export function activate(context: vscode.ExtensionContext) {
   Logger.initialize(context);
   Logger.info('VOrg extension is now active!');
 
-  // 初始化TODO关键字管理器
-  const todoKeywordManager = TodoKeywordManager.getInstance();
-  
+  // 初始化配置服务
+  const configService = ConfigService.fromVSCodeWorkspace();
+  ConfigService.setInstance(configService);
+
+  // 监听配置变化并更新配置服务
+  context.subscriptions.push(
+    ConfigService.watchConfiguration((newConfig) => {
+      ConfigService.setInstance(newConfig);
+      Logger.info('配置已更新');
+    })
+  );
+
   // 初始化符号索引服务（共享缓存，供多个功能使用）
   const symbolIndexService = OrgSymbolIndexService.getInstance();
   context.subscriptions.push(symbolIndexService);
-  
+
   // 初始化语法高亮器
   const syntaxHighlighter = new SyntaxHighlighter();
 
@@ -287,7 +297,7 @@ export function activate(context: vscode.ExtensionContext) {
         const currentPosition = activeEditor.selection.active;
         const currentLine = currentDocument.lineAt(currentPosition.line);
         const currentText = currentLine.text;
-        
+
         // 打开目标文档，获取或生成 ID
         const targetDocument = await vscode.workspace.openTextDocument(symbolUri);
         const { id: idToUse, needsInsert } = await getOrGenerateIdForCompletion(
@@ -295,24 +305,24 @@ export function activate(context: vscode.ExtensionContext) {
           symbolLine,
           providedId
         );
-        
+
         // 检查目标文档是否是当前文档
         const isSameDocument = currentDocument.uri.toString() === symbolUri.toString();
-        
+
         // 如果需要插入 ID，先准备编辑操作（在编辑当前行之前）
         let idInsertEdit: vscode.WorkspaceEdit | undefined;
         if (needsInsert) {
-          idInsertEdit = PropertyParser.prepareIdInsertionEdit(
+          idInsertEdit = PropertyService.prepareIdInsertionEdit(
             symbolUri,
             targetDocument,
             symbolLine,
             idToUse
           );
         }
-        
+
         // 替换当前行中的 ID（可能是占位符或已提供的 ID）
         const newText = replaceIdInText(currentText, idToUse);
-        
+
         // 如果目标文档是当前文档，需要合并编辑操作
         if (isSameDocument && needsInsert && idInsertEdit) {
           // 将当前行的替换操作添加到同一个 WorkspaceEdit 中
@@ -321,17 +331,17 @@ export function activate(context: vscode.ExtensionContext) {
             new vscode.Position(currentPosition.line, currentLine.text.length)
           );
           idInsertEdit.replace(currentDocument.uri, currentLineRange, newText);
-          
+
           // 应用合并后的编辑
           const success = await vscode.workspace.applyEdit(idInsertEdit);
           if (!success) {
             Logger.error(`[CompletionProvider] 应用编辑失败`);
             return;
           }
-          
+
           // 将光标移动到 ]] 后面
           moveCursorAfterLink(activeEditor, currentPosition.line);
-          
+
           // 保存文档
           await currentDocument.save();
         } else {
@@ -341,15 +351,15 @@ export function activate(context: vscode.ExtensionContext) {
               new vscode.Position(currentPosition.line, 0),
               new vscode.Position(currentPosition.line, currentLine.text.length)
             );
-            
+
             await activeEditor.edit(editBuilder => {
               editBuilder.replace(range, newText);
             });
-            
+
             // 将光标移动到 ]] 后面
             moveCursorAfterLink(activeEditor, currentPosition.line);
           }
-          
+
           // 如果需要插入 ID，插入到目标文档并保存（目标文档不是当前文档）
           if (needsInsert) {
             await insertIdToTargetDocument(
@@ -371,24 +381,24 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('vorg.insertIdForCompletion', async (uri: vscode.Uri, line: number, id: string) => {
       try {
         const document = await vscode.workspace.openTextDocument(uri);
-        
+
         // 使用 WorkspaceEdit 来避免切换文档
         const workspaceEdit = new vscode.WorkspaceEdit();
-        
+
         // 查找 Property 抽屉
         const drawer = PropertyParser.findPropertyDrawer(document, line);
-        
+
         if (!drawer) {
           // 如果没有 Property 抽屉，创建一个
           const headingLineObj = document.lineAt(line);
           const headingIndent = PropertyParser.parseIndent(headingLineObj.text);
           const propertyIndent = headingIndent + '  ';
-          
+
           const drawerText = PropertyParser.buildPropertyDrawer(
             [{ key: 'ID', value: id }],
             propertyIndent
           );
-          
+
           const insertPosition = new vscode.Position(line + 1, 0);
           workspaceEdit.insert(uri, insertPosition, drawerText);
         } else {
@@ -408,11 +418,11 @@ export function activate(context: vscode.ExtensionContext) {
             const endLine = document.lineAt(drawer.endLine);
             const indent = PropertyParser.getPropertyIndent(document, drawer);
             const idPropertyLine = PropertyParser.buildPropertyLine('ID', id, indent);
-            
+
             workspaceEdit.insert(uri, endLine.range.start, idPropertyLine + '\n');
           }
         }
-        
+
         // 应用编辑（不会切换文档）
         await vscode.workspace.applyEdit(workspaceEdit);
       } catch (error) {

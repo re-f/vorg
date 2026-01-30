@@ -11,6 +11,7 @@ async function main() {
 
         // 运行测试
         await runTests({
+            version: '1.92.0',
             extensionDevelopmentPath,
             extensionTestsPath
         });

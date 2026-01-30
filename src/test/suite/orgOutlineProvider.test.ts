@@ -2,8 +2,23 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { OrgOutlineProvider } from '../../outline/orgOutlineProvider';
 
+/**
+ * 辅助函数：提取纯显示名称（去除拼音信息）
+ * 符号名称格式为：displayName + \u200B + pinyinInfo
+ */
+function getDisplayName(name: string): string {
+    return name.split('\u200B')[0];
+}
+
+/**
+ * 辅助函数：查找符号（忽略拼音部分）
+ */
+function findSymbol(symbols: vscode.DocumentSymbol[], expectedName: string): vscode.DocumentSymbol | undefined {
+    return symbols.find(s => getDisplayName(s.name).includes(expectedName));
+}
+
 suite('OrgOutlineProvider Test Suite', () => {
-    
+
     test('Should handle org files with metadata headers', async () => {
         const content = `#+glossary_sources:  Glossary
 
@@ -39,31 +54,31 @@ suite('OrgOutlineProvider Test Suite', () => {
             content: content,
             language: 'org'
         });
-        
+
         const provider = new OrgOutlineProvider();
         const symbols = await provider.provideDocumentSymbols(doc, new vscode.CancellationTokenSource().token) as vscode.DocumentSymbol[];
-        
+
         // 验证符号被正确提取
         assert.ok(symbols);
         assert.ok(symbols.length > 0);
-        
-        // 查找 TITLE 元数据
+
+        // 查找 TITLE 元数据（metadata 不包含拼音）
         const titleSymbol = symbols.find(s => s.name.includes('TITLE: 2025 年记录'));
         assert.ok(titleSymbol, 'Should find TITLE metadata');
         assert.strictEqual(titleSymbol.kind, vscode.SymbolKind.Property);
-        
+
         // 查找第一个标题（Level 1 应为 Namespace）
-        const firstHeading = symbols.find(s => s.name === '第一个标题');
+        const firstHeading = findSymbol(symbols, '第一个标题');
         assert.ok(firstHeading, 'Should find first heading');
         assert.strictEqual(firstHeading.kind, vscode.SymbolKind.Namespace);
-        
+
         // 验证子标题被正确嵌套
         assert.ok(firstHeading.children.length > 0, 'First heading should have children');
-        const subHeading = firstHeading.children.find(child => child.name === '子标题一');
+        const subHeading = findSymbol(firstHeading.children, '子标题一');
         assert.ok(subHeading, 'Should find sub heading');
         assert.strictEqual(subHeading.kind, vscode.SymbolKind.Class);
     });
-    
+
     test('Should handle org files without metadata headers', async () => {
         const content = `* 第一个标题
 
@@ -89,26 +104,26 @@ suite('OrgOutlineProvider Test Suite', () => {
             content: content,
             language: 'org'
         });
-        
+
         const provider = new OrgOutlineProvider();
         const symbols = await provider.provideDocumentSymbols(doc, new vscode.CancellationTokenSource().token) as vscode.DocumentSymbol[];
-        
+
         // 验证符号被正确提取
         assert.ok(symbols);
         assert.ok(symbols.length > 0);
-        
+
         // 查找第一个标题（Level 1 应为 Namespace）
-        const firstHeading = symbols.find(s => s.name === '第一个标题');
+        const firstHeading = findSymbol(symbols, '第一个标题');
         assert.ok(firstHeading, 'Should find first heading');
         assert.strictEqual(firstHeading.kind, vscode.SymbolKind.Namespace);
-        
+
         // 验证子标题被正确嵌套
         assert.ok(firstHeading.children.length > 0, 'First heading should have children');
-        const subHeading = firstHeading.children.find(child => child.name === '子标题一');
+        const subHeading = findSymbol(firstHeading.children, '子标题一');
         assert.ok(subHeading, 'Should find sub heading');
         assert.strictEqual(subHeading.kind, vscode.SymbolKind.Class);
     });
-    
+
     test('Should handle TODO headings with tags', async () => {
         const content = `* TODO 待完成任务 :urgent:work:
 
@@ -126,27 +141,29 @@ suite('OrgOutlineProvider Test Suite', () => {
             content: content,
             language: 'org'
         });
-        
+
         const provider = new OrgOutlineProvider();
         const symbols = await provider.provideDocumentSymbols(doc, new vscode.CancellationTokenSource().token) as vscode.DocumentSymbol[];
-        
+
         // 验证符号被正确提取
         assert.ok(symbols);
         assert.ok(symbols.length > 0);
-        
+
         // 查找 TODO 标题
-        const todoHeading = symbols.find(s => s.name.includes('TODO 待完成任务'));
+        const todoHeading = findSymbol(symbols, 'TODO 待完成任务');
         assert.ok(todoHeading, 'Should find TODO heading');
-        assert.ok(todoHeading.name.includes(':urgent:work:'), 'Should include tags');
+        const todoDisplayName = getDisplayName(todoHeading.name);
+        assert.ok(todoDisplayName.includes(':urgent:work:'), 'Should include tags');
         assert.strictEqual(todoHeading.detail, 'TODO');
-        
+
         // 查找 DONE 标题
-        const doneHeading = symbols.find(s => s.name.includes('DONE 已完成任务'));
+        const doneHeading = findSymbol(symbols, 'DONE 已完成任务');
         assert.ok(doneHeading, 'Should find DONE heading');
-        assert.ok(doneHeading.name.includes(':completed:'), 'Should include tags');
+        const doneDisplayName = getDisplayName(doneHeading.name);
+        assert.ok(doneDisplayName.includes(':completed:'), 'Should include tags');
         assert.strictEqual(doneHeading.detail, 'DONE');
     });
-    
+
     test('Should handle empty org file', async () => {
         const content = '';
 
@@ -154,15 +171,15 @@ suite('OrgOutlineProvider Test Suite', () => {
             content: content,
             language: 'org'
         });
-        
+
         const provider = new OrgOutlineProvider();
         const symbols = await provider.provideDocumentSymbols(doc, new vscode.CancellationTokenSource().token) as vscode.DocumentSymbol[];
-        
+
         // 验证返回空数组
         assert.ok(symbols);
         assert.strictEqual(symbols.length, 0);
     });
-    
+
     test('Should handle org file with only metadata', async () => {
         const content = `#+TITLE: 测试文档
 #+AUTHOR: 测试作者
@@ -174,23 +191,23 @@ suite('OrgOutlineProvider Test Suite', () => {
             content: content,
             language: 'org'
         });
-        
+
         const provider = new OrgOutlineProvider();
         const symbols = await provider.provideDocumentSymbols(doc, new vscode.CancellationTokenSource().token) as vscode.DocumentSymbol[];
-        
+
         // 验证只有元数据符号
         assert.ok(symbols);
         assert.ok(symbols.length > 0);
-        
+
         // 验证所有符号都是属性类型
         symbols.forEach(symbol => {
             assert.strictEqual(symbol.kind, vscode.SymbolKind.Property);
         });
-        
-        // 验证包含所有重要元数据
+
+        // 验证包含所有重要元数据（metadata 不包含拼音，直接匹配）
         const titleSymbol = symbols.find(s => s.name.includes('TITLE: 测试文档'));
         assert.ok(titleSymbol, 'Should find TITLE metadata');
-        
+
         const authorSymbol = symbols.find(s => s.name.includes('AUTHOR: 测试作者'));
         assert.ok(authorSymbol, 'Should find AUTHOR metadata');
     });

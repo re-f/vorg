@@ -54,31 +54,33 @@ export function parseTodoKeywords(configString: string): {
   }
 
   const [todoSection = '', doneSection = ''] = configString.split('|').map(s => s.trim());
-  
+
   const parseSection = (section: string, isDone: boolean): TodoKeywordConfig[] => {
-    if (!section) return [];
-    
+    if (!section) {
+      return [];
+    }
+
     // 使用正则匹配每个关键字及其配置
     const keywordRegex = /(\w+)(\([^)]*\))?/g;
     const keywords: TodoKeywordConfig[] = [];
     let match;
-    
+
     while ((match = keywordRegex.exec(section)) !== null) {
       const keyword = match[1];
       const config = match[2]; // 包含括号的部分，如 (@/!)
-      
+
       let needsTimestamp = false;
       let needsNote = false;
-      
+
       if (config) {
         // 解析括号内的配置：@(时间戳)、!(备注)
         const configContent = config.slice(1, -1); // 去掉括号
-        
+
         // 检查是否需要时间戳和备注
         needsTimestamp = configContent.includes('@');
         needsNote = configContent.includes('!');
       }
-      
+
       keywords.push({
         keyword,
         needsTimestamp,
@@ -86,14 +88,14 @@ export function parseTodoKeywords(configString: string): {
         isDone
       });
     }
-    
+
     return keywords;
   };
-  
+
   const todoKeywords = parseSection(todoSection, false);
   const doneKeywords = parseSection(doneSection, true);
   const allKeywords = [...todoKeywords, ...doneKeywords];
-  
+
   return {
     todoKeywords,
     doneKeywords,

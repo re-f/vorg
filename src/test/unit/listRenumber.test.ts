@@ -1,13 +1,12 @@
 import * as assert from 'assert';
-import { ListCommands } from '../../commands/editing/listCommands';
-import { ListItemInfo } from '../../parsers/listParser';
+import { ListParser, ListItemInfo } from '../../parsers/listParser';
 
 /**
  * 列表重新编号工具函数单元测试
  * 测试纯函数逻辑，不依赖 VS Code API
  */
 suite('列表重新编号工具函数测试', () => {
-  
+
   // 辅助函数：创建列表项信息
   function createListItemInfo(
     indent: number,
@@ -27,34 +26,34 @@ suite('列表重新编号工具函数测试', () => {
   }
 
   suite('calculateNewItemNumber 测试', () => {
-    
+
     test('应该计算第一个项的编号', () => {
-      const result = (ListCommands as any).calculateNewItemNumber(0);
+      const result = ListParser.calculateNewItemNumber(0);
       assert.strictEqual(result, '1.');
     });
 
     test('应该计算第二个项的编号', () => {
-      const result = (ListCommands as any).calculateNewItemNumber(1);
+      const result = ListParser.calculateNewItemNumber(1);
       assert.strictEqual(result, '2.');
     });
 
     test('应该计算第十个项的编号', () => {
-      const result = (ListCommands as any).calculateNewItemNumber(9);
+      const result = ListParser.calculateNewItemNumber(9);
       assert.strictEqual(result, '10.');
     });
   });
 
   suite('renumberOrderedListItems 测试', () => {
-    
+
     test('应该重新编号所有项（无新项插入）', () => {
       const items = [
         { line: 0, listInfo: createListItemInfo(2, '1.', '第一项') },
         { line: 1, listInfo: createListItemInfo(2, '2.', '第二项') },
         { line: 2, listInfo: createListItemInfo(2, '3.', '第三项') }
       ];
-      
-      const result = (ListCommands as any).renumberOrderedListItems(items, -1);
-      
+
+      const result = ListParser.renumberOrderedListItems(items, -1);
+
       assert.strictEqual(result.length, 3);
       assert.strictEqual(result[0].newMarker, '1.');
       assert.strictEqual(result[0].originalLine, 0);
@@ -70,10 +69,10 @@ suite('列表重新编号工具函数测试', () => {
         { line: 1, listInfo: createListItemInfo(2, '2.', '第二项') },
         { line: 2, listInfo: createListItemInfo(2, '3.', '第三项') }
       ];
-      
+
       // 在最后插入新项（索引 3）
-      const result = (ListCommands as any).renumberOrderedListItems(items, 3);
-      
+      const result = ListParser.renumberOrderedListItems(items, 3);
+
       assert.strictEqual(result.length, 3);
       // 前面的项编号不变
       assert.strictEqual(result[0].newMarker, '1.');
@@ -89,10 +88,10 @@ suite('列表重新编号工具函数测试', () => {
         { line: 2, listInfo: createListItemInfo(2, '3.', '第三项') },
         { line: 3, listInfo: createListItemInfo(2, '4.', '第四项') }
       ];
-      
+
       // 在第2项后插入新项（索引 2）
-      const result = (ListCommands as any).renumberOrderedListItems(items, 2);
-      
+      const result = ListParser.renumberOrderedListItems(items, 2);
+
       assert.strictEqual(result.length, 4);
       // 前面的项编号不变
       assert.strictEqual(result[0].newMarker, '1.');
@@ -112,10 +111,10 @@ suite('列表重新编号工具函数测试', () => {
         { line: 0, listInfo: createListItemInfo(2, '1.', '第一项') },
         { line: 1, listInfo: createListItemInfo(2, '2.', '第二项') }
       ];
-      
+
       // 在开头插入新项（索引 0）
-      const result = (ListCommands as any).renumberOrderedListItems(items, 0);
-      
+      const result = ListParser.renumberOrderedListItems(items, 0);
+
       assert.strictEqual(result.length, 2);
       // 新项应该是 1，但不在结果中
       // 所有原有项都应该重新编号
@@ -127,9 +126,9 @@ suite('列表重新编号工具函数测试', () => {
 
     test('应该处理空列表', () => {
       const items: Array<{ line: number; listInfo: ListItemInfo }> = [];
-      
-      const result = (ListCommands as any).renumberOrderedListItems(items, -1);
-      
+
+      const result = ListParser.renumberOrderedListItems(items, -1);
+
       assert.strictEqual(result.length, 0);
     });
 
@@ -137,9 +136,9 @@ suite('列表重新编号工具函数测试', () => {
       const items = [
         { line: 0, listInfo: createListItemInfo(2, '1.', '第一项') }
       ];
-      
-      const result = (ListCommands as any).renumberOrderedListItems(items, -1);
-      
+
+      const result = ListParser.renumberOrderedListItems(items, -1);
+
       assert.strictEqual(result.length, 1);
       assert.strictEqual(result[0].newMarker, '1.');
       assert.strictEqual(result[0].originalLine, 0);
@@ -150,9 +149,9 @@ suite('列表重新编号工具函数测试', () => {
         { line: 0, listInfo: createListItemInfo(2, '1.', '第一项', true, 'X') },
         { line: 1, listInfo: createListItemInfo(2, '2.', '第二项') }
       ];
-      
-      const result = (ListCommands as any).renumberOrderedListItems(items, -1);
-      
+
+      const result = ListParser.renumberOrderedListItems(items, -1);
+
       assert.strictEqual(result.length, 2);
       // 验证复选框状态被保留
       assert.strictEqual(result[0].listInfo.hasCheckbox, true);

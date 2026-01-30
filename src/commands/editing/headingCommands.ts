@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { ContextInfo, HeadingInfo } from '../types/editingTypes';
-import { TodoKeywordManager } from '../../utils/todoKeywordManager';
 import { HeadingParser } from '../../parsers/headingParser';
+import { getConfigService } from '../../services/configService';
 
 /**
  * 标题操作命令类
@@ -16,7 +16,6 @@ import { HeadingParser } from '../../parsers/headingParser';
  * @class HeadingCommands
  */
 export class HeadingCommands {
-  private static todoKeywordManager = TodoKeywordManager.getInstance();
 
   /**
    * 在当前标题下方立即插入同级标题（不分割内容）
@@ -31,10 +30,10 @@ export class HeadingCommands {
     const document = editor.document;
     const line = document.lineAt(position.line);
     const stars = '*'.repeat(context.level || 1);
-    
+
     // 在当前行之后插入新标题
     editBuilder.insert(line.range.end, `\n${stars} `);
-    
+
     // 返回光标位置
     return new vscode.Position(position.line + 1, stars.length + 1);
   }
@@ -51,13 +50,16 @@ export class HeadingCommands {
     const position = editor.selection.active;
     const document = editor.document;
     const stars = '*'.repeat(context.level || 1);
-    
+
     // 找到子树结束位置
-    const subtreeEnd = HeadingParser.findSubtreeEnd(document, position);
-    
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+    const subtreeEnd = HeadingParser.findSubtreeEnd(document, position, todoKeywords);
+    const vscodeSubtreeEnd = new vscode.Position(subtreeEnd.line, subtreeEnd.character);
+
     // 在子树末尾插入新标题
-    editBuilder.insert(subtreeEnd, `\n${stars} `);
-    
+    editBuilder.insert(vscodeSubtreeEnd, `\n${stars} `);
+
     // 返回光标应该移动到的位置
     return new vscode.Position(subtreeEnd.line + 1, stars.length + 1);
   }
@@ -75,16 +77,19 @@ export class HeadingCommands {
     const document = editor.document;
     const line = document.lineAt(position.line);
     const stars = '*'.repeat(context.level || 1);
-    
+
     // 获取光标后的内容
     const restOfLine = line.text.substring(position.character).trim();
-    
-    // 删除光标后的内容
-    editBuilder.delete(new vscode.Range(position, line.range.end));
-    
-    // 立即在当前行之后插入新标题
+
+    // 获取光标前的内容（去掉尾部空格）
+    const prefix = line.text.substring(0, position.character).trimEnd();
+
+    // 替换整行为前缀
+    editBuilder.replace(line.range, prefix);
+
+    // 在当前行之后插入新标题
     editBuilder.insert(line.range.end, `\n${stars} ${restOfLine}`);
-    
+
     // 返回光标应该移动到的位置（新标题的内容开始位置）
     return new vscode.Position(position.line + 1, stars.length + 1);
   }
@@ -96,23 +101,30 @@ export class HeadingCommands {
     const position = editor.selection.active;
     const line = editor.document.lineAt(position.line);
     const lineText = line.text;
-    
+
     // 确定星号数量
     const stars = HeadingCommands.determineStarLevel(editor, position.line);
-    
+
     // 获取默认TODO关键字
-    const defaultTodoKeyword = HeadingCommands.todoKeywordManager.getDefaultTodoKeyword();
-    
+    const config = getConfigService();
+    const defaultTodoKeyword = config.getDefaultTodoKeyword();
+
+    let newPosition: vscode.Position;
     await editor.edit(editBuilder => {
       if (lineText.trim() === '') {
         // 当前行为空，直接插入
         editBuilder.insert(position, `${stars} ${defaultTodoKeyword} `);
+        newPosition = new vscode.Position(position.line, stars.length + defaultTodoKeyword.length + 2);
       } else {
         // 当前行有内容，在行末插入新行
         const lineEnd = line.range.end;
         editBuilder.insert(lineEnd, `\n${stars} ${defaultTodoKeyword} `);
+        newPosition = new vscode.Position(position.line + 1, stars.length + defaultTodoKeyword.length + 2);
       }
     });
+
+    // 移动光标
+    editor.selection = new vscode.Selection(newPosition!, newPosition!);
   }
 
   /**
@@ -121,10 +133,10 @@ export class HeadingCommands {
   static async toggleHeadingFold(editor: vscode.TextEditor, position: vscode.Position) {
     // 保存当前光标位置，确保折叠后光标不会跳转
     const savedPosition = editor.selection.active;
-    
+
     // 使用 VS Code 的折叠命令
     await vscode.commands.executeCommand('editor.toggleFold');
-    
+
     // 恢复光标位置
     editor.selection = new vscode.Selection(savedPosition, savedPosition);
   }
@@ -135,9 +147,10 @@ export class HeadingCommands {
    */
   static findCurrentHeading(
     document: vscode.TextDocument,
-    position: vscode.Position
-  ): { line: vscode.TextLine; headingInfo: HeadingInfo } | null {
-    return HeadingParser.findCurrentHeading(document, position);
+    position: vscode.Position,
+    todoKeywords?: string[]
+  ): { line: any; headingInfo: HeadingInfo } | null {
+    return HeadingParser.findCurrentHeading(document, position, todoKeywords);
   }
 
   /**
@@ -147,7 +160,9 @@ export class HeadingCommands {
     const document = editor.document;
     const line = document.lineAt(lineNumber);
     const lineText = line.text;
-    const headingInfo = HeadingParser.parseHeading(lineText);
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+    const headingInfo = HeadingParser.parseHeading(lineText, true, todoKeywords);
 
     if (headingInfo.level > 0) {
       return headingInfo.stars;
@@ -162,45 +177,48 @@ export class HeadingCommands {
   static async promoteSubtree(editor: vscode.TextEditor): Promise<void> {
     const position = editor.selection.active;
     const document = editor.document;
-    
+
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+
     // 检查当前行是否就是标题行（只在 headline 行本身时生效）
     const currentLine = document.lineAt(position.line);
-    const currentHeadingInfo = HeadingParser.parseHeading(currentLine.text);
+    const currentHeadingInfo = HeadingParser.parseHeading(currentLine.text, true, todoKeywords);
     if (currentHeadingInfo.level === 0) {
       // 如果当前行不是标题行，不执行任何操作
       return;
     }
-    
+
     // 查找当前标题（用于获取完整的标题信息）
-    const currentHeading = HeadingParser.findCurrentHeading(document, position);
+    const currentHeading = HeadingParser.findCurrentHeading(document, position, todoKeywords);
     if (!currentHeading) {
       return;
     }
 
     const startLine = currentHeading.line.lineNumber;
     const startLevel = currentHeading.headingInfo.level;
-    
+
     // 如果已经是1级标题，不能再升级
     if (startLevel <= 1) {
       return;
     }
 
     // 找到子树结束行
-    const subtreeEnd = HeadingParser.findSubtreeEnd(document, currentHeading.line.range.start);
+    const subtreeEnd = HeadingParser.findSubtreeEnd(document, currentHeading.line.range.start, todoKeywords);
     const endLine = subtreeEnd.line;
 
     // 收集所有需要修改的标题行及其新级别
     const edits: Array<{ line: number; newLevel: number; headingInfo: HeadingInfo }> = [];
-    
+
     for (let lineNumber = startLine; lineNumber <= endLine; lineNumber++) {
       const line = document.lineAt(lineNumber);
-      const headingInfo = HeadingParser.parseHeading(line.text);
-      
+      const headingInfo = HeadingParser.parseHeading(line.text, true, todoKeywords);
+
       if (headingInfo.level > 0) {
         // 计算相对级别差
         const levelDiff = headingInfo.level - startLevel;
         const newLevel = Math.max(1, startLevel - 1 + levelDiff);
-        
+
         if (newLevel !== headingInfo.level) {
           edits.push({ line: lineNumber, newLevel, headingInfo });
         }
@@ -234,40 +252,43 @@ export class HeadingCommands {
   static async demoteSubtree(editor: vscode.TextEditor): Promise<void> {
     const position = editor.selection.active;
     const document = editor.document;
-    
+
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+
     // 检查当前行是否就是标题行（只在 headline 行本身时生效）
     const currentLine = document.lineAt(position.line);
-    const currentHeadingInfo = HeadingParser.parseHeading(currentLine.text);
+    const currentHeadingInfo = HeadingParser.parseHeading(currentLine.text, true, todoKeywords);
     if (currentHeadingInfo.level === 0) {
       // 如果当前行不是标题行，不执行任何操作
       return;
     }
-    
+
     // 查找当前标题（用于获取完整的标题信息）
-    const currentHeading = HeadingParser.findCurrentHeading(document, position);
+    const currentHeading = HeadingParser.findCurrentHeading(document, position, todoKeywords);
     if (!currentHeading) {
       return;
     }
 
     const startLine = currentHeading.line.lineNumber;
     const startLevel = currentHeading.headingInfo.level;
-    
+
     // 找到子树结束行
-    const subtreeEnd = HeadingParser.findSubtreeEnd(document, currentHeading.line.range.start);
+    const subtreeEnd = HeadingParser.findSubtreeEnd(document, currentHeading.line.range.start, todoKeywords);
     const endLine = subtreeEnd.line;
 
     // 收集所有需要修改的标题行及其新级别
     const edits: Array<{ line: number; newLevel: number; headingInfo: HeadingInfo }> = [];
-    
+
     for (let lineNumber = startLine; lineNumber <= endLine; lineNumber++) {
       const line = document.lineAt(lineNumber);
-      const headingInfo = HeadingParser.parseHeading(line.text);
-      
+      const headingInfo = HeadingParser.parseHeading(line.text, true, todoKeywords);
+
       if (headingInfo.level > 0) {
         // 计算相对级别差
         const levelDiff = headingInfo.level - startLevel;
         const newLevel = startLevel + 1 + levelDiff;
-        
+
         edits.push({ line: lineNumber, newLevel, headingInfo });
       }
     }

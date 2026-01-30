@@ -2,15 +2,14 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { HeadingParser } from '../parsers/headingParser';
 import { PropertyParser } from '../parsers/propertyParser';
-import { TodoKeywordManager } from './todoKeywordManager';
 import { Logger } from './logger';
+import { getConfigService } from '../services/configService';
 
 /**
  * 链接工具类
  * 统一处理链接相关的查找和解析功能
  */
 export class LinkUtils {
-  private static todoKeywordManager = TodoKeywordManager.getInstance();
 
   /**
    * 解析文件路径
@@ -37,15 +36,18 @@ export class LinkUtils {
   static findIdInDocument(document: vscode.TextDocument, id: string): vscode.Location | null {
     // 使用 PropertyParser 查找 ID
     const idLine = PropertyParser.findIdInDocument(document, id);
-    
+
     if (idLine === null) {
       return null;
     }
-    
+
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+
     // 向上查找最近的标题 - 使用 HeadingParser
     for (let i = idLine; i >= 0; i--) {
       const line = document.lineAt(i);
-      if (HeadingParser.isHeadingLine(line.text)) {
+      if (HeadingParser.isHeadingLine(line.text, todoKeywords)) {
         return new vscode.Location(document.uri, new vscode.Position(i, 0));
       }
     }
@@ -68,7 +70,7 @@ export class LinkUtils {
     // 如果在当前文档中没找到，则在整个工作区的所有.org文件中查找
     try {
       const orgFiles = await vscode.workspace.findFiles('**/*.org', '**/node_modules/**', 100);
-      
+
       for (const fileUri of orgFiles) {
         // 跳过当前文档，因为已经搜索过了
         if (fileUri.toString() === document.uri.toString()) {
@@ -101,19 +103,22 @@ export class LinkUtils {
   static findHeadlineByTitle(document: vscode.TextDocument, title: string): vscode.Location | null {
     const text = document.getText();
     const lines = text.split('\n');
-    
+
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      
+
       // 使用 HeadingParser 解析标题
-      const headingInfo = HeadingParser.parseHeading(line);
-      
+      const headingInfo = HeadingParser.parseHeading(line, true, todoKeywords);
+
       if (headingInfo.level > 0) {
         // 获取完整标题（包含 TODO 状态）
-        const fullTitle = headingInfo.todoKeyword 
+        const fullTitle = headingInfo.todoKeyword
           ? `${headingInfo.todoKeyword} ${headingInfo.title}`
           : headingInfo.title;
-        
+
         // 匹配标题文本（带或不带 TODO 状态）
         if (headingInfo.title === title || fullTitle === title) {
           return new vscode.Location(document.uri, new vscode.Position(i, 0));

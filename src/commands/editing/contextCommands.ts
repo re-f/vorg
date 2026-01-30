@@ -20,6 +20,7 @@
 import * as vscode from 'vscode';
 import { ContextAnalyzer } from '../../parsers/contextAnalyzer';
 import { ListParser } from '../../parsers/listParser';
+import { getConfigService } from '../../services/configService';
 
 /**
  * 上下文命令处理器接口
@@ -30,7 +31,7 @@ interface ContextHandler {
    * 检查是否可以处理当前上下文
    */
   canHandle(context: ReturnType<typeof ContextAnalyzer.analyzeContext>): boolean;
-  
+
   /**
    * 执行处理逻辑
    */
@@ -60,7 +61,7 @@ class CheckboxToggleHandler implements ContextHandler {
     // 状态转换：' ' (未完成) -> 'X' (完成) -> '-' (部分完成) -> ' ' (未完成)
     const currentState = listInfo.checkboxState || ' ';
     let newState: string;
-    
+
     switch (currentState) {
       case ' ':
         newState = 'X'; // 未完成 -> 完成
@@ -170,13 +171,17 @@ export class ContextCommands {
 
     const position = editor.selection.active;
     const document = editor.document;
-    
+
+    // 获取关键词配置
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+
     // 分析当前上下文
-    const context = ContextAnalyzer.analyzeContext(document, position);
+    const context = ContextAnalyzer.analyzeContext(document, position, todoKeywords);
 
     // 查找第一个可以处理当前上下文的处理器
     const handler = this.handlers.find(h => h.canHandle(context));
-    
+
     if (handler) {
       await handler.handle(editor, position, context);
     } else {

@@ -3,6 +3,7 @@ import { HeadingParser } from '../parsers/headingParser';
 import { HeadingSymbolUtils } from '../utils/headingSymbolUtils';
 import { Logger } from '../utils/logger';
 import { getPinyinString } from '../utils/pinyinUtils';
+import { getConfigService } from './configService';
 
 /**
  * 标题符号信息
@@ -53,13 +54,13 @@ export class OrgSymbolIndexService implements vscode.Disposable {
 
   /** 符号索引缓存：文件路径 -> 标题符号列表 */
   private symbolCache = new Map<string, IndexedHeadingSymbol[]>();
-  
+
   /** 文件监听器 */
   private fileWatcher: vscode.FileSystemWatcher | null = null;
-  
+
   /** 是否已初始化索引 */
   private isIndexed = false;
-  
+
   /** 索引任务的 Promise，用于避免重复索引 */
   private indexingPromise: Promise<void> | null = null;
 
@@ -84,21 +85,21 @@ export class OrgSymbolIndexService implements vscode.Disposable {
    */
   private setupFileWatcher(): void {
     this.fileWatcher = vscode.workspace.createFileSystemWatcher('**/*.org');
-    
+
     // 文件创建时，索引该文件
     this.fileWatcher.onDidCreate(uri => {
       this.indexFile(uri).catch(error => {
         Logger.error(`索引文件失败 ${uri.fsPath}`, error);
       });
     });
-    
+
     // 文件修改时，重新索引该文件
     this.fileWatcher.onDidChange(uri => {
       this.indexFile(uri).catch(error => {
         Logger.error(`重新索引文件失败 ${uri.fsPath}`, error);
       });
     });
-    
+
     // 文件删除时，从缓存中移除
     this.fileWatcher.onDidDelete(uri => {
       this.removeFromCache(uri);
@@ -127,22 +128,22 @@ export class OrgSymbolIndexService implements vscode.Disposable {
     if (this.indexingPromise) {
       return this.indexingPromise;
     }
-    
+
     this.indexingPromise = (async () => {
       try {
         Logger.info('[OrgSymbolIndex] 开始构建索引...');
         const startTime = Date.now();
-        
+
         // 查找所有 .org 文件
         const orgFiles = await vscode.workspace.findFiles('**/*.org', null, 10000);
-        
+
         Logger.info(`[OrgSymbolIndex] 找到 ${orgFiles.length} 个 .org 文件`);
-        
+
         // 并行索引所有文件
         await Promise.all(orgFiles.map(uri => this.indexFile(uri)));
-        
+
         this.isIndexed = true;
-        
+
         const duration = Date.now() - startTime;
         const totalSymbols = this.getTotalSymbolCount();
         Logger.info(`[OrgSymbolIndex] 索引构建完成，耗时 ${duration}ms，共 ${totalSymbols} 个标题`);
@@ -150,7 +151,7 @@ export class OrgSymbolIndexService implements vscode.Disposable {
         this.indexingPromise = null;
       }
     })();
-    
+
     return this.indexingPromise;
   }
 
@@ -163,7 +164,7 @@ export class OrgSymbolIndexService implements vscode.Disposable {
     try {
       const document = await vscode.workspace.openTextDocument(uri);
       const symbols = this.extractSymbolsFromDocument(document);
-      
+
       // 更新缓存
       this.symbolCache.set(uri.toString(), symbols);
     } catch (error) {
@@ -183,28 +184,31 @@ export class OrgSymbolIndexService implements vscode.Disposable {
     const lines = document.getText().split('\n');
     const uri = document.uri;
     const relativePath = this.getRelativePath(uri);
-    
+
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      
+
       // 解析标题（包含标签解析）
-      const headingInfo = HeadingParser.parseHeading(line, true);
-      
+      const headingInfo = HeadingParser.parseHeading(line, true, todoKeywords);
+
       if (headingInfo.level > 0) {
         const text = headingInfo.text || headingInfo.title;
         const tags = headingInfo.tags || [];
         const todoKeyword = headingInfo.todoKeyword;
-        
+
         // 构建显示名称
         const displayName = HeadingParser.buildDisplayName(text, todoKeyword, tags);
-        
+
         // 计算拼音（用于拼音搜索）
         const pinyinText = getPinyinString(text);
         const pinyinDisplayName = getPinyinString(displayName);
-        
+
         // 确定符号类型
         const symbolKind = HeadingSymbolUtils.getSymbolKind(headingInfo.level);
-        
+
         symbols.push({
           displayName,
           text,
@@ -220,7 +224,7 @@ export class OrgSymbolIndexService implements vscode.Disposable {
         });
       }
     }
-    
+
     return symbols;
   }
 
@@ -253,7 +257,7 @@ export class OrgSymbolIndexService implements vscode.Disposable {
   ): Promise<IndexedHeadingSymbol[]> {
     // 确保索引已构建
     await this.ensureIndexed();
-    
+
     // 检查缓存中的符号是否包含拼音字段（兼容旧版本缓存）
     // 如果发现缺少拼音字段，重建索引
     if (this.symbolCache.size > 0) {
@@ -266,7 +270,7 @@ export class OrgSymbolIndexService implements vscode.Disposable {
           await this.rebuildIndex();
         } else if (query && query.length > 0) {
           // 调试：检查拼音匹配（仅当有查询时）
-          const testSymbol = firstSymbols.find((s: IndexedHeadingSymbol) => 
+          const testSymbol = firstSymbols.find((s: IndexedHeadingSymbol) =>
             s.pinyinText && s.pinyinText.length > 0
           );
           if (testSymbol) {
@@ -279,29 +283,29 @@ export class OrgSymbolIndexService implements vscode.Disposable {
         }
       }
     }
-    
+
     const results: IndexedHeadingSymbol[] = [];
     const maxResults = options?.maxResults || Number.MAX_SAFE_INTEGER;
-    
+
     // 遍历所有缓存的符号
     for (const symbols of this.symbolCache.values()) {
       if (options?.token?.isCancellationRequested) {
         break;
       }
-      
+
       for (const symbol of symbols) {
         // 如果达到最大结果数，退出
         if (results.length >= maxResults) {
           return results;
         }
-        
+
         // 如果没有查询或符号匹配查询，添加到结果
         if (!query || this.matchesQuery(symbol, query)) {
           results.push(symbol);
         }
       }
     }
-    
+
     return results;
   }
 
@@ -323,7 +327,7 @@ export class OrgSymbolIndexService implements vscode.Disposable {
    */
   async getAllSymbols(): Promise<IndexedHeadingSymbol[]> {
     await this.ensureIndexed();
-    
+
     // 检查缓存中的符号是否包含拼音字段（兼容旧版本缓存）
     if (this.symbolCache.size > 0) {
       const firstSymbols = this.symbolCache.values().next().value;
@@ -336,7 +340,7 @@ export class OrgSymbolIndexService implements vscode.Disposable {
         }
       }
     }
-    
+
     const allSymbols: IndexedHeadingSymbol[] = [];
     for (const symbols of this.symbolCache.values()) {
       allSymbols.push(...symbols);
@@ -355,12 +359,12 @@ export class OrgSymbolIndexService implements vscode.Disposable {
     const lowerQuery = query.toLowerCase();
     const lowerText = symbol.text.toLowerCase();
     const lowerDisplayName = symbol.displayName.toLowerCase();
-    
+
     // 简单包含匹配（原有功能，优先检查）
     if (lowerText.includes(lowerQuery) || lowerDisplayName.includes(lowerQuery)) {
       return true;
     }
-    
+
     // 拼音匹配（如果查询文本匹配拼音字段）
     // 安全检查：确保拼音字段存在且不为空
     const pinyinText = symbol.pinyinText || '';
@@ -368,7 +372,7 @@ export class OrgSymbolIndexService implements vscode.Disposable {
     if (pinyinText || pinyinDisplayName) {
       const lowerPinyinText = pinyinText.toLowerCase();
       const lowerPinyinDisplayName = pinyinDisplayName.toLowerCase();
-      
+
       // 拼音字段格式是 "全拼 首字母"，例如 "ceshi cs" 或 "gongzuojilu gzjl"
       // 需要检查查询是否匹配全拼或首字母部分
       // 例如："gz" 应该匹配 "gongzuojilu gzjl" 中的 "gzjl" 部分
@@ -377,7 +381,7 @@ export class OrgSymbolIndexService implements vscode.Disposable {
         return true;
       }
     }
-    
+
     // 支持空格分隔的多个关键词匹配
     const queryWords = lowerQuery.split(/\s+/).filter(word => word.length > 0);
     if (queryWords.length > 1) {
@@ -397,7 +401,7 @@ export class OrgSymbolIndexService implements vscode.Disposable {
         return false;
       });
     }
-    
+
     return false;
   }
 
@@ -409,15 +413,15 @@ export class OrgSymbolIndexService implements vscode.Disposable {
     if (!workspaceFolders || workspaceFolders.length === 0) {
       return uri.fsPath;
     }
-    
+
     // 使用第一个工作区文件夹作为基准
     const workspaceRoot = workspaceFolders[0].uri.fsPath;
     const filePath = uri.fsPath;
-    
+
     if (filePath.startsWith(workspaceRoot)) {
       return filePath.substring(workspaceRoot.length + 1); // +1 是为了去掉路径分隔符
     }
-    
+
     return uri.fsPath;
   }
 
@@ -465,11 +469,11 @@ export class OrgSymbolIndexService implements vscode.Disposable {
       this.fileWatcher.dispose();
       this.fileWatcher = null;
     }
-    
+
     // 清空缓存
     this.symbolCache.clear();
     this.isIndexed = false;
-    
+
     // 清空单例
     OrgSymbolIndexService.instance = null;
   }

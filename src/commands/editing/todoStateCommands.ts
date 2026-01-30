@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { HeadingInfo } from '../types/editingTypes';
-import { TodoKeywordManager } from '../../utils/todoKeywordManager';
 import { HeadingCommands } from './headingCommands';
 import { HeadingParser } from '../../parsers/headingParser';
+import { getConfigService } from '../../services/configService';
 
 /**
  * TODO 状态管理命令类
@@ -15,16 +15,19 @@ import { HeadingParser } from '../../parsers/headingParser';
  * @class TodoStateCommands
  */
 export class TodoStateCommands {
-  private static todoKeywordManager = TodoKeywordManager.getInstance();
 
   /**
    * 设置特定的TODO状态
    */
   static async setTodoState(editor: vscode.TextEditor, targetState?: string) {
     const position = editor.selection.active;
-    
+
+    const config = getConfigService();
+    const todoKeywordsStrArr = config.getAllKeywordStrings();
+    const allKeywordConfigs = config.getAllKeywords();
+
     // 查找当前位置所属的标题
-    const headingLineInfo = HeadingCommands.findCurrentHeading(editor.document, position);
+    const headingLineInfo = HeadingCommands.findCurrentHeading(editor.document, position, todoKeywordsStrArr);
     if (!headingLineInfo) {
       vscode.window.showInformationMessage('请将光标放在标题或其内容区域内');
       return;
@@ -33,11 +36,10 @@ export class TodoStateCommands {
     const { line, headingInfo } = headingLineInfo;
 
     // 如果没有指定目标状态，显示选择列表
-    if (!targetState) {
-      const allKeywords = TodoStateCommands.todoKeywordManager.getAllKeywords();
+    if (targetState === undefined) {
       const items = [
         { label: '(无状态)', value: '' },
-        ...allKeywords.map(k => ({
+        ...allKeywordConfigs.map(k => ({
           label: k.keyword,
           value: k.keyword,
           description: k.isDone ? '已完成状态' : '未完成状态'
@@ -56,7 +58,7 @@ export class TodoStateCommands {
     }
 
     // 验证目标状态是否有效
-    if (targetState && !TodoStateCommands.todoKeywordManager.isValidKeyword(targetState)) {
+    if (targetState && !config.isValidKeyword(targetState)) {
       vscode.window.showErrorMessage(`无效的TODO状态: ${targetState}`);
       return;
     }
@@ -75,11 +77,15 @@ export class TodoStateCommands {
     newState: string
   ) {
     const lineText = line.text;
-    
+
+    const config = getConfigService();
+    const todoKeywordsStrArr = config.getAllKeywordStrings();
+
     // 使用HeadingParser重建标题行
     const newLineText = HeadingParser.updateTodoState(
       lineText,
-      newState || null
+      newState || null,
+      todoKeywordsStrArr
     );
 
     // 应用文本变更
@@ -88,7 +94,7 @@ export class TodoStateCommands {
     });
 
     // 检查是否需要添加时间戳和备注
-    const keywordConfig = TodoStateCommands.todoKeywordManager.getKeywordConfig(newState);
+    const keywordConfig = config.getKeywordConfig(newState);
     if (keywordConfig) {
       await TodoStateCommands.handleStateTransitionLogging(
         editor,
@@ -124,7 +130,7 @@ export class TodoStateCommands {
     if (needsTimestamp) {
       const now = new Date();
       const timestamp = now.toISOString().slice(0, 19).replace('T', ' ');
-      
+
       if (keywordConfig.isDone) {
         logText += `   CLOSED: [${timestamp}]\n`;
       } else {

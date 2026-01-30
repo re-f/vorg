@@ -23,7 +23,6 @@
  */
 
 import * as vscode from 'vscode';
-import { TodoKeywordManager } from '../utils/todoKeywordManager';
 import { ContextAnalyzer } from '../parsers/contextAnalyzer';
 import { HeadingParser } from '../parsers/headingParser';
 import { HeadingCommands } from './editing/headingCommands';
@@ -33,6 +32,7 @@ import { ListCommands } from './editing/listCommands';
 import { TableCommands } from './editing/tableCommands';
 import { CodeBlockCommands } from './editing/codeBlockCommands';
 import { ContextCommands } from './editing/contextCommands';
+import { getConfigService } from '../services/configService';
 
 /**
  * 编辑命令协调器
@@ -53,7 +53,6 @@ import { ContextCommands } from './editing/contextCommands';
  * @class EditingCommands
  */
 export class EditingCommands {
-  private static todoKeywordManager = TodoKeywordManager.getInstance();
 
   /**
    * 注册编辑相关命令
@@ -61,57 +60,57 @@ export class EditingCommands {
   static registerCommands(context: vscode.ExtensionContext) {
     // org-meta-return 命令 (Meta+Enter)
     const metaReturnCommand = vscode.commands.registerCommand('vorg.metaReturn', () => {
-      EditingCommands.executeMetaReturn();
+      return EditingCommands.executeMetaReturn();
     });
 
     // 智能回车命令 (Ctrl+Meta+Enter)
     const smartReturnCommand = vscode.commands.registerCommand('vorg.smartReturn', () => {
-      EditingCommands.executeSmartReturn();
+      return EditingCommands.executeSmartReturn();
     });
 
     // 插入TODO标题命令
     const insertTodoCommand = vscode.commands.registerCommand('vorg.insertTodoHeading', () => {
-      EditingCommands.insertTodoHeading();
+      return EditingCommands.insertTodoHeading();
     });
 
     // 切换到特定TODO状态的命令
     const setTodoStateCommand = vscode.commands.registerCommand('vorg.setTodoState', (state?: string) => {
-      EditingCommands.setTodoState(state);
+      return EditingCommands.setTodoState(state);
     });
 
     // TAB 键智能缩进命令
     const smartTabCommand = vscode.commands.registerCommand('vorg.smartTab', () => {
-      EditingCommands.executeSmartTab();
+      return EditingCommands.executeSmartTab();
     });
 
     // Shift+TAB 键反向缩进命令
     const smartShiftTabCommand = vscode.commands.registerCommand('vorg.smartShiftTab', () => {
-      EditingCommands.executeSmartShiftTab();
+      return EditingCommands.executeSmartShiftTab();
     });
 
     // 设置Property命令（类似org-set-property）
     const setPropertyCommand = vscode.commands.registerCommand('vorg.setProperty', () => {
-      EditingCommands.orgSetProperty();
+      return EditingCommands.orgSetProperty();
     });
 
     // org-ctrl-return 命令 (Ctrl+Enter)
     const ctrlReturnCommand = vscode.commands.registerCommand('vorg.ctrlReturn', () => {
-      EditingCommands.executeCtrlReturn();
+      return EditingCommands.executeCtrlReturn();
     });
 
     // 升级子树命令 (org-promote-subtree)
     const promoteSubtreeCommand = vscode.commands.registerCommand('vorg.promoteSubtree', (lineNumber?: number) => {
-      EditingCommands.promoteSubtree(lineNumber);
+      return EditingCommands.promoteSubtree(lineNumber);
     });
 
     // 降级子树命令 (org-demote-subtree)
     const demoteSubtreeCommand = vscode.commands.registerCommand('vorg.demoteSubtree', (lineNumber?: number) => {
-      EditingCommands.demoteSubtree(lineNumber);
+      return EditingCommands.demoteSubtree(lineNumber);
     });
 
     // Ctrl+C Ctrl+C 上下文命令
     const ctrlCtrlCommand = vscode.commands.registerCommand('vorg.ctrlCtrl', () => {
-      ContextCommands.executeCtrlCtrl();
+      return ContextCommands.executeCtrlCtrl();
     });
 
     context.subscriptions.push(
@@ -141,13 +140,13 @@ export class EditingCommands {
 
     const position = editor.selection.active;
     const document = editor.document;
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+    const context = ContextAnalyzer.analyzeContext(document, position, todoKeywords);
     const line = document.lineAt(position.line);
     const lineText = line.text;
     const isAtBeginning = position.character === 0 || lineText.slice(0, position.character).trim() === '';
     const isAtEnd = position.character >= lineText.trimEnd().length;
-
-    // 检查当前位置的上下文
-    const context = ContextAnalyzer.analyzeContext(document, position);
 
     let newCursorPosition: vscode.Position | null = null;
 
@@ -183,7 +182,7 @@ export class EditingCommands {
         case 'property-drawer':
         case 'property-item':
         case 'property-drawer-header':
-          PropertyCommands.insertPropertyItem(editBuilder, editor);
+          newCursorPosition = PropertyCommands.insertPropertyItem(editBuilder, editor);
           break;
         case 'property-drawer-end':
           EditingCommands.insertDefaultNewline(editBuilder, editor, position, isAtBeginning);
@@ -216,11 +215,13 @@ export class EditingCommands {
 
     const position = editor.selection.active;
     const document = editor.document;
-    const context = ContextAnalyzer.analyzeContext(document, position);
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+    const context = ContextAnalyzer.analyzeContext(document, position, todoKeywords);
 
     if (context.type === 'heading') {
       // 在子树末尾插入新标题
-      const subtreeEnd = HeadingParser.findSubtreeEnd(document, position);
+      const subtreeEnd = HeadingParser.findSubtreeEnd(document, position, todoKeywords);
       const newPosition = new vscode.Position(subtreeEnd.line + 1, 0);
 
       await editor.edit(editBuilder => {
@@ -261,7 +262,9 @@ export class EditingCommands {
 
     const position = editor.selection.active;
     const document = editor.document;
-    const context = ContextAnalyzer.analyzeContext(document, position);
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+    const context = ContextAnalyzer.analyzeContext(document, position, todoKeywords);
     const line = document.lineAt(position.line);
     const isAtBeginning = position.character === 0 || line.text.slice(0, position.character).trim() === '';
 
@@ -334,7 +337,9 @@ export class EditingCommands {
 
     const position = editor.selection.active;
     const document = editor.document;
-    const context = ContextAnalyzer.analyzeContext(document, position);
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+    const context = ContextAnalyzer.analyzeContext(document, position, todoKeywords);
 
     switch (context.type) {
       case 'heading':
@@ -389,7 +394,9 @@ export class EditingCommands {
 
     const position = editor.selection.active;
     const document = editor.document;
-    const context = ContextAnalyzer.analyzeContext(document, position);
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+    const context = ContextAnalyzer.analyzeContext(document, position, todoKeywords);
 
     switch (context.type) {
       case 'list-item':
@@ -418,8 +425,11 @@ export class EditingCommands {
   ) {
     const document = editor.document;
 
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+
     // 查找所属标题以确定级别
-    const currentHeading = HeadingCommands.findCurrentHeading(document, position);
+    const currentHeading = HeadingCommands.findCurrentHeading(document, position, todoKeywords);
     const level = currentHeading ? currentHeading.headingInfo.level : 1;
     const stars = '*'.repeat(level);
 
@@ -444,8 +454,11 @@ export class EditingCommands {
     const document = editor.document;
     const line = document.lineAt(position.line);
 
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+
     // 查找所属标题以确定级别
-    const currentHeading = HeadingCommands.findCurrentHeading(document, position);
+    const currentHeading = HeadingCommands.findCurrentHeading(document, position, todoKeywords);
     const level = currentHeading ? currentHeading.headingInfo.level : 1;
     const stars = '*'.repeat(level);
 

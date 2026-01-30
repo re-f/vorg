@@ -27,7 +27,7 @@ export class DebugCommands {
 
         // 注册刷新语法高亮命令
         const refreshHighlightingCommand = vscode.commands.registerCommand('vorg.debug.refreshHighlighting', () => {
-            DebugCommands.refreshHighlighting();
+            return DebugCommands.refreshHighlighting();
         });
 
         context.subscriptions.push(refreshHighlightingCommand);

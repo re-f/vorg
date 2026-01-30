@@ -1,14 +1,15 @@
 import * as assert from 'assert';
 import { ListParser } from '../../parsers/listParser';
+import * as core from '../../types/core';
 
 /**
  * ListParser 解析逻辑单元测试
  * 测试列表解析、缩进管理、子项查找等核心功能
  */
 suite('ListParser 列表解析测试', () => {
-  
+
   // 辅助函数：创建 mock document
-  function createMockDocument(content: string) {
+  function createMockDocument(content: string): core.TextDocument {
     const lines = content.split('\n');
     return {
       lineCount: lines.length,
@@ -21,7 +22,7 @@ suite('ListParser 列表解析测试', () => {
         }
       }),
       getText: () => content
-    } as any;
+    };
   }
 
   // 辅助函数：创建 Position
@@ -30,10 +31,10 @@ suite('ListParser 列表解析测试', () => {
   }
 
   suite('parseListItem 测试', () => {
-    
+
     test('应该解析无序列表项（- 标记）', () => {
       const result = ListParser.parseListItem('- 列表项内容');
-      
+
       assert.strictEqual(result?.indent, 0);
       assert.strictEqual(result?.marker, '-');
       assert.strictEqual(result?.content, '列表项内容');
@@ -43,21 +44,21 @@ suite('ListParser 列表解析测试', () => {
 
     test('应该解析无序列表项（* 标记）', () => {
       const result = ListParser.parseListItem('* 列表项内容');
-      
+
       assert.strictEqual(result?.marker, '*');
       assert.strictEqual(result?.content, '列表项内容');
     });
 
     test('应该解析无序列表项（+ 标记）', () => {
       const result = ListParser.parseListItem('+ 列表项内容');
-      
+
       assert.strictEqual(result?.marker, '+');
       assert.strictEqual(result?.content, '列表项内容');
     });
 
     test('应该解析有序列表项', () => {
       const result = ListParser.parseListItem('1. 有序列表项');
-      
+
       assert.strictEqual(result?.marker, '1.');
       assert.strictEqual(result?.content, '有序列表项');
       assert.strictEqual(result?.isOrdered, true);
@@ -65,7 +66,7 @@ suite('ListParser 列表解析测试', () => {
 
     test('应该解析带缩进的列表项', () => {
       const result = ListParser.parseListItem('  - 缩进列表项');
-      
+
       assert.strictEqual(result?.indent, 2);
       assert.strictEqual(result?.marker, '-');
       assert.strictEqual(result?.content, '缩进列表项');
@@ -73,7 +74,7 @@ suite('ListParser 列表解析测试', () => {
 
     test('应该解析带复选框的列表项（未选中）', () => {
       const result = ListParser.parseListItem('- [ ] 待办事项');
-      
+
       assert.strictEqual(result?.hasCheckbox, true);
       assert.strictEqual(result?.checkboxState, ' ');
       assert.strictEqual(result?.content, '待办事项');
@@ -81,7 +82,7 @@ suite('ListParser 列表解析测试', () => {
 
     test('应该解析带复选框的列表项（已选中）', () => {
       const result = ListParser.parseListItem('- [X] 已完成事项');
-      
+
       assert.strictEqual(result?.hasCheckbox, true);
       assert.strictEqual(result?.checkboxState, 'X');
       assert.strictEqual(result?.content, '已完成事项');
@@ -89,7 +90,7 @@ suite('ListParser 列表解析测试', () => {
 
     test('应该解析带复选框的列表项（进行中）', () => {
       const result = ListParser.parseListItem('- [-] 进行中事项');
-      
+
       assert.strictEqual(result?.hasCheckbox, true);
       assert.strictEqual(result?.checkboxState, '-');
       assert.strictEqual(result?.content, '进行中事项');
@@ -108,7 +109,7 @@ suite('ListParser 列表解析测试', () => {
   });
 
   suite('isListLine 测试', () => {
-    
+
     test('应该识别无序列表行', () => {
       assert.strictEqual(ListParser.isListLine('- 列表项'), true);
       assert.strictEqual(ListParser.isListLine('* 列表项'), true);
@@ -132,7 +133,7 @@ suite('ListParser 列表解析测试', () => {
   });
 
   suite('getNextMarker 测试', () => {
-    
+
     test('有序列表标记应该递增', () => {
       assert.strictEqual(ListParser.getNextMarker('1.'), '2.');
       assert.strictEqual(ListParser.getNextMarker('5.'), '6.');
@@ -147,7 +148,7 @@ suite('ListParser 列表解析测试', () => {
   });
 
   suite('parseIndent 和 getIndentLevel 测试', () => {
-    
+
     test('应该解析空缩进', () => {
       assert.strictEqual(ListParser.parseIndent('- 列表'), '');
       assert.strictEqual(ListParser.getIndentLevel('- 列表'), 0);
@@ -170,14 +171,14 @@ suite('ListParser 列表解析测试', () => {
   });
 
   suite('findListItemEnd 测试', () => {
-    
+
     test('应该找到简单列表项的结束', () => {
       const content = `- 列表项 1
 - 列表项 2`;
       const doc = createMockDocument(content);
       const pos = createPosition(0);
       const end = ListParser.findListItemEnd(doc, pos, 0);
-      
+
       assert.strictEqual(end.line, 0);
     });
 
@@ -189,7 +190,7 @@ suite('ListParser 列表解析测试', () => {
       const doc = createMockDocument(content);
       const pos = createPosition(0);
       const end = ListParser.findListItemEnd(doc, pos, 0);
-      
+
       assert.strictEqual(end.line, 2); // 应该在子项 2 的行尾
     });
 
@@ -200,7 +201,7 @@ suite('ListParser 列表解析测试', () => {
       const doc = createMockDocument(content);
       const pos = createPosition(0);
       const end = ListParser.findListItemEnd(doc, pos, 0);
-      
+
       assert.strictEqual(end.line, 1);
     });
 
@@ -213,7 +214,7 @@ suite('ListParser 列表解析测试', () => {
       const doc = createMockDocument(content);
       const pos = createPosition(3); // 光标在第4项
       const end = ListParser.findListItemEnd(doc, pos, 2);
-      
+
       // 应该在第四项的行尾停止，不应该继续到普通文本行
       assert.strictEqual(end.line, 3);
     });
@@ -224,19 +225,19 @@ suite('ListParser 列表解析测试', () => {
       const doc = createMockDocument(content);
       const pos = createPosition(0);
       const end = ListParser.findListItemEnd(doc, pos, 2);
-      
+
       // 应该在列表项的行尾停止
       assert.strictEqual(end.line, 0);
     });
   });
 
   suite('hasSubItems 测试', () => {
-    
+
     test('有子项的列表应返回 true', () => {
       const content = `- 列表项
   - 子项`;
       const doc = createMockDocument(content);
-      
+
       assert.strictEqual(ListParser.hasSubItems(doc, 0, 0), true);
     });
 
@@ -244,7 +245,7 @@ suite('ListParser 列表解析测试', () => {
       const content = `- 列表项
 - 另一个列表项`;
       const doc = createMockDocument(content);
-      
+
       assert.strictEqual(ListParser.hasSubItems(doc, 0, 0), false);
     });
 
@@ -253,13 +254,13 @@ suite('ListParser 列表解析测试', () => {
   这是普通文本内容
 - 另一个列表项`;
       const doc = createMockDocument(content);
-      
+
       assert.strictEqual(ListParser.hasSubItems(doc, 0, 0), true);
     });
   });
 
   suite('buildListItemLine 测试', () => {
-    
+
     test('应该构建简单列表项', () => {
       const result = ListParser.buildListItemLine(0, '-', '内容');
       assert.strictEqual(result, '- 内容');
@@ -292,7 +293,7 @@ suite('ListParser 列表解析测试', () => {
   });
 
   suite('isHeadingLine 测试', () => {
-    
+
     test('应该识别标题行', () => {
       assert.strictEqual(ListParser.isHeadingLine('* 标题'), true);
       assert.strictEqual(ListParser.isHeadingLine('** 二级标题'), true);
@@ -306,14 +307,14 @@ suite('ListParser 列表解析测试', () => {
   });
 
   suite('findFirstListItemAtLevel 测试', () => {
-    
+
     test('应该找到同一级别的第一个列表项', () => {
       const content = `  1. 第一项
   - 第二项
   - 第三项`;
       const doc = createMockDocument(content);
       const result = ListParser.findFirstListItemAtLevel(doc, 2, 2);
-      
+
       assert.ok(result);
       assert.strictEqual(result?.marker, '1.');
       assert.strictEqual(result?.isOrdered, true);
@@ -325,7 +326,7 @@ suite('ListParser 列表解析测试', () => {
   - 第二项`;
       const doc = createMockDocument(content);
       const result = ListParser.findFirstListItemAtLevel(doc, 2, 2);
-      
+
       assert.ok(result);
       assert.strictEqual(result?.marker, '1.');
     });
@@ -336,7 +337,7 @@ suite('ListParser 列表解析测试', () => {
   2. 子项2`;
       const doc = createMockDocument(content);
       const result = ListParser.findFirstListItemAtLevel(doc, 2, 2);
-      
+
       assert.ok(result);
       assert.strictEqual(result?.marker, '1.');
     });
@@ -346,20 +347,20 @@ suite('ListParser 列表解析测试', () => {
 普通文本`;
       const doc = createMockDocument(content);
       const result = ListParser.findFirstListItemAtLevel(doc, 1, 2);
-      
+
       assert.strictEqual(result, null);
     });
   });
 
   suite('findFirstListItemLineAtLevel 测试', () => {
-    
+
     test('应该找到第一个列表项的行号', () => {
       const content = `  1. 第一项
   - 第二项
   - 第三项`;
       const doc = createMockDocument(content);
       const result = ListParser.findFirstListItemLineAtLevel(doc, 2, 2);
-      
+
       assert.strictEqual(result, 0);
     });
 
@@ -369,7 +370,7 @@ suite('ListParser 列表解析测试', () => {
   - 第二项`;
       const doc = createMockDocument(content);
       const result = ListParser.findFirstListItemLineAtLevel(doc, 2, 2);
-      
+
       assert.strictEqual(result, 0);
     });
 
@@ -379,7 +380,7 @@ suite('ListParser 列表解析测试', () => {
   2. 子项2`;
       const doc = createMockDocument(content);
       const result = ListParser.findFirstListItemLineAtLevel(doc, 2, 2);
-      
+
       assert.strictEqual(result, 1);
     });
 
@@ -388,20 +389,20 @@ suite('ListParser 列表解析测试', () => {
 普通文本`;
       const doc = createMockDocument(content);
       const result = ListParser.findFirstListItemLineAtLevel(doc, 1, 2);
-      
+
       assert.strictEqual(result, -1);
     });
   });
 
   suite('countItemsAtLevel 测试', () => {
-    
+
     test('应该统计同一级别的列表项数量', () => {
       const content = `  1. 第一项
   - 第二项
   - 第三项`;
       const doc = createMockDocument(content);
       const result = ListParser.countItemsAtLevel(doc, 2, 2);
-      
+
       assert.strictEqual(result, 3);
     });
 
@@ -411,7 +412,7 @@ suite('ListParser 列表解析测试', () => {
   - 第二项`;
       const doc = createMockDocument(content);
       const result = ListParser.countItemsAtLevel(doc, 2, 2);
-      
+
       assert.strictEqual(result, 2);
     });
 
@@ -422,7 +423,7 @@ suite('ListParser 列表解析测试', () => {
   - 第二项`;
       const doc = createMockDocument(content);
       const result = ListParser.countItemsAtLevel(doc, 3, 2);
-      
+
       assert.strictEqual(result, 2); // 只统计缩进为 2 的项
     });
 
@@ -431,7 +432,7 @@ suite('ListParser 列表解析测试', () => {
 普通文本`;
       const doc = createMockDocument(content);
       const result = ListParser.countItemsAtLevel(doc, 1, 2);
-      
+
       assert.strictEqual(result, 0);
     });
 
@@ -442,20 +443,20 @@ suite('ListParser 列表解析测试', () => {
   2. 有序项2`;
       const doc = createMockDocument(content);
       const result = ListParser.countItemsAtLevel(doc, 3, 2);
-      
+
       assert.strictEqual(result, 4); // 所有同级项
     });
   });
 
   suite('findItemsAtLevel 测试', () => {
-    
+
     test('应该找到同一级别的所有列表项', () => {
       const content = `  1. 第一项
   - 第二项
   - 第三项`;
       const doc = createMockDocument(content);
       const result = ListParser.findItemsAtLevel(doc, 0, 2);
-      
+
       assert.strictEqual(result.length, 3);
       assert.strictEqual(result[0].line, 0);
       assert.strictEqual(result[0].listInfo.marker, '1.');
@@ -472,7 +473,7 @@ suite('ListParser 列表解析测试', () => {
   - 第三项`;
       const doc = createMockDocument(content);
       const result = ListParser.findItemsAtLevel(doc, 0, 2);
-      
+
       assert.strictEqual(result.length, 2);
       assert.strictEqual(result[0].line, 0);
       assert.strictEqual(result[1].line, 1);
@@ -485,7 +486,7 @@ suite('ListParser 列表解析测试', () => {
   3. 第三项`;
       const doc = createMockDocument(content);
       const result = ListParser.findItemsAtLevel(doc, 0, 2);
-      
+
       assert.strictEqual(result.length, 2);
       assert.strictEqual(result[0].line, 0);
       assert.strictEqual(result[1].line, 1);
@@ -497,7 +498,7 @@ suite('ListParser 列表解析测试', () => {
   - 第二项`;
       const doc = createMockDocument(content);
       const result = ListParser.findItemsAtLevel(doc, 0, 2);
-      
+
       assert.strictEqual(result.length, 2);
       assert.strictEqual(result[0].line, 0);
       assert.strictEqual(result[1].line, 2);
@@ -510,7 +511,7 @@ suite('ListParser 列表解析测试', () => {
   - 第二项`;
       const doc = createMockDocument(content);
       const result = ListParser.findItemsAtLevel(doc, 0, 2);
-      
+
       assert.strictEqual(result.length, 2);
       assert.strictEqual(result[0].line, 0);
       assert.strictEqual(result[1].line, 3);
@@ -521,7 +522,7 @@ suite('ListParser 列表解析测试', () => {
   - 列表项`;
       const doc = createMockDocument(content);
       const result = ListParser.findItemsAtLevel(doc, 0, 2);
-      
+
       assert.strictEqual(result.length, 0);
     });
   });
