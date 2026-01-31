@@ -1,6 +1,8 @@
 import { unified } from 'unified';
 import uniorgParse from 'uniorg-parse';
 import { OrgHeading, OrgLink } from './types';
+import { getPinyinString } from '../utils/pinyinUtils';
+import { HeadingParser } from '../parsers/headingParser';
 
 /**
  * UniorgAstExtractor
@@ -21,8 +23,9 @@ export class UniorgAstExtractor {
      * 注意: property drawer 在 AST 中是 headline 的兄弟节点,
      * 所以我们需要在遍历时收集它们
      */
-    extractHeadings(ast: any, fileUri: string): OrgHeading[] {
+    extractHeadings(ast: any, fileUri: string, content: string): OrgHeading[] {
         const headings: OrgHeading[] = [];
+        const mapper = new OffsetMapper(content);
 
         const traverse = (node: any, parentId?: string) => {
             let currentHeadingId = parentId;
@@ -39,14 +42,16 @@ export class UniorgAstExtractor {
                     // 创建 heading
                     const heading = this.createHeadingFromNode(
                         headline,
+                        node.contentsBegin || headline.contentsBegin || 0,
                         properties,
                         fileUri,
+                        mapper,
                         parentId
                     );
 
                     // 修正 endLine: 使用 section 的结束位置
                     if (node.contentsEnd) {
-                        heading.endLine = node.contentsEnd;
+                        heading.endLine = mapper.getLine(node.contentsEnd);
                     }
 
                     headings.push(heading);
@@ -83,8 +88,9 @@ export class UniorgAstExtractor {
     /**
      * 从 AST 提取所有 links
      */
-    extractLinks(ast: any, fileUri: string): OrgLink[] {
+    extractLinks(ast: any, fileUri: string, content: string): OrgLink[] {
         const links: OrgLink[] = [];
+        const mapper = new OffsetMapper(content);
         let currentHeadingLine: number | undefined;
         let currentHeadingId: string | undefined;
 
@@ -93,7 +99,7 @@ export class UniorgAstExtractor {
             if (node.type === 'section') {
                 const headline = node.children?.find((c: any) => c.type === 'headline');
                 if (headline) {
-                    currentHeadingLine = headline.contentsBegin || 0;
+                    currentHeadingLine = mapper.getLine(node.contentsBegin || headline.contentsBegin || 0);
 
                     // 获取 ID (从 properties)
                     const drawer = node.children?.find((c: any) => c.type === 'property-drawer');
@@ -108,7 +114,7 @@ export class UniorgAstExtractor {
 
             // 提取 link
             if (node.type === 'link') {
-                const link = this.extractLinkFromNode(node, fileUri, currentHeadingLine, currentHeadingId);
+                const link = this.extractLinkFromNode(node, fileUri, mapper, currentHeadingLine, currentHeadingId);
                 if (link) {
                     links.push(link);
                 }
@@ -186,11 +192,14 @@ export class UniorgAstExtractor {
      */
     private createHeadingFromNode(
         node: any,
+        startOffset: number,
         properties: Record<string, string>,
         fileUri: string,
+        mapper: OffsetMapper,
         parentId?: string
     ): OrgHeading {
-        const id = properties.ID || `${fileUri}:${node.contentsBegin || 0}`;
+        const startLine = mapper.getLine(startOffset);
+        const id = properties.ID || `${fileUri}:${startLine}`;
 
         // 提取 title (从 rawValue)
         const title = node.rawValue || '';
@@ -203,22 +212,31 @@ export class UniorgAstExtractor {
         // 提取 TODO category
         const todoCategory = this.getTodoCategory(node.todoKeyword);
 
+        // 计算拼音（用于拼音搜索）
+        const tags = node.tags || [];
+        const todoKeyword = node.todoKeyword || undefined;
+        const displayName = HeadingParser.buildDisplayName(title, todoKeyword, tags);
+        const pinyinTitle = getPinyinString(title);
+        const pinyinDisplayName = getPinyinString(displayName);
+
         return {
             id,
             fileUri,
             level: node.level || 1,
             title,
-            todoState: node.todoKeyword || undefined,
+            pinyinTitle,
+            pinyinDisplayName,
+            todoState: todoKeyword,
             todoCategory,
             priority: node.priority || undefined,
-            tags: node.tags || [],
+            tags,
             properties,
             scheduled,
             deadline,
             closed,
             timestamps: [],
-            startLine: node.contentsBegin || 0,
-            endLine: node.contentsEnd || 0,
+            startLine: startLine,
+            endLine: mapper.getLine(node.contentsEnd || node.contentsBegin || 0),
             parentId,
             childrenIds: [],
             content: '',
@@ -233,6 +251,7 @@ export class UniorgAstExtractor {
     private extractLinkFromNode(
         node: any,
         fileUri: string,
+        mapper: OffsetMapper,
         sourceHeadingLine?: number,
         sourceHeadingId?: string
     ): OrgLink | null {
@@ -256,7 +275,7 @@ export class UniorgAstExtractor {
             sourceUri: fileUri,
             sourceHeadingLine,
             sourceHeadingId,
-            lineNumber: node.contentsBegin || 0,
+            lineNumber: mapper.getLine(node.contentsBegin || 0),
             ...target,
             linkType,
             linkText
@@ -387,5 +406,44 @@ export class UniorgAstExtractor {
 
         // http 链接
         return { targetUri: path };
+    }
+}
+
+/**
+ * 辅助类：将字符偏移量转换为 0 索引的行号
+ */
+class OffsetMapper {
+    private lineStarts: number[] = [];
+
+    constructor(content: string) {
+        this.lineStarts.push(0);
+        for (let i = 0; i < content.length; i++) {
+            if (content[i] === '\n') {
+                this.lineStarts.push(i + 1);
+            }
+        }
+    }
+
+    /**
+     * 获取指定偏移量对应的 0 索引行号
+     */
+    getLine(offset: number): number {
+        // 使用二分查找找到对应的行
+        let low = 0;
+        let high = this.lineStarts.length - 1;
+
+        while (low <= high) {
+            const mid = Math.floor((low + high) / 2);
+            if (this.lineStarts[mid] === offset) {
+                return mid;
+            } else if (this.lineStarts[mid] < offset) {
+                low = mid + 1;
+            } else {
+                high = mid - 1;
+            }
+        }
+
+        // 返回 high，因为 high 是最后一个小于等于 offset 的行起点的索引
+        return high;
     }
 }

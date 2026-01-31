@@ -12,7 +12,7 @@ import * as path from 'path';
  * Schema version history
  */
 const SCHEMA_VERSIONS = {
-    1: 'Initial schema with files, headings, links, tags, timestamps'
+    1: 'Initial schema with files, headings, pinyin fields, links, tags, timestamps'
 };
 
 const CURRENT_SCHEMA_VERSION = 1;
@@ -118,7 +118,7 @@ export class SchemaManager {
      * @param targetVersion Target schema version
      */
     public migrate(targetVersion: number): void {
-        const currentVersion = this.getSchemaVersion();
+        let currentVersion = this.getSchemaVersion();
 
         if (currentVersion === targetVersion) {
             console.log(`Database already at version ${targetVersion}`);
@@ -131,10 +131,10 @@ export class SchemaManager {
 
         console.log(`Migrating database from version ${currentVersion} to ${targetVersion}`);
 
-        // For now, we only have version 1
-        // Future migrations will be added here
-        if (currentVersion === 0 && targetVersion === 1) {
+        // Sequence of migrations
+        if (currentVersion === 0) {
             this.initialize();
+            currentVersion = this.getSchemaVersion();
         }
     }
 

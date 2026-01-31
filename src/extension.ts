@@ -204,6 +204,7 @@ async function insertIdToTargetDocument(
   }
 }
 
+
 // import { IncrementalUpdateService } from './database/incrementalUpdateService'; // 已移除顶级导入
 
 /**
@@ -254,7 +255,14 @@ export async function activate(context: vscode.ExtensionContext) {
     const { IncrementalUpdateService } = await import('./database/incrementalUpdateService');
 
     // 确保数据库已初始化
-    const dbPath = path.join(context.globalStorageUri.fsPath, 'vorg.db');
+    // 优先保存到工作区根目录，方便用户查看和手动清理
+    let dbPath: string;
+    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+      dbPath = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, '.vorg.db');
+    } else {
+      dbPath = path.join(context.globalStorageUri.fsPath, 'vorg.db');
+    }
+
     await DatabaseConnection.getInstance().initialize(dbPath);
     Logger.info(`Database initialized successfully at: ${dbPath}`);
 

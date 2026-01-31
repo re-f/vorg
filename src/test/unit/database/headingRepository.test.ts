@@ -162,4 +162,36 @@ suite('HeadingRepository Integration Tests', () => {
         assert.strictEqual(results.length, 1);
         assert.strictEqual(results[0].title, 'Tagged');
     });
+
+    test('should search headings by title and pinyin', () => {
+        const fileUri = '/test/pinyin.org';
+        fileRepo.insert({ uri: fileUri, hash: 'h', title: 'T', properties: {}, tags: [], headings: [], updatedAt: new Date() });
+
+        headingRepo.insert({
+            id: 'p1', fileUri, level: 1, title: '测试标题', pinyinTitle: 'ceshibiaoti csbt', pinyinDisplayName: 'TODO [#A] ceshibiaoti csbt work',
+            startLine: 1, endLine: 1, properties: {}, tags: ['work'], timestamps: [], childrenIds: [], createdAt: new Date(), updatedAt: new Date(),
+            todoState: 'TODO', todoCategory: 'todo', priority: 'A', content: ''
+        });
+
+        // Search by exact title
+        const results1 = headingRepo.search('测试');
+        assert.strictEqual(results1.length, 1);
+        assert.strictEqual(results1[0].fileUri, fileUri);
+
+        // Search by pinyin initials
+        const results2 = headingRepo.search('csbt');
+        assert.strictEqual(results2.length, 1);
+        assert.strictEqual(results2[0].fileUri, fileUri);
+
+        // Search by part of pinyin
+        const results3 = headingRepo.search('biaoti');
+        assert.strictEqual(results3.length, 1);
+        assert.strictEqual(results3[0].fileUri, fileUri);
+    });
+
+    test('SchemaManager: should initialize correct version', () => {
+        const row = db.exec("SELECT value FROM metadata WHERE key='schema_version'")[0];
+        assert.ok(row, 'Metadata table should exist and have version');
+        assert.strictEqual(row.values[0][0], '1', 'Version should be 1');
+    });
 });

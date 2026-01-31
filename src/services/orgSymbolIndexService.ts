@@ -2,8 +2,9 @@ import * as vscode from 'vscode';
 import { HeadingParser } from '../parsers/headingParser';
 import { HeadingSymbolUtils } from '../utils/headingSymbolUtils';
 import { Logger } from '../utils/logger';
-import { getPinyinString } from '../utils/pinyinUtils';
-import { getConfigService } from './configService';
+import { DatabaseConnection } from '../database/connection';
+import { HeadingRepository } from '../database/headingRepository';
+import { OrgHeading } from '../database/types';
 
 /**
  * 标题符号信息
@@ -39,12 +40,10 @@ export interface IndexedHeadingSymbol {
  * Org-mode 符号索引服务
  * 
  * 提供工作区级别的 Org-mode 标题索引和搜索功能。
- * 使用内存缓存 + FileWatcher 机制，确保高性能和实时更新。
+ * 现已重构为基于 SQLite 数据库的持久化索引，内存缓存已被移除。
  * 
  * 功能包括：
- * - 自动索引工作区中的所有 .org 文件
- * - 实时监听文件变化并更新索引
- * - 提供快速的标题搜索功能
+ * - 提供快速的标题搜索功能（支持拼音）
  * - 供多个功能模块共享使用（符号导航、链接插入等）
  * 
  * @class OrgSymbolIndexService
@@ -52,20 +51,8 @@ export interface IndexedHeadingSymbol {
 export class OrgSymbolIndexService implements vscode.Disposable {
   private static instance: OrgSymbolIndexService | null = null;
 
-  /** 符号索引缓存：文件路径 -> 标题符号列表 */
-  private symbolCache = new Map<string, IndexedHeadingSymbol[]>();
-
-  /** 文件监听器 */
-  private fileWatcher: vscode.FileSystemWatcher | null = null;
-
-  /** 是否已初始化索引 */
-  private isIndexed = false;
-
-  /** 索引任务的 Promise，用于避免重复索引 */
-  private indexingPromise: Promise<void> | null = null;
-
   private constructor() {
-    this.setupFileWatcher();
+    // 构造函数现在不执行任何操作，因为生命周期由 IncrementalUpdateService 管理
   }
 
   /**
@@ -79,330 +66,97 @@ export class OrgSymbolIndexService implements vscode.Disposable {
   }
 
   /**
-   * 设置文件监听器
+   * 确保索引已构建 (Legacy)
    * 
-   * 监听 .org 和 .org_archive 文件的创建、修改和删除，自动更新索引
-   */
-  private setupFileWatcher(): void {
-    this.fileWatcher = vscode.workspace.createFileSystemWatcher('**/*.{org,org_archive}');
-
-    // 文件创建时，索引该文件
-    this.fileWatcher.onDidCreate(uri => {
-      this.indexFile(uri).catch(error => {
-        Logger.error(`索引文件失败 ${uri.fsPath}`, error);
-      });
-    });
-
-    // 文件修改时，重新索引该文件
-    this.fileWatcher.onDidChange(uri => {
-      this.indexFile(uri).catch(error => {
-        Logger.error(`重新索引文件失败 ${uri.fsPath}`, error);
-      });
-    });
-
-    // 文件删除时，从缓存中移除
-    this.fileWatcher.onDidDelete(uri => {
-      this.removeFromCache(uri);
-    });
-  }
-
-  /**
-   * 确保索引已构建
-   * 
-   * 如果尚未索引，会自动构建；否则直接返回
+   * 现在是一个空操作，因为 IncrementalUpdateService 在扩展激活时会自动启动索引
    */
   async ensureIndexed(): Promise<void> {
-    if (this.isIndexed) {
-      return;
-    }
-    await this.buildIndex();
+    // No-op
   }
 
   /**
-   * 构建完整的工作区索引
-   * 
-   * 扫描所有 .org 文件并建立符号索引
+   * 从 OrgHeading 映射到 IndexedHeadingSymbol
    */
-  private async buildIndex(): Promise<void> {
-    // 如果已经在索引中，返回现有的 Promise
-    if (this.indexingPromise) {
-      return this.indexingPromise;
-    }
+  private mapHeadingToSymbol(heading: OrgHeading): IndexedHeadingSymbol {
+    const uri = vscode.Uri.file(heading.fileUri);
+    const displayName = HeadingParser.buildDisplayName(heading.title, heading.todoState, heading.tags);
 
-    this.indexingPromise = (async () => {
-      try {
-        Logger.info('[OrgSymbolIndex] 开始构建索引...');
-        const startTime = Date.now();
-
-        // 查找所有 .org 和 .org_archive 文件
-        const orgFiles = await vscode.workspace.findFiles('**/*.{org,org_archive}', null, 10000);
-
-        Logger.info(`[OrgSymbolIndex] 找到 ${orgFiles.length} 个 Org 文件`);
-
-        // 并行索引所有文件
-        await Promise.all(orgFiles.map(uri => this.indexFile(uri)));
-
-        this.isIndexed = true;
-
-        const duration = Date.now() - startTime;
-        const totalSymbols = this.getTotalSymbolCount();
-        Logger.info(`[OrgSymbolIndex] 索引构建完成，耗时 ${duration}ms，共 ${totalSymbols} 个标题`);
-      } finally {
-        this.indexingPromise = null;
-      }
-    })();
-
-    return this.indexingPromise;
-  }
-
-  /**
-   * 索引单个文件
-   * 
-   * @param uri - 文件 URI
-   */
-  private async indexFile(uri: vscode.Uri): Promise<void> {
-    try {
-      const document = await vscode.workspace.openTextDocument(uri);
-      const symbols = this.extractSymbolsFromDocument(document);
-
-      // 更新缓存
-      this.symbolCache.set(uri.toString(), symbols);
-    } catch (error) {
-      Logger.warn(`[OrgSymbolIndex] 无法索引文件 ${uri.fsPath}`);
-      Logger.error(`[OrgSymbolIndex] 索引错误详情`, error);
-    }
-  }
-
-  /**
-   * 从文档中提取符号
-   * 
-   * @param document - 文档对象
-   * @returns 符号信息数组
-   */
-  private extractSymbolsFromDocument(document: vscode.TextDocument): IndexedHeadingSymbol[] {
-    const symbols: IndexedHeadingSymbol[] = [];
-    const lines = document.getText().split('\n');
-    const uri = document.uri;
-    const relativePath = this.getRelativePath(uri);
-
-    const config = getConfigService();
-    const todoKeywords = config.getAllKeywordStrings();
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-
-      // 解析标题（包含标签解析）
-      const headingInfo = HeadingParser.parseHeading(line, true, todoKeywords);
-
-      if (headingInfo.level > 0) {
-        const text = headingInfo.text || headingInfo.title;
-        const tags = headingInfo.tags || [];
-        const todoKeyword = headingInfo.todoKeyword;
-
-        // 构建显示名称
-        const displayName = HeadingParser.buildDisplayName(text, todoKeyword, tags);
-
-        // 计算拼音（用于拼音搜索）
-        const pinyinText = getPinyinString(text);
-        const pinyinDisplayName = getPinyinString(displayName);
-
-        // 确定符号类型
-        const symbolKind = HeadingSymbolUtils.getSymbolKind(headingInfo.level);
-
-        symbols.push({
-          displayName,
-          text,
-          pinyinText,
-          pinyinDisplayName,
-          level: headingInfo.level,
-          todoKeyword,
-          tags,
-          uri,
-          line: i,
-          symbolKind,
-          relativePath
-        });
-      }
-    }
-
-    return symbols;
-  }
-
-  /**
-   * 从缓存中移除文件
-   * 
-   * @param uri - 文件 URI
-   */
-  private removeFromCache(uri: vscode.Uri): void {
-    this.symbolCache.delete(uri.toString());
+    return {
+      displayName,
+      text: heading.title,
+      pinyinText: heading.pinyinTitle || '',
+      pinyinDisplayName: heading.pinyinDisplayName || '',
+      level: heading.level,
+      todoKeyword: heading.todoState || null,
+      tags: heading.tags,
+      uri: uri,
+      line: heading.startLine,
+      symbolKind: HeadingSymbolUtils.getSymbolKind(heading.level),
+      relativePath: this.getRelativePath(uri)
+    };
   }
 
   /**
    * 搜索标题符号
    * 
-   * 支持模糊匹配和多关键词搜索
+   * 支持模糊匹配和多关键词搜索（基于数据库 LIKE 查询）
    * 
-   * @param query - 搜索查询字符串（可选，为空则返回所有）
+   * @param query - 搜索查询字符串
    * @param options - 搜索选项
    * @returns 匹配的符号数组
    */
   async searchSymbols(
     query?: string,
     options?: {
-      /** 最大结果数 */
       maxResults?: number;
-      /** 取消令牌 */
       token?: vscode.CancellationToken;
     }
   ): Promise<IndexedHeadingSymbol[]> {
-    // 确保索引已构建
-    await this.ensureIndexed();
-
-    // 检查缓存中的符号是否包含拼音字段（兼容旧版本缓存）
-    // 如果发现缺少拼音字段，重建索引
-    if (this.symbolCache.size > 0) {
-      const firstSymbols = this.symbolCache.values().next().value;
-      if (firstSymbols && firstSymbols.length > 0) {
-        const firstSymbol = firstSymbols[0];
-        // 检查是否缺少拼音字段（旧版本缓存）
-        if (firstSymbol.pinyinText === undefined || firstSymbol.pinyinDisplayName === undefined) {
-          Logger.info('[OrgSymbolIndex] 检测到旧版本缓存，重建索引以支持拼音搜索...');
-          await this.rebuildIndex();
-        } else if (query && query.length > 0) {
-          // 调试：检查拼音匹配（仅当有查询时）
-          const testSymbol = firstSymbols.find((s: IndexedHeadingSymbol) =>
-            s.pinyinText && s.pinyinText.length > 0
-          );
-          if (testSymbol) {
-            const lowerQuery = query.toLowerCase();
-            const lowerPinyinText = (testSymbol.pinyinText || '').toLowerCase();
-            const lowerPinyinDisplayName = (testSymbol.pinyinDisplayName || '').toLowerCase();
-            const matches = lowerPinyinText.includes(lowerQuery) || lowerPinyinDisplayName.includes(lowerQuery);
-            Logger.info(`[OrgSymbolIndex] 搜索测试: 查询="${query}", 示例符号="${testSymbol.text}", 拼音="${testSymbol.pinyinText}", 匹配=${matches}`);
-          }
-        }
-      }
+    const db = DatabaseConnection.getInstance().getDatabase();
+    if (!db) {
+      Logger.warn('[OrgSymbolIndex] 数据库未连接，无法搜索符号');
+      return [];
     }
 
-    const results: IndexedHeadingSymbol[] = [];
-    const maxResults = options?.maxResults || Number.MAX_SAFE_INTEGER;
+    const repo = new HeadingRepository(db);
+    const maxResults = options?.maxResults || 100;
 
-    // 遍历所有缓存的符号
-    for (const symbols of this.symbolCache.values()) {
-      if (options?.token?.isCancellationRequested) {
-        break;
-      }
-
-      for (const symbol of symbols) {
-        // 如果达到最大结果数，退出
-        if (results.length >= maxResults) {
-          return results;
-        }
-
-        // 如果没有查询或符号匹配查询，添加到结果
-        if (!query || this.matchesQuery(symbol, query)) {
-          results.push(symbol);
-        }
-      }
+    let headings: OrgHeading[];
+    if (!query) {
+      headings = repo.findAll();
+    } else {
+      headings = repo.search(query, maxResults);
     }
 
-    return results;
+    return headings.map(h => this.mapHeadingToSymbol(h));
   }
 
   /**
    * 获取指定文件的所有标题符号
-   * 
-   * @param uri - 文件 URI
-   * @returns 符号数组，如果文件未索引则返回空数组
    */
   async getSymbolsForFile(uri: vscode.Uri): Promise<IndexedHeadingSymbol[]> {
-    await this.ensureIndexed();
-    return this.symbolCache.get(uri.toString()) || [];
+    const db = DatabaseConnection.getInstance().getDatabase();
+    if (!db) {
+      return [];
+    }
+
+    const repo = new HeadingRepository(db);
+    const headings = repo.findByFileUri(uri.fsPath);
+    return headings.map(h => this.mapHeadingToSymbol(h));
   }
 
   /**
    * 获取所有已索引的标题符号
-   * 
-   * @returns 所有符号数组
    */
   async getAllSymbols(): Promise<IndexedHeadingSymbol[]> {
-    await this.ensureIndexed();
-
-    // 检查缓存中的符号是否包含拼音字段（兼容旧版本缓存）
-    if (this.symbolCache.size > 0) {
-      const firstSymbols = this.symbolCache.values().next().value;
-      if (firstSymbols && firstSymbols.length > 0) {
-        const firstSymbol = firstSymbols[0];
-        // 检查是否缺少拼音字段（旧版本缓存）
-        if (firstSymbol.pinyinText === undefined || firstSymbol.pinyinDisplayName === undefined) {
-          Logger.info('[OrgSymbolIndex] 检测到旧版本缓存，重建索引以支持拼音搜索...');
-          await this.rebuildIndex();
-        }
-      }
+    const db = DatabaseConnection.getInstance().getDatabase();
+    if (!db) {
+      return [];
     }
 
-    const allSymbols: IndexedHeadingSymbol[] = [];
-    for (const symbols of this.symbolCache.values()) {
-      allSymbols.push(...symbols);
-    }
-    return allSymbols;
-  }
-
-  /**
-   * 检查符号是否匹配查询
-   * 
-   * 支持不区分大小写的模糊匹配、多关键词搜索和拼音搜索
-   * - 字符串直接匹配（原有功能）：匹配 text 和 displayName
-   * - 拼音匹配：匹配缓存的拼音字段（全拼和首字母）
-   */
-  private matchesQuery(symbol: IndexedHeadingSymbol, query: string): boolean {
-    const lowerQuery = query.toLowerCase();
-    const lowerText = symbol.text.toLowerCase();
-    const lowerDisplayName = symbol.displayName.toLowerCase();
-
-    // 简单包含匹配（原有功能，优先检查）
-    if (lowerText.includes(lowerQuery) || lowerDisplayName.includes(lowerQuery)) {
-      return true;
-    }
-
-    // 拼音匹配（如果查询文本匹配拼音字段）
-    // 安全检查：确保拼音字段存在且不为空
-    const pinyinText = symbol.pinyinText || '';
-    const pinyinDisplayName = symbol.pinyinDisplayName || '';
-    if (pinyinText || pinyinDisplayName) {
-      const lowerPinyinText = pinyinText.toLowerCase();
-      const lowerPinyinDisplayName = pinyinDisplayName.toLowerCase();
-
-      // 拼音字段格式是 "全拼 首字母"，例如 "ceshi cs" 或 "gongzuojilu gzjl"
-      // 需要检查查询是否匹配全拼或首字母部分
-      // 例如："gz" 应该匹配 "gongzuojilu gzjl" 中的 "gzjl" 部分
-      if (lowerPinyinText.includes(lowerQuery) || lowerPinyinDisplayName.includes(lowerQuery)) {
-        Logger.info(`[拼音匹配成功] 查询: "${query}" 匹配符号: "${symbol.text}", 拼音: "${pinyinText}"`);
-        return true;
-      }
-    }
-
-    // 支持空格分隔的多个关键词匹配
-    const queryWords = lowerQuery.split(/\s+/).filter(word => word.length > 0);
-    if (queryWords.length > 1) {
-      // 每个关键词都要匹配（可以是文本匹配或拼音匹配）
-      return queryWords.every(word => {
-        if (lowerText.includes(word) || lowerDisplayName.includes(word)) {
-          return true;
-        }
-        // 如果拼音字段存在，也检查拼音匹配
-        if (pinyinText || pinyinDisplayName) {
-          const lowerPinyinText = pinyinText.toLowerCase();
-          const lowerPinyinDisplayName = pinyinDisplayName.toLowerCase();
-          if (lowerPinyinText.includes(word) || lowerPinyinDisplayName.includes(word)) {
-            return true;
-          }
-        }
-        return false;
-      });
-    }
-
-    return false;
+    const repo = new HeadingRepository(db);
+    const headings = repo.findAll();
+    return headings.map(h => this.mapHeadingToSymbol(h));
   }
 
   /**
@@ -414,12 +168,11 @@ export class OrgSymbolIndexService implements vscode.Disposable {
       return uri.fsPath;
     }
 
-    // 使用第一个工作区文件夹作为基准
     const workspaceRoot = workspaceFolders[0].uri.fsPath;
     const filePath = uri.fsPath;
 
     if (filePath.startsWith(workspaceRoot)) {
-      return filePath.substring(workspaceRoot.length + 1); // +1 是为了去掉路径分隔符
+      return filePath.substring(workspaceRoot.length + 1);
     }
 
     return uri.fsPath;
@@ -429,70 +182,48 @@ export class OrgSymbolIndexService implements vscode.Disposable {
    * 获取所有唯一的标签及其出现次数
    */
   getAllTags(): Map<string, number> {
-    const tagMap = new Map<string, number>();
-    for (const symbols of this.symbolCache.values()) {
-      for (const symbol of symbols) {
-        if (symbol.tags) {
-          for (const tag of symbol.tags) {
-            tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
-          }
-        }
-      }
+    const db = DatabaseConnection.getInstance().getDatabase();
+    if (!db) {
+      return new Map();
     }
-    return tagMap;
+
+    const repo = new HeadingRepository(db);
+    return repo.getAllTags();
   }
 
   /**
    * 获取索引的统计信息
    */
   getStats(): { fileCount: number; symbolCount: number; isIndexed: boolean } {
-    return {
-      fileCount: this.symbolCache.size,
-      symbolCount: this.getTotalSymbolCount(),
-      isIndexed: this.isIndexed
-    };
-  }
-
-  /**
-   * 获取总符号数量
-   */
-  private getTotalSymbolCount(): number {
-    let count = 0;
-    for (const symbols of this.symbolCache.values()) {
-      count += symbols.length;
+    const db = DatabaseConnection.getInstance().getDatabase();
+    if (!db) {
+      return { fileCount: 0, symbolCount: 0, isIndexed: false };
     }
-    return count;
+
+    const stmt = db.prepare('SELECT COUNT(DISTINCT file_uri) as fileCount, COUNT(*) as symbolCount FROM headings');
+    if (stmt.step()) {
+      const row = stmt.getAsObject();
+      stmt.free();
+      return {
+        fileCount: (row.fileCount as number) || 0,
+        symbolCount: (row.symbolCount as number) || 0,
+        isIndexed: true
+      };
+    }
+    stmt.free();
+    return { fileCount: 0, symbolCount: 0, isIndexed: false };
   }
 
   /**
-   * 强制重建索引
-   * 
-   * 清空缓存并重新扫描所有文件
+   * 强制重建索引 (Legacy)
+   * 现在由 IncrementalUpdateService 管理
    */
   async rebuildIndex(): Promise<void> {
-    this.symbolCache.clear();
-    this.isIndexed = false;
-    await this.buildIndex();
+    // IncrementalUpdateService should handle this
+    Logger.info('[OrgSymbolIndex] rebuildIndex 应当调用 IncrementalUpdateService 的全量索引');
   }
 
-  /**
-   * 清理资源
-   * 
-   * 释放文件监听器和清空缓存
-   */
   dispose(): void {
-    // 释放文件监听器
-    if (this.fileWatcher) {
-      this.fileWatcher.dispose();
-      this.fileWatcher = null;
-    }
-
-    // 清空缓存
-    this.symbolCache.clear();
-    this.isIndexed = false;
-
-    // 清空单例
     OrgSymbolIndexService.instance = null;
   }
 }
-

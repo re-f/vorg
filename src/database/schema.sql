@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS headings (
   id TEXT,                           -- Optional unique ID from :ID: property (NULLABLE)
   level INTEGER NOT NULL,            -- Heading level (1-6)
   title TEXT NOT NULL,               -- Heading title (without stars, TODO, priority, tags)
+  pinyin_title TEXT,                 -- Pinyin search string for title
+  pinyin_display_name TEXT,          -- Pinyin search string for display name
   
   -- TODO and priority
   todo_state TEXT,                   -- TODO state (TODO, DONE, NEXT, etc.)
@@ -80,6 +82,8 @@ CREATE INDEX IF NOT EXISTS idx_headings_scheduled ON headings(scheduled);
 CREATE INDEX IF NOT EXISTS idx_headings_deadline ON headings(deadline);
 CREATE INDEX IF NOT EXISTS idx_headings_parent_id ON headings(parent_id);
 CREATE INDEX IF NOT EXISTS idx_headings_level ON headings(level);
+CREATE INDEX IF NOT EXISTS idx_headings_pinyin_title ON headings(pinyin_title);
+CREATE INDEX IF NOT EXISTS idx_headings_pinyin_display ON headings(pinyin_display_name);
 
 -- Composite index for Agenda queries
 CREATE INDEX IF NOT EXISTS idx_headings_agenda 
@@ -196,6 +200,8 @@ SELECT
   h.id,
   h.file_uri,
   h.title,
+  h.pinyin_title,
+  h.pinyin_display_name,
   h.todo_state,
   h.priority,
   h.scheduled,
@@ -211,6 +217,8 @@ SELECT
   h.id,
   h.file_uri,
   h.title,
+  h.pinyin_title,
+  h.pinyin_display_name,
   h.todo_state,
   h.priority,
   h.scheduled,

@@ -17,7 +17,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
+            const headings = extractor.extractHeadings(ast, '/test/file.org', content);
 
             assert.strictEqual(headings.length, 2);
             assert.strictEqual(headings[0].title, 'Heading 1');
@@ -31,7 +31,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
+            const headings = extractor.extractHeadings(ast, '/test/file.org', content);
 
             assert.strictEqual(headings.length, 1);
             assert.strictEqual(headings[0].todoState, 'TODO');
@@ -44,7 +44,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
+            const headings = extractor.extractHeadings(ast, '/test/file.org', content);
 
             assert.strictEqual(headings.length, 1);
             assert.deepStrictEqual(headings[0].tags, ['work', 'urgent']);
@@ -59,7 +59,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
+            const headings = extractor.extractHeadings(ast, '/test/file.org', content);
 
             assert.strictEqual(headings.length, 1);
             assert.strictEqual(headings[0].id, 'my-uuid-123');
@@ -71,7 +71,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
+            const headings = extractor.extractHeadings(ast, '/test/file.org', content);
 
             assert.strictEqual(headings.length, 1);
             assert.ok(headings[0].id.includes('/test/file.org'));
@@ -82,7 +82,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
+            const headings = extractor.extractHeadings(ast, '/test/file.org', content);
 
             assert.strictEqual(headings.length, 3);
 
@@ -93,6 +93,26 @@ suite('UniorgAstExtractor Tests', () => {
             assert.strictEqual(child1.parentId, parent.id);
             assert.strictEqual(child2.parentId, parent.id);
         });
+
+        test('should extract correct line numbers', () => {
+            const content = '# Title\n\n* Heading 1\nContent\n* Heading 2';
+            const parser = unified().use(uniorgParse as any);
+            const ast = parser.parse(content);
+
+            const headings = extractor.extractHeadings(ast, '/test/file.org', content);
+
+            // Line numbers are 0-indexed
+            // # Title (Line 0)
+            // (Empty) (Line 1)
+            // * Heading 1 (Line 2)
+            // Content (Line 3)
+            // * Heading 2 (Line 4)
+            assert.strictEqual(headings.length, 2);
+            assert.strictEqual(headings[0].title, 'Heading 1');
+            assert.strictEqual(headings[0].startLine, 2);
+            assert.strictEqual(headings[1].title, 'Heading 2');
+            assert.strictEqual(headings[1].startLine, 4);
+        });
     });
 
     suite('extractLinks', () => {
@@ -101,7 +121,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const links = extractor.extractLinks(ast, '/test/file.org');
+            const links = extractor.extractLinks(ast, '/test/file.org', content);
 
             assert.strictEqual(links.length, 1);
             assert.strictEqual(links[0].linkType, 'file');
@@ -114,7 +134,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const links = extractor.extractLinks(ast, '/test/file.org');
+            const links = extractor.extractLinks(ast, '/test/file.org', content);
 
             assert.strictEqual(links.length, 1);
             assert.strictEqual(links[0].linkType, 'id');
@@ -127,7 +147,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const links = extractor.extractLinks(ast, '/test/file.org');
+            const links = extractor.extractLinks(ast, '/test/file.org', content);
 
             assert.strictEqual(links.length, 1);
             assert.strictEqual(links[0].linkType, 'http');
@@ -139,7 +159,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const links = extractor.extractLinks(ast, '/test/file.org');
+            const links = extractor.extractLinks(ast, '/test/file.org', content);
 
             assert.strictEqual(links.length, 1);
             assert.strictEqual(links[0].targetUri, 'other.org');
@@ -151,7 +171,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const links = extractor.extractLinks(ast, '/test/file.org');
+            const links = extractor.extractLinks(ast, '/test/file.org', content);
 
             assert.strictEqual(links.length, 1);
             assert.strictEqual(links[0].targetUri, 'other.org');
@@ -168,7 +188,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const links = extractor.extractLinks(ast, '/test/file.org');
+            const links = extractor.extractLinks(ast, '/test/file.org', content);
 
             assert.strictEqual(links.length, 1);
             assert.strictEqual(links[0].sourceHeadingId, 'source-heading-id');
@@ -183,7 +203,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const links = extractor.extractLinks(ast, '/test/file.org');
+            const links = extractor.extractLinks(ast, '/test/file.org', content);
 
             assert.strictEqual(links.length, 3);
         });
@@ -232,7 +252,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
+            const headings = extractor.extractHeadings(ast, '/test/file.org', content);
 
             assert.strictEqual(headings.length, 1);
             assert.ok(headings[0].scheduled);
@@ -250,7 +270,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
+            const headings = extractor.extractHeadings(ast, '/test/file.org', content);
 
             assert.strictEqual(headings.length, 1);
             assert.ok(headings[0].deadline);
@@ -266,7 +286,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
+            const headings = extractor.extractHeadings(ast, '/test/file.org', content);
 
             assert.strictEqual(headings.length, 1);
             assert.ok(headings[0].closed);
@@ -280,8 +300,8 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
-            const links = extractor.extractLinks(ast, '/test/file.org');
+            const headings = extractor.extractHeadings(ast, '/test/file.org', content);
+            const links = extractor.extractLinks(ast, '/test/file.org', content);
 
             assert.strictEqual(headings.length, 0);
             assert.strictEqual(links.length, 0);
@@ -292,7 +312,7 @@ suite('UniorgAstExtractor Tests', () => {
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
+            const headings = extractor.extractHeadings(ast, '/test/file.org', content);
 
             assert.strictEqual(headings.length, 0);
         });
@@ -320,8 +340,8 @@ Some content with [[file:other.org][a link]].
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
-            const links = extractor.extractLinks(ast, '/test/file.org');
+            const headings = extractor.extractHeadings(ast, '/test/file.org', content);
+            const links = extractor.extractLinks(ast, '/test/file.org', content);
             const metadata = extractor.extractFileMetadata(ast);
 
             assert.strictEqual(metadata.title, 'Complex Document');
@@ -336,6 +356,20 @@ Some content with [[file:other.org][a link]].
                 assert.strictEqual(level2Task.priority, 'A');
                 assert.ok(level2Task.scheduled, 'should have scheduled date');
             }
+        });
+
+        test('should extract pinyin for Chinese headings', () => {
+            const content = '* 测试标题 :work:';
+            const parser = unified().use(uniorgParse as any);
+            const ast = parser.parse(content);
+
+            const headings = extractor.extractHeadings(ast, '/test/file.org', content);
+
+            assert.strictEqual(headings.length, 1);
+            assert.strictEqual(headings[0].title, '测试标题');
+            assert.ok(headings[0].pinyinTitle, 'should have pinyin title');
+            assert.strictEqual(headings[0].pinyinTitle, 'ceshibiaoti csbt');
+            assert.ok(headings[0].pinyinDisplayName, 'should have pinyin display name');
         });
     });
 });

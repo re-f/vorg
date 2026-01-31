@@ -18,12 +18,14 @@ export class HeadingRepository {
         const stmt = SqlJsHelper.prepare(this.db, `
       INSERT INTO headings (
         file_uri, start_line, end_line, id, level, title,
+        pinyin_title, pinyin_display_name,
         todo_state, todo_category, priority,
         scheduled, deadline, closed,
         parent_id, content, properties,
         created_at, updated_at
       ) VALUES (
         $fileUri, $startLine, $endLine, $id, $level, $title,
+        $pinyinTitle, $pinyinDisplayName,
         $todoState, $todoCategory, $priority,
         $scheduled, $deadline, $closed,
         $parentId, $content, $properties,
@@ -42,6 +44,8 @@ export class HeadingRepository {
             $id: dbId,
             $level: heading.level,
             $title: heading.title,
+            $pinyinTitle: heading.pinyinTitle || null,
+            $pinyinDisplayName: heading.pinyinDisplayName || null,
             $todoState: heading.todoState || null,
             $todoCategory: heading.todoCategory || null,
             $priority: heading.priority || null,
@@ -75,12 +79,14 @@ export class HeadingRepository {
         const headingSql = `
       INSERT INTO headings (
         file_uri, start_line, end_line, id, level, title,
+        pinyin_title, pinyin_display_name,
         todo_state, todo_category, priority,
         scheduled, deadline, closed,
         parent_id, content,
         created_at, updated_at
       ) VALUES (
         $fileUri, $startLine, $endLine, $id, $level, $title,
+        $pinyinTitle, $pinyinDisplayName,
         $todoState, $todoCategory, $priority,
         $scheduled, $deadline, $closed,
         $parentId, $content,
@@ -108,6 +114,8 @@ export class HeadingRepository {
                     $id: dbId,
                     $level: heading.level,
                     $title: heading.title,
+                    $pinyinTitle: heading.pinyinTitle || null,
+                    $pinyinDisplayName: heading.pinyinDisplayName || null,
                     $todoState: heading.todoState || null,
                     $todoCategory: heading.todoCategory || null,
                     $priority: heading.priority || null,
@@ -237,6 +245,30 @@ export class HeadingRepository {
     }
 
     /**
+     * 搜索 headings (支持文本和拼音)
+     */
+    search(query: string, maxResults: number = 100): OrgHeading[] {
+        const lowerQuery = `%${query.toLowerCase()}%`;
+        const rows = SqlJsHelper.prepare(this.db, `
+            SELECT * FROM headings 
+            WHERE title LIKE ? 
+               OR pinyin_title LIKE ? 
+               OR pinyin_display_name LIKE ?
+            LIMIT ?
+        `).all([lowerQuery, lowerQuery, lowerQuery, maxResults]);
+
+        return rows.map(row => this.rowToHeading(row));
+    }
+
+    /**
+     * 获取所有 headings
+     */
+    findAll(): OrgHeading[] {
+        const rows = SqlJsHelper.prepare(this.db, 'SELECT * FROM headings').all();
+        return rows.map(row => this.rowToHeading(row));
+    }
+
+    /**
      * 删除文件的所有 headings
      */
     deleteByFileUri(uri: string): void {
@@ -269,6 +301,8 @@ export class HeadingRepository {
             endLine: row.end_line,
             level: row.level,
             title: row.title,
+            pinyinTitle: row.pinyin_title || undefined,
+            pinyinDisplayName: row.pinyin_display_name || undefined,
             todoState: row.todo_state,
             todoCategory: row.todo_category,
             priority: row.priority,

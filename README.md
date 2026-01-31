@@ -111,8 +111,13 @@ Control whether to show action buttons (like Promote, Demote on heading lines) i
 When enabled, action buttons will appear above each heading line for quick access to operations.
 
 ## 📁 Supported File Types
+- `.org` and `.org_archive` - Org-mode document files
 
-- `.org` - Org-mode document files
+## 🔍 Workspace Indexing
+To provide high-performance workspace symbol search (`Cmd+T`) and tag retrieval, VOrg creates a SQLite database file named `.vorg.db` in your workspace root.
+- **Purpose**: Stores heading indexes, tags, and metadata for fast searching.
+- **Maintenance**: To reset the index, simply delete this file and reload VS Code.
+- **Git**: This file is typically added to `.gitignore` automatically to prevent it from being committed.
 
 ## 🆚 Comparison with Other Org Extensions
 

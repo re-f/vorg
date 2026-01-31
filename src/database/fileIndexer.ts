@@ -49,8 +49,8 @@ export class FileIndexer {
 
         // 3. Extract data
         const metadata = this.extractor.extractFileMetadata(ast);
-        const headings = this.extractor.extractHeadings(ast, uri);
-        const links = this.extractor.extractLinks(ast, uri);
+        const headings = this.extractor.extractHeadings(ast, uri, content);
+        const links = this.extractor.extractLinks(ast, uri, content);
 
         // 4. Update database in transaction
         this.connection.transaction(() => {

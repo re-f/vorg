@@ -95,6 +95,12 @@ export interface OrgHeading {
     /** Heading title text (without stars, TODO, priority, tags) */
     title: string;
 
+    /** Pinyin search string for title */
+    pinyinTitle?: string;
+
+    /** Pinyin search string for display name (title + state + tags) */
+    pinyinDisplayName?: string;
+
     /** TODO state (TODO, DONE, NEXT, etc.) */
     todoState?: string;
 

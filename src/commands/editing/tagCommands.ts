@@ -52,28 +52,8 @@ export class TagCommands {
             if (providedTags && Array.isArray(providedTags)) {
                 newTags = providedTags;
             } else {
-                // Get tags from both sources for maximum coverage
-                const inMemoryTags = indexService.getAllTags();
-                let dbTags = new Map<string, number>();
-                try {
-                    // eslint-disable-next-line @typescript-eslint/naming-convention
-                    const { DatabaseConnection } = await import('../../database/connection');
-                    // eslint-disable-next-line @typescript-eslint/naming-convention
-                    const { HeadingRepository } = await import('../../database/headingRepository');
-                    const db = DatabaseConnection.getInstance().getDatabase();
-                    if (db) {
-                        const repo = new HeadingRepository(db);
-                        dbTags = repo.getAllTags();
-                    }
-                } catch (e) {
-                    Logger.warn('Failed to get tags from database', e);
-                }
-
-                // Merge tags
-                const allTagsMap = new Map<string, number>(inMemoryTags);
-                for (const [tag, count] of dbTags.entries()) {
-                    allTagsMap.set(tag, (allTagsMap.get(tag) || 0) + count);
-                }
+                // Get tags from the index service (now backed by DB)
+                const allTagsMap = indexService.getAllTags();
 
                 const existingTags = headingInfo.tags || [];
 
