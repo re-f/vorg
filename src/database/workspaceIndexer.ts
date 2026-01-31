@@ -35,9 +35,9 @@ export class WorkspaceIndexer {
     public async indexWorkspace(force: boolean = false): Promise<void> {
         console.log('Starting workspace indexing...');
 
-        // Find all .org files
-        // Pattern matches all .org files, ignoring .git/node_modules usually handled by provider
-        const uris = await this.fileProvider.findFiles('**/*.org');
+        // Find all .org and .org_archive files
+        // Pattern matches all .org and .org_archive files, ignoring .git/node_modules usually handled by provider
+        const uris = await this.fileProvider.findFiles('**/*.{org,org_archive}');
 
         console.log(`Found ${uris.length} files to index.`);
 

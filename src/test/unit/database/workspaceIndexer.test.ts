@@ -14,8 +14,8 @@ class MockFileProvider implements FileProvider {
 
     async findFiles(pattern: string): Promise<string[]> {
         // Simple glob-like match for test
-        if (pattern === '**/*.org') {
-            return Object.keys(this.files).filter(f => f.endsWith('.org'));
+        if (pattern === '**/*.{org,org_archive}') {
+            return Object.keys(this.files).filter(f => f.endsWith('.org') || f.endsWith('.org_archive'));
         }
         return [];
     }

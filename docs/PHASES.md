@@ -52,13 +52,13 @@
 - ✅ Stage 2.6: Heading & Link Schema 调整 (140 verified tests)
 - 性能优化
 
-### Stage 3: 增量更新机制 (3-4 天)
-- 文件监听器
-- 变更检测
-- 差异更新
-- 错误恢复
+### Stage 3: 增量更新机制 (3-4 天) ✅ 已完成
+- ✅ 文件监听器 (`WorkspaceWatcher`, 支持 `.org` 和 `.org_archive`)
+- ✅ 变更检测与防抖逻辑
+- ✅ 差异更新与删除同步
+- ✅ 错误恢复与日志记录
 
-### Stage 4: 查询 API (3-4 天)
+### Stage 4: 查询 API (3-4 天) 🔄 进行中
 - 基础查询
 - Agenda 查询
 - 标签查询
@@ -157,8 +157,9 @@
   - Stage 1.4 完成 (数据库连接管理)
   - Stage 1.5 完成 (File Repository)
   - **Stage 1 完成** ✅ (71/71 测试通过)
-- 2026-01-29: Phase 0 架构升级
+- 2026-01-29: Phase 0 架构升级与增量索引
   - Stage 2.1-2.3 完成 (Repositories & Extractor)
   - Stage 2.4-2.5 完成 (File & Workspace Indexer)
   - **Stage 2.6 完成** ✅ 实现健壮的复合主键架构，支持所有标题的反向链接
   - **Stage 2 核心功能完成** ✅ (140/140 测试通过)
+  - **Stage 3 完成** ✅ 实现 `WorkspaceWatcher` 与 `IncrementalUpdateService`，支持 `.org` 和 `.org_archive` 实时同步

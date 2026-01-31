@@ -199,6 +199,8 @@ async function insertIdToTargetDocument(
   }
 }
 
+import { IncrementalUpdateService } from './database/incrementalUpdateService';
+
 /**
  * 激活扩展
  * 
@@ -206,10 +208,22 @@ async function insertIdToTargetDocument(
  * 
  * @param context - VS Code 扩展上下文，用于注册订阅和命令
  */
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   // 初始化日志系统
   Logger.initialize(context);
   Logger.info('VOrg extension is now active!');
+
+  // 初始化数据库增量更新服务
+  try {
+    const updateService = new IncrementalUpdateService();
+    // 异步启动，不阻塞核心功能激活
+    updateService.start().catch(err => {
+      Logger.error('Failed to start IncrementalUpdateService', err);
+    });
+    context.subscriptions.push(updateService);
+  } catch (error) {
+    Logger.error('Failed to initialize IncrementalUpdateService', error);
+  }
 
   // 初始化配置服务
   const configService = ConfigService.fromVSCodeWorkspace();
