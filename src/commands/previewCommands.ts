@@ -40,13 +40,13 @@ export class PreviewCommands {
   public registerCommands(context: vscode.ExtensionContext): void {
     // 普通预览命令（在当前标签页中打开）
     const previewDisposable = vscode.commands.registerCommand(
-      COMMANDS.PREVIEW, 
+      COMMANDS.PREVIEW,
       () => this.previewManager.openPreview()
     );
 
     // 并排预览命令（在侧边打开）
     const previewToSideDisposable = vscode.commands.registerCommand(
-      COMMANDS.PREVIEW_TO_SIDE, 
+      COMMANDS.PREVIEW_TO_SIDE,
       () => this.previewManager.openPreviewToSide()
     );
 
@@ -65,12 +65,12 @@ export class PreviewCommands {
   private async exportPreview(): Promise<void> {
     const activeEditor = vscode.window.activeTextEditor;
     if (!activeEditor) {
-      vscode.window.showErrorMessage('没有活动的编辑器。请先打开一个 Org-mode 文件。');
+      vscode.window.showErrorMessage('没有活动的编辑器。请先打开一个 .org 或 .org_archive 文件。');
       return;
     }
 
     if (activeEditor.document.languageId !== 'org') {
-      vscode.window.showWarningMessage('当前文件不是 Org-mode 文件。VOrg 最适合处理 .org 文件。');
+      vscode.window.showWarningMessage('当前文件不是 Org-mode 文件。VOrg 支持 .org 和 .org_archive 文件。');
     }
 
     const document = activeEditor.document;
@@ -104,18 +104,18 @@ export class PreviewCommands {
   public async exportPreviewToSameDirectory(document?: vscode.TextDocument): Promise<void> {
     // 如果传入了文档，使用传入的文档；否则尝试从活动编辑器获取
     let targetDocument = document;
-    
+
     if (!targetDocument) {
       const activeEditor = vscode.window.activeTextEditor;
       if (!activeEditor) {
-        vscode.window.showErrorMessage('没有活动的编辑器。请先打开一个 Org-mode 文件。');
+        vscode.window.showErrorMessage('没有活动的编辑器。请先打开一个 .org 或 .org_archive 文件。');
         return;
       }
       targetDocument = activeEditor.document;
     }
 
     if (targetDocument.languageId !== 'org') {
-      vscode.window.showWarningMessage('当前文件不是 Org-mode 文件。VOrg 最适合处理 .org 文件。');
+      vscode.window.showWarningMessage('当前文件不是 Org-mode 文件。VOrg 支持 .org 和 .org_archive 文件。');
       return;
     }
 
@@ -135,7 +135,7 @@ export class PreviewCommands {
     try {
       // 生成可导出的 HTML
       const html = HtmlGenerator.generateExportableHtml(document);
-      
+
       // 写入文件（使用 Buffer 编码为 UTF-8）
       const data = Buffer.from(html, 'utf-8');
       await vscode.workspace.fs.writeFile(saveUri, data);
@@ -153,13 +153,13 @@ export class PreviewCommands {
     vscode.workspace.onDidChangeTextDocument(
       event => {
         // 只处理当前活动的org文档
-        if (event.document === vscode.window.activeTextEditor?.document && 
-            event.document.languageId === 'org') {
+        if (event.document === vscode.window.activeTextEditor?.document &&
+          event.document.languageId === 'org') {
           // 清除之前的定时器
           if (this.updateTimeout) {
             clearTimeout(this.updateTimeout);
           }
-          
+
           // 设置新的防抖定时器
           this.updateTimeout = setTimeout(() => {
             this.previewManager.updateAllPreviews();
@@ -191,7 +191,7 @@ export class PreviewCommands {
     vscode.window.onDidChangeTextEditorVisibleRanges(
       event => {
         if (event.textEditor === vscode.window.activeTextEditor &&
-            event.textEditor.document.languageId === 'org') {
+          event.textEditor.document.languageId === 'org') {
           // 同步滚动到预览窗口
           this.previewManager.syncScrollForAllPreviews();
         }

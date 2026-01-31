@@ -81,10 +81,10 @@ export class OrgSymbolIndexService implements vscode.Disposable {
   /**
    * 设置文件监听器
    * 
-   * 监听 .org 文件的创建、修改和删除，自动更新索引
+   * 监听 .org 和 .org_archive 文件的创建、修改和删除，自动更新索引
    */
   private setupFileWatcher(): void {
-    this.fileWatcher = vscode.workspace.createFileSystemWatcher('**/*.org');
+    this.fileWatcher = vscode.workspace.createFileSystemWatcher('**/*.{org,org_archive}');
 
     // 文件创建时，索引该文件
     this.fileWatcher.onDidCreate(uri => {
@@ -134,10 +134,10 @@ export class OrgSymbolIndexService implements vscode.Disposable {
         Logger.info('[OrgSymbolIndex] 开始构建索引...');
         const startTime = Date.now();
 
-        // 查找所有 .org 文件
-        const orgFiles = await vscode.workspace.findFiles('**/*.org', null, 10000);
+        // 查找所有 .org 和 .org_archive 文件
+        const orgFiles = await vscode.workspace.findFiles('**/*.{org,org_archive}', null, 10000);
 
-        Logger.info(`[OrgSymbolIndex] 找到 ${orgFiles.length} 个 .org 文件`);
+        Logger.info(`[OrgSymbolIndex] 找到 ${orgFiles.length} 个 Org 文件`);
 
         // 并行索引所有文件
         await Promise.all(orgFiles.map(uri => this.indexFile(uri)));

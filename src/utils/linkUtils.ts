@@ -67,9 +67,9 @@ export class LinkUtils {
       return currentFileLocation;
     }
 
-    // 如果在当前文档中没找到，则在整个工作区的所有.org文件中查找
+    // 如果在当前文档中没找到，则在整个工作区的所有 .org 和 .org_archive 文件中查找
     try {
-      const orgFiles = await vscode.workspace.findFiles('**/*.org', '**/node_modules/**', 100);
+      const orgFiles = await vscode.workspace.findFiles('**/*.{org,org_archive}', '**/node_modules/**', 100);
 
       for (const fileUri of orgFiles) {
         // 跳过当前文档，因为已经搜索过了

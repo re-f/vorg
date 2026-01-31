@@ -28,8 +28,8 @@ export class LinkParser {
     const httpLinks = this.parseHttpLinks(lineText);
     // 过滤掉与方括号链接重叠的 HTTP 链接
     const filteredHttpLinks = httpLinks.filter(httpLink => {
-      return !bracketLinks.some(bracketLink => 
-        httpLink.startCol >= bracketLink.startCol && 
+      return !bracketLinks.some(bracketLink =>
+        httpLink.startCol >= bracketLink.startCol &&
         httpLink.endCol <= bracketLink.endCol
       );
     });
@@ -124,7 +124,7 @@ export class LinkParser {
    */
   static isPositionInLink(lineText: string, position: number): LinkInfo | null {
     const links = this.parseLinks(lineText);
-    
+
     for (const link of links) {
       if (position >= link.startCol && position <= link.endCol) {
         return link;
@@ -172,41 +172,41 @@ export class LinkParser {
     // 文件链接，可能带标题 file.org::*Headline 或 file.org::#id
     if (target.includes('::')) {
       const [file, anchor] = target.split('::', 2);
-      
+
       if (anchor.startsWith('*')) {
         // 标题链接
-        return { 
-          type: 'headline', 
-          file, 
-          headline: anchor.substring(1) 
+        return {
+          type: 'headline',
+          file,
+          headline: anchor.substring(1)
         };
       } else if (anchor.startsWith('#')) {
         // ID 链接
-        return { 
-          type: 'id', 
-          file, 
-          id: anchor.substring(1) 
+        return {
+          type: 'id',
+          file,
+          id: anchor.substring(1)
         };
       } else {
         // 其他锚点
-        return { 
-          type: 'headline', 
-          file, 
-          headline: anchor 
+        return {
+          type: 'headline',
+          file,
+          headline: anchor
         };
       }
     }
 
     // 纯标题链接 *Headline
     if (target.startsWith('*')) {
-      return { 
-        type: 'headline', 
-        headline: target.substring(1) 
+      return {
+        type: 'headline',
+        headline: target.substring(1)
       };
     }
 
     // 文件链接
-    if (target.includes('.org') || target.includes('/')) {
+    if (target.includes('.org') || target.includes('.org_archive') || target.includes('/')) {
       return { type: 'file', path: target };
     }
 

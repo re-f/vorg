@@ -39,7 +39,7 @@ export class DebugCommands {
     private static refreshHighlighting(): void {
         const editor = vscode.window.activeTextEditor;
         if (!editor || editor.document.languageId !== 'org') {
-            vscode.window.showWarningMessage('请打开一个 .org 文件');
+            vscode.window.showWarningMessage('请打开一个 .org 或 .org_archive 文件');
             return;
         }
 

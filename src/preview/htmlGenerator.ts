@@ -20,7 +20,7 @@ import rehypeStringify from 'rehype-stringify';
  * @class HtmlGenerator
  */
 export class HtmlGenerator {
-  
+
   public static generatePreviewHtml(document: vscode.TextDocument, webview?: vscode.Webview): string {
     const text = document.getText();
 
@@ -32,11 +32,11 @@ export class HtmlGenerator {
     try {
       // 提取文档标题
       const documentTitle = this.extractTitle(text);
-      
+
       // 首先解析 AST（只解析一次，后续重用）
       const parser = unified().use(uniorgParse as any);
       const ast = parser.parse(text);
-      
+
       // 使用 AST 生成 HTML
       const processor = unified()
         .use(uniorgParse as any)
@@ -44,7 +44,7 @@ export class HtmlGenerator {
         .use(rehypeStringify as any);
 
       let html = processor.processSync(text).toString();
-      
+
       // 后处理：添加 checkbox 支持（重用 AST）
       html = this.processCheckboxes(html, ast);
 
@@ -93,9 +93,9 @@ export class HtmlGenerator {
         <body>
           <div class="icon">📄</div>
           <h1>Not an Org-mode File</h1>
-          <p>VOrg is designed to preview Org-mode files (.org extension).</p>
+          <p>VOrg is designed to preview Org-mode files (.org and .org_archive extensions).</p>
           <p>Current file type: <strong>${languageId}</strong></p>
-          <p>To get the best experience, please open a file with .org extension.</p>
+          <p>To get the best experience, please open a file with .org or .org_archive extension.</p>
         </body>
       </html>
     `;
@@ -142,12 +142,12 @@ export class HtmlGenerator {
   private static addLineMarkers(html: string, ast: any): string {
     // 从 AST 中提取元素和行号的映射关系
     const lineMap = new Map<string, number>();
-    
+
     const extractLineInfo = (node: any): void => {
       // 获取节点的位置信息（如果有的话）
       if (node.position && node.position.start) {
         const lineNumber = node.position.start.line - 1; // AST 行号从 1 开始，我们需要从 0 开始
-        
+
         // 处理标题节点
         if (node.type === 'headline') {
           // 提取标题的纯文本内容
@@ -156,7 +156,7 @@ export class HtmlGenerator {
             lineMap.set(titleText.trim(), lineNumber);
           }
         }
-        
+
         // 处理段落节点
         else if (node.type === 'paragraph') {
           const paragraphText = this.extractTextFromNode(node);
@@ -168,7 +168,7 @@ export class HtmlGenerator {
             lineMap.set(paragraphText.trim(), lineNumber);
           }
         }
-        
+
         // 处理列表项节点
         else if (node.type === 'list-item') {
           const listText = this.extractTextFromNode(node);
@@ -178,7 +178,7 @@ export class HtmlGenerator {
             lineMap.set(listText.trim(), lineNumber);
           }
         }
-        
+
         // 处理代码块节点（src-block, example-block 等）
         else if (node.type === 'src-block' || node.type === 'example-block') {
           // 使用代码块的第一行内容作为标识
@@ -191,7 +191,7 @@ export class HtmlGenerator {
             lineMap.set(`code:${node.type}`, lineNumber);
           }
         }
-        
+
         // 处理表格节点
         else if (node.type === 'table') {
           // 使用表格的第一行内容作为标识
@@ -206,18 +206,18 @@ export class HtmlGenerator {
           }
         }
       }
-      
+
       // 递归处理子节点
       if (node.children) {
         node.children.forEach(extractLineInfo);
       }
     };
-    
+
     extractLineInfo(ast);
 
     // 使用正则在 HTML 中插入行号标记
     let htmlWithLineMarkers = html;
-    
+
     // 为标题添加行号标记
     htmlWithLineMarkers = htmlWithLineMarkers.replace(
       /(<h[1-6][^>]*>)([^<]+)/g,
@@ -312,12 +312,12 @@ export class HtmlGenerator {
     if (!node) {
       return '';
     }
-    
+
     // 如果节点有直接的值，返回它
     if (node.value) {
       return node.value;
     }
-    
+
     // 如果有子节点，递归提取文本
     if (node.children && node.children.length > 0) {
       return node.children
@@ -325,14 +325,14 @@ export class HtmlGenerator {
         .join('')
         .trim();
     }
-    
+
     return '';
   }
 
   private static processCheckboxes(html: string, ast: any): string {
     // 收集所有的 checkbox 信息
-    const checkboxItems: Array<{checkbox: string | null, content: string}> = [];
-    
+    const checkboxItems: Array<{ checkbox: string | null, content: string }> = [];
+
     function collectCheckboxes(node: any): void {
       if (node.type === 'list-item' && node.checkbox !== null && node.checkbox !== undefined) {
         // 提取列表项的文本内容
@@ -348,37 +348,37 @@ export class HtmlGenerator {
           content: content
         });
       }
-      
+
       if (node.children) {
         node.children.forEach(collectCheckboxes);
       }
     }
-    
+
     collectCheckboxes(ast);
-    
+
     // 在 HTML 中替换对应的列表项
     let processedHtml = html;
-    
+
     checkboxItems.forEach((item) => {
       if (item.content) {
         // 匹配对应的 <li> 元素
         const liPattern = new RegExp(`<li>([^<]*${item.content.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^<]*)</li>`, 'g');
-        
+
         // 创建带 checkbox 的替换内容
         const checkboxElement = `<input type="checkbox"${item.checkbox === 'on' ? ' checked' : ''} disabled>`;
         const replacement = `<li class="task-list-item">${checkboxElement} $1</li>`;
-        
+
         processedHtml = processedHtml.replace(liPattern, replacement);
       }
     });
-    
+
     return processedHtml;
   }
 
   private static processExampleBlocks(html: string): string {
     // 修复示例块中的换行问题
     // uniorg-rehype 可能会将示例块转换为没有正确保持换行的格式
-    
+
     // 处理所有的 pre 标签，确保保持换行
     html = html.replace(/<pre([^>]*)>([\s\S]*?)<\/pre>/g, (match, attributes, content) => {
       // 确保内容中的换行符被保持
@@ -386,7 +386,7 @@ export class HtmlGenerator {
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&amp;/g, '&'); // 解码HTML实体
-      
+
       return `<pre${attributes} style="white-space: pre-wrap;">${processedContent}</pre>`;
     });
 
@@ -411,7 +411,7 @@ export class HtmlGenerator {
     const exportButtonHtml = webview ? this.getExportButtonHtml() : '';
     const titleHtml = documentTitle ? `<h1 class="document-title">${this.escapeHtml(documentTitle)}</h1>` : '';
     const pageTitle = documentTitle || 'Org Preview';
-    
+
     return `
       <!DOCTYPE html>
       <html>
@@ -553,11 +553,11 @@ export class HtmlGenerator {
     try {
       // 提取文档标题
       const documentTitle = this.extractTitle(text);
-      
+
       // 首先解析 AST（只解析一次，后续重用）
       const parser = unified().use(uniorgParse as any);
       const ast = parser.parse(text);
-      
+
       // 使用 AST 生成 HTML
       const processor = unified()
         .use(uniorgParse as any)
@@ -565,7 +565,7 @@ export class HtmlGenerator {
         .use(rehypeStringify as any);
 
       let html = processor.processSync(text).toString();
-      
+
       // 后处理：添加 checkbox 支持（重用 AST）
       html = this.processCheckboxes(html, ast);
 
@@ -593,7 +593,7 @@ export class HtmlGenerator {
       /<div class="scroll-indicator"[^>]*>.*?<\/div>/s,
       ''
     );
-    
+
     const titleHtml = documentTitle ? `<h1 class="document-title">${this.escapeHtml(documentTitle)}</h1>` : '';
     const pageTitle = documentTitle || 'Org Preview Export';
 
@@ -820,7 +820,7 @@ export class HtmlGenerator {
 
   private static getScript(webview?: vscode.Webview): string {
     const hasWebview = webview ? 'true' : 'false';
-    
+
     return `
       const vscode = ${webview ? 'acquireVsCodeApi()' : 'null'};
       const hasWebview = ${hasWebview};

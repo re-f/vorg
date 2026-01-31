@@ -85,7 +85,8 @@
           "org-mode"
         ],
         "extensions": [
-          ".org"
+          ".org",
+          ".org_archive"
         ],
         "configuration": "./language-configuration.json"
       }

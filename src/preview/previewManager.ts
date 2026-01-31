@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import { HtmlGenerator } from './htmlGenerator';
 import { ScrollSync } from './scrollSync';
-import { 
-  PREVIEW_PANEL_TYPE, 
-  SIDE_PANEL_TYPE, 
-  PREVIEW_TITLE, 
+import {
+  PREVIEW_PANEL_TYPE,
+  SIDE_PANEL_TYPE,
+  PREVIEW_TITLE,
   DEFAULT_PREVIEW_OPTIONS,
-  WEBVIEW_MESSAGES 
+  WEBVIEW_MESSAGES
 } from '../utils/constants';
 import { PreviewPanelManager } from '../types';
 
@@ -81,7 +81,7 @@ export class PreviewManager {
     }
 
     if (activeEditor.document.languageId !== 'org') {
-      vscode.window.showWarningMessage('Current file is not an Org-mode file. VOrg works best with .org files.');
+      vscode.window.showWarningMessage('Current file is not an Org-mode file. VOrg works with .org and .org_archive files.');
     }
 
     const columnToShowIn = activeEditor.viewColumn;
@@ -112,13 +112,13 @@ export class PreviewManager {
     }
 
     if (activeEditor.document.languageId !== 'org') {
-      vscode.window.showWarningMessage('Current file is not an Org-mode file. VOrg works best with .org files.');
+      vscode.window.showWarningMessage('Current file is not an Org-mode file. VOrg works with .org and .org_archive files.');
     }
 
     // 确定预览窗口应该显示在哪一列
     const currentColumn = activeEditor.viewColumn || vscode.ViewColumn.One;
-    const previewColumn = currentColumn === vscode.ViewColumn.One 
-      ? vscode.ViewColumn.Two 
+    const previewColumn = currentColumn === vscode.ViewColumn.One
+      ? vscode.ViewColumn.Two
       : vscode.ViewColumn.Beside;
 
     if (this.panelManager.currentSidePanel) {
@@ -215,7 +215,7 @@ export class PreviewManager {
   }
 
   private handleWebviewMessage(
-    message: any, 
+    message: any,
     panel: vscode.WebviewPanel | undefined,
     panelType?: 'currentPanel' | 'currentSidePanel'
   ): void {
@@ -245,10 +245,10 @@ export class PreviewManager {
             this.setupPanel(panel, 'currentSidePanel');
           }
         }
-        
+
         // 更新预览内容（恢复后需要重新设置 HTML）
         this.updatePreview(panel);
-        
+
         // 发送初始滚动位置
         ScrollSync.syncScrollToPreview(panel);
         break;
@@ -265,7 +265,7 @@ export class PreviewManager {
               this.exportCallback(this.currentDocument);
             }
           } else {
-            vscode.window.showErrorMessage('无法找到 Org-mode 文件。请确保已打开一个 .org 文件。');
+            vscode.window.showErrorMessage('无法找到 Org-mode 文件。请确保已打开一个 .org 或 .org_archive 文件。');
           }
         }
         break;
