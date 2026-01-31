@@ -269,6 +269,19 @@ export class PreviewManager {
           }
         }
         break;
+      case 'openHeading':
+        // 处理点击查询结果跳转
+        if (message.uri && message.line !== undefined) {
+          const uri = vscode.Uri.parse(message.uri);
+          vscode.workspace.openTextDocument(uri).then(doc => {
+            vscode.window.showTextDocument(doc, {
+              viewColumn: vscode.ViewColumn.One,
+              selection: new vscode.Range(message.line, 0, message.line, 0),
+              preview: false
+            });
+          });
+        }
+        break;
     }
   }
 } 

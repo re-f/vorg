@@ -3,6 +3,9 @@ import { unified } from 'unified';
 import uniorgParse from 'uniorg-parse';
 import uniorgRehype from 'uniorg-rehype';
 import rehypeStringify from 'rehype-stringify';
+import { QueryService } from '../services/queryService';
+import { OrgHeading } from '../database/types';
+import * as path from 'path';
 
 /**
  * HTML 生成器
@@ -39,14 +42,21 @@ export class HtmlGenerator {
 
       // 使用 AST 生成 HTML
       const processor = unified()
-        .use(uniorgParse as any)
         .use(uniorgRehype as any)
         .use(rehypeStringify as any);
 
-      let html = processor.processSync(text).toString();
+      // 在转换为 HTML 之前处理查询块 (修改 AST)
+      const queryResults = new Map<string, string>();
+      this.preProcessQueryBlocks(ast, queryResults);
+
+      const hast = processor.runSync(ast);
+      let html = (processor.stringify(hast as any) as any).toString();
 
       // 后处理：添加 checkbox 支持（重用 AST）
       html = this.processCheckboxes(html, ast);
+
+      // 后处理：执行并替换嵌入式查询块
+      html = this.postProcessQueryBlocks(html, queryResults);
 
       // 后处理：修复示例块的换行
       html = this.processExampleBlocks(html);
@@ -180,14 +190,16 @@ export class HtmlGenerator {
         }
 
         // 处理代码块节点（src-block, example-block 等）
-        else if (node.type === 'src-block' || node.type === 'example-block') {
-          // 使用代码块的第一行内容作为标识
-          const codeText = node.value || '';
-          const firstLine = codeText.split('\n')[0];
+        else if (node.type === 'src-block' || node.type === 'example-block' || node.type === 'special-block') {
+          // 对于 Query 块，value 可能是我们的 Token
+          const text = (node.type === 'special-block')
+            ? this.extractTextFromNode(node)
+            : (node.value || '');
+
+          const firstLine = text.split('\n')[0];
           if (firstLine && firstLine.trim().length > 0) {
             lineMap.set(`code:${firstLine.trim().substring(0, 30)}`, lineNumber);
           } else {
-            // 如果没有内容，使用类型作为标识
             lineMap.set(`code:${node.type}`, lineNumber);
           }
         }
@@ -405,6 +417,115 @@ export class HtmlGenerator {
     });
 
     return html;
+  }
+
+  /**
+   * 在 AST 转换前，将查询块替换为占位符
+   */
+  private static preProcessQueryBlocks(ast: any, queryResults: Map<string, string>): void {
+    let queryCounter = 0;
+
+    const traverse = (node: any): void => {
+      let isQuery = false;
+      let queryValue = '';
+
+      const nodeType = node.type;
+      const blockName = (node.blockType || node.name || node.language || '').toString().toUpperCase();
+
+      if (nodeType === 'src-block' && blockName === 'QUERY') {
+        isQuery = true;
+        queryValue = node.value;
+      } else if (nodeType === 'special-block' && blockName === 'QUERY') {
+        isQuery = true;
+        queryValue = this.extractTextFromNode(node);
+      } else if (blockName === 'QUERY' && (nodeType === 'export-block' || nodeType === 'example-block')) {
+        isQuery = true;
+        queryValue = node.value;
+      } else if (nodeType === 'example-block' && node.value && node.value.trim().startsWith('{') && node.value.includes('"todo"')) {
+        isQuery = true;
+        queryValue = node.value;
+      }
+
+      if (isQuery && queryValue) {
+        const tokenId = `__VORG_QUERY_BLOCK_${queryCounter++}__`;
+        try {
+          const headings = QueryService.executeSync(queryValue);
+          const resultHtml = this.renderHeadingList(headings);
+          queryResults.set(tokenId, resultHtml);
+
+          // 修改节点内容为 Token，并确保结构符合 Org 规范（Greater Element 包含 Element）
+          if (nodeType === 'src-block' || nodeType === 'example-block' || nodeType === 'export-block') {
+            node.value = tokenId;
+          } else if (nodeType === 'special-block') {
+            node.children = [{
+              type: 'paragraph',
+              children: [{ type: 'text', value: tokenId }]
+            }];
+          }
+        } catch (e) {
+          console.error('Failed to pre-process query block', e);
+        }
+      }
+
+      if (node.children) {
+        node.children.forEach(traverse);
+      }
+    };
+
+    traverse(ast);
+  }
+
+  /**
+   * 在 HTML 生成后，将占位符替换为查询结果
+   */
+  private static postProcessQueryBlocks(html: string, queryResults: Map<string, string>): string {
+    let processedHtml = html;
+
+    queryResults.forEach((resultHtml, tokenId) => {
+      // 匹配包含 Token 的容器 (pre 或 div)
+      // 使用更宽松的正则处理可能的空白符
+      const pattern = new RegExp(`<(pre|div)[^>]*>[\\s\\S]*?\\s*${tokenId}\\s*[\\s\\S]*?<\\/\\1>`, 'g');
+      processedHtml = processedHtml.replace(pattern, `<div class="org-query-container">${resultHtml}</div>`);
+    });
+
+    return processedHtml;
+  }
+
+  /**
+   * 将查询到的 Heading 列表渲染为 HTML
+   */
+  private static renderHeadingList(headings: OrgHeading[]): string {
+    if (headings.length === 0) {
+      return '<div class="org-query-no-results">No results found.</div>';
+    }
+
+    const items = headings.map(h => {
+      const todoClass = h.todoState ? `todo-${h.todoState.toLowerCase()}` : '';
+      const priorityTag = h.priority ? `<span class="org-priority">[#${h.priority}]</span>` : '';
+      const tagsHtml = (h.tags && h.tags.length > 0)
+        ? `<span class="org-tags">${h.tags.map(t => `<span class="org-tag">${t}</span>`).join('')}</span>`
+        : '';
+
+      const fileName = path.basename(h.fileUri);
+
+      return `
+        <div class="org-query-item">
+          <div class="org-query-row">
+            ${h.todoState ? `<span class="org-todo ${todoClass}">${h.todoState}</span>` : ''}
+            ${priorityTag}
+            <a href="#" class="org-query-link" 
+               onclick="onHeadingClick('${h.fileUri.replace(/'/g, "\\'")}', ${h.startLine})"
+               title="${h.fileUri}">
+               ${this.escapeHtml(h.title)}
+            </a>
+            ${tagsHtml}
+          </div>
+          <div class="org-query-meta">${fileName}:${h.startLine + 1}</div>
+        </div>
+      `;
+    }).join('');
+
+    return `<div class="org-query-results">${items}</div>`;
   }
 
   private static generateStyledHtml(content: string, isDarkTheme: boolean, webview?: vscode.Webview, documentTitle?: string | null): string {
@@ -815,6 +936,68 @@ export class HtmlGenerator {
         z-index: 1000;
         opacity: 0.7;
       }
+
+      /* 嵌入式查询样式 */
+      .org-query-container {
+        margin: 1.5em 0;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1em;
+        background-color: var(--code-bg);
+      }
+      .org-query-results {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8em;
+      }
+      .org-query-item {
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.6em;
+      }
+      .org-query-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      .org-query-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5em;
+      }
+      .org-query-link {
+        font-weight: 600;
+        color: var(--link-color);
+        text-decoration: none;
+      }
+      .org-query-link:hover {
+        text-decoration: underline;
+      }
+      .org-query-meta {
+        font-size: 0.8em;
+        color: #888;
+        margin-top: 0.2em;
+      }
+      .org-todo {
+        padding: 0.1em 0.4em;
+        border-radius: 3px;
+        font-weight: bold;
+        font-size: 0.75em;
+        color: white;
+      }
+      .todo-todo { background-color: #ff5252; }
+      .todo-next { background-color: #ffab40; }
+      .todo-done { background-color: #4caf50; opacity: 0.7; }
+      .org-priority {
+        color: #e91e63;
+        font-family: monospace;
+        font-weight: bold;
+      }
+      .org-query-no-results {
+        text-align: center;
+        color: #888;
+        padding: 1em;
+        font-style: italic;
+      }
     `;
   }
 
@@ -829,6 +1012,16 @@ export class HtmlGenerator {
       if (hasWebview && vscode) {
         vscode.postMessage({ command: 'ready' });
       }
+
+      window.onHeadingClick = function(uri, line) {
+        if (vscode) {
+          vscode.postMessage({
+            command: 'openHeading',
+            uri: uri,
+            line: line
+          });
+        }
+      };
       
       // 监听来自 VS Code 的消息
       if (hasWebview && vscode) {

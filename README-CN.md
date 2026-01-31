@@ -115,10 +115,38 @@ VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、
 - `.org` 和 `.org_archive` - Org-mode 文档文件
 
 ## 🔍 工作区索引
-为了提供高性能的工作区符号搜索（`Cmd+T`）和标签检索功能，VOrg 会在当前工作区根目录下创建一个名为 `.vorg.db` 的 SQLite 数据库文件。
-- **用途**：存储标题索引、标签和元数据。
-- **清理**：如需重置索引，只需删除该文件并重启 VS Code 即可。
-- **Git**：该文件通常会被自动加入 `.gitignore` 以避免提交到仓库。
+为了提供高性能的工作区符号搜索 (`Cmd+T`) 和标签检索，VOrg 会在工作区根目录创建一个名为 `.vorg.db` 的 SQLite 数据库文件。
+- **用途**: 存储标题索引、标签和元数据，以实现极速搜索。
+- **维护**: 如需重置索引，只需删除此文件并重新加载窗口。
+- **Git**: 建议将 `.vorg.db` 添加到 `.gitignore` 文件中，以避免将本地索引提交到代码仓库。
+
+## 📊 嵌入式查询块 (Embedded Query Blocks)
+VOrg 支持动态查询块，允许您直接在文档预览中聚合显示整个工作区的标题。
+
+### 语法
+使用 `#+BEGIN_QUERY` 块并填入 JSON 格式的查询对象：
+
+```org
+#+BEGIN_QUERY
+{
+  "todo": ["NEXT", "TODO"],
+  "priority": "A",
+  "tags": ["work"],
+  "limit": 5,
+  "sortBy": "mtime",
+  "order": "desc"
+}
+#+END_QUERY
+```
+
+### 查询参数
+- `todo`: 按 TODO 状态过滤（字符串或数组）。
+- `priority`: 按优先级过滤（如 "A", "B"）。
+- `tags`: 按标签过滤（字符串或数组，匹配任意一个）。
+- `searchTerm`: 在标题中搜索（支持 Pinyin 拼音首字母）。
+- `limit`: 显示结果的最大数量。
+- `sortBy`: 排序字段 (`priority`, `todo`, `deadline`, `mtime`, `level`)。
+- `order`: 排序顺序 (`asc` 或 `desc`)。
 
 ## 🆚 与其他 Org 扩展的对比
 

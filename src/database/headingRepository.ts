@@ -188,7 +188,7 @@ export class HeadingRepository {
       ORDER BY start_line ASC
     `).all([uri]);
 
-        return rows.map(row => this.rowToHeading(row));
+        return rows.map((row: any) => this.rowToHeading(row));
     }
 
     /**
@@ -196,7 +196,7 @@ export class HeadingRepository {
      */
     findByTodoState(todoState: string): OrgHeading[] {
         const rows = SqlJsHelper.prepare(this.db, `SELECT * FROM headings WHERE todo_state = ?`).all([todoState]);
-        return rows.map(row => this.rowToHeading(row));
+        return rows.map((row: any) => this.rowToHeading(row));
     }
 
     /**
@@ -209,7 +209,7 @@ export class HeadingRepository {
             JOIN heading_tags ht ON h.file_uri = ht.file_uri AND h.start_line = ht.heading_line
             WHERE ht.tag = ?
         `).all([tag]);
-        return rows.map(row => this.rowToHeading(row));
+        return rows.map((row: any) => this.rowToHeading(row));
     }
 
     /**
@@ -225,7 +225,7 @@ export class HeadingRepository {
             ORDER BY scheduled ASC
         `).all([startTs, endTs]);
 
-        return rows.map(row => this.rowToHeading(row));
+        return rows.map((row: any) => this.rowToHeading(row));
     }
 
     /**
@@ -241,7 +241,7 @@ export class HeadingRepository {
             ORDER BY deadline ASC
         `).all([startTs, endTs]);
 
-        return rows.map(row => this.rowToHeading(row));
+        return rows.map((row: any) => this.rowToHeading(row));
     }
 
     /**
@@ -257,7 +257,98 @@ export class HeadingRepository {
             LIMIT ?
         `).all([lowerQuery, lowerQuery, lowerQuery, maxResults]);
 
-        return rows.map(row => this.rowToHeading(row));
+        return rows.map((row: any) => this.rowToHeading(row));
+    }
+
+    /**
+     * 根据复杂条件查询 headings (用于现代化查询系统)
+     */
+    findByCriteria(query: any): OrgHeading[] {
+        const params: any = {};
+        const whereClauses: string[] = [];
+
+        // 1. TODO 状态过滤
+        if (query.todo) {
+            if (Array.isArray(query.todo)) {
+                const todoList = query.todo.map((t: string, i: number) => {
+                    const key = `$todo${i}`;
+                    params[key] = t;
+                    return key;
+                });
+                whereClauses.push(`todo_state IN (${todoList.join(', ')})`);
+            } else {
+                params.$todo = query.todo;
+                whereClauses.push(`todo_state = $todo`);
+            }
+        }
+
+        // 2. 优先级过滤
+        if (query.priority) {
+            if (Array.isArray(query.priority)) {
+                const prioList = query.priority.map((p: string, i: number) => {
+                    const key = `$prio${i}`;
+                    params[key] = p;
+                    return key;
+                });
+                whereClauses.push(`priority IN (${prioList.join(', ')})`);
+            } else {
+                params.$priority = query.priority;
+                whereClauses.push(`priority = $priority`);
+            }
+        }
+
+        // 3. 标签过滤 (使用 EXISTS 子查询处理多对多关系)
+        if (query.tags) {
+            const tags = Array.isArray(query.tags) ? query.tags : [query.tags];
+            const tagMarkers = tags.map((t: string, i: number) => {
+                const key = `$tag${i}`;
+                params[key] = t;
+                return key;
+            });
+            whereClauses.push(`EXISTS (
+                SELECT 1 FROM heading_tags ht 
+                WHERE ht.file_uri = headings.file_uri 
+                  AND ht.heading_line = headings.start_line 
+                  AND ht.tag IN (${tagMarkers.join(', ')})
+            )`);
+        }
+
+        // 4. 文本搜索 (复用 pinyin 逻辑)
+        if (query.searchTerm) {
+            params.$search = `%${query.searchTerm.toLowerCase()}%`;
+            whereClauses.push(`(title LIKE $search OR pinyin_title LIKE $search OR pinyin_display_name LIKE $search)`);
+        }
+
+        // 5. 范围限制
+        if (query.fileUri) {
+            params.$fileUri = query.fileUri;
+            whereClauses.push(`file_uri = $fileUri`);
+        }
+
+        // 构建 SQL
+        let sql = `SELECT * FROM headings`;
+        if (whereClauses.length > 0) {
+            sql += ` WHERE ${whereClauses.join(' AND ')}`;
+        }
+
+        // 排序
+        const sortField = query.sortBy === 'priority' ? 'priority' :
+            query.sortBy === 'todo' ? 'todo_state' :
+                query.sortBy === 'deadline' ? 'deadline' :
+                    query.sortBy === 'mtime' ? 'updated_at' : 'start_line';
+        const sortOrder = query.order === 'desc' ? 'DESC' : 'ASC';
+        sql += ` ORDER BY ${sortField} ${sortOrder}, file_uri ASC`;
+
+        // 限制数量
+        if (query.limit) {
+            params.$limit = query.limit;
+            sql += ` LIMIT $limit`;
+        } else {
+            sql += ` LIMIT 500`; // 默认限制，防止内存溢出
+        }
+
+        const rows = SqlJsHelper.prepare(this.db, sql).all(params);
+        return rows.map((row: any) => this.rowToHeading(row));
     }
 
     /**
@@ -265,7 +356,7 @@ export class HeadingRepository {
      */
     findAll(): OrgHeading[] {
         const rows = SqlJsHelper.prepare(this.db, 'SELECT * FROM headings').all();
-        return rows.map(row => this.rowToHeading(row));
+        return rows.map((row: any) => this.rowToHeading(row));
     }
 
     /**

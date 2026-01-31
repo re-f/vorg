@@ -1,0 +1,7 @@
+* 在预览中展示搜索结果
+#+BEGIN_QUERY
+{
+  "todo": ["WAITING", "TODO"],
+  "limit": 5
+}
+#+END_QUERY

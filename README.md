@@ -117,7 +117,35 @@ When enabled, action buttons will appear above each heading line for quick acces
 To provide high-performance workspace symbol search (`Cmd+T`) and tag retrieval, VOrg creates a SQLite database file named `.vorg.db` in your workspace root.
 - **Purpose**: Stores heading indexes, tags, and metadata for fast searching.
 - **Maintenance**: To reset the index, simply delete this file and reload VS Code.
-- **Git**: This file is typically added to `.gitignore` automatically to prevent it from being committed.
+- **Git**: It is recommended to add `.vorg.db` to your `.gitignore` file to avoid committing the local index to your repository.
+
+## 📊 Embedded Query Blocks
+VOrg supports dynamic query blocks that allow you to aggregate headings from across your workspace directly into your document preview.
+
+### Syntax
+Use `#+BEGIN_QUERY` followed by a JSON query object:
+
+```org
+#+BEGIN_QUERY
+{
+  "todo": ["NEXT", "TODO"],
+  "priority": "A",
+  "tags": ["work"],
+  "limit": 5,
+  "sortBy": "mtime",
+  "order": "desc"
+}
+#+END_QUERY
+```
+
+### Query Parameters
+- `todo`: Filter by TODO state (string or array).
+- `priority`: Filter by priority (e.g., "A", "B").
+- `tags`: Filter by tags (string or array, matches any).
+- `searchTerm`: Search in heading titles (supports Pinyin).
+- `limit`: Maximum number of results to display.
+- `sortBy`: Field to sort by (`priority`, `todo`, `deadline`, `mtime`, `level`).
+- `order`: Sort order (`asc` or `desc`).
 
 ## 🆚 Comparison with Other Org Extensions
 
