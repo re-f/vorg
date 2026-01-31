@@ -218,10 +218,19 @@ export async function activate(context: vscode.ExtensionContext) {
   Logger.initialize(context);
   Logger.info('VOrg extension is now active!');
 
-  //-分割线
+  // 初始化配置服务 (必须在命令注册前，因为命令执行依赖配置)
+  const configService = ConfigService.fromVSCodeWorkspace();
+  ConfigService.setInstance(configService);
 
+  // 监听配置变化并更新配置服务
+  context.subscriptions.push(
+    ConfigService.watchConfiguration((newConfig) => {
+      ConfigService.setInstance(newConfig);
+      Logger.info('配置已更新');
+    })
+  );
 
-  // 注册所有命令（尽早注册，避免后面初始化失败导致命令不可用）
+  // 注册所有命令
   LinkCommands.registerCommands(context);
   EditingCommands.registerCommands(context);
   DebugCommands.registerCommands(context);
@@ -234,6 +243,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const previewCommands = new PreviewCommands(context);
   previewCommands.registerCommands(context);
   previewCommands.registerEventListeners(context);
+
 
   // 初始化数据库增量更新服务
   try {
@@ -259,18 +269,6 @@ export async function activate(context: vscode.ExtensionContext) {
     Logger.error('Failed to initialize Database/IncrementalUpdateService (Native module error suspected)', error);
     vscode.window.showWarningMessage('VOrg: 数据库索引服务启动失败（可能是原生模块不兼容），大部分编辑功能仍可使用。');
   }
-
-  // 初始化配置服务
-  const configService = ConfigService.fromVSCodeWorkspace();
-  ConfigService.setInstance(configService);
-
-  // 监听配置变化并更新配置服务
-  context.subscriptions.push(
-    ConfigService.watchConfiguration((newConfig) => {
-      ConfigService.setInstance(newConfig);
-      Logger.info('配置已更新');
-    })
-  );
 
   // 初始化符号索引服务（共享缓存，供多个功能使用）
   const symbolIndexService = OrgSymbolIndexService.getInstance();

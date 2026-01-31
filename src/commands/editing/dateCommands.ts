@@ -24,91 +24,112 @@ export class DateCommands {
      * 设置计划日期 (SCHEDULED 或 DEADLINE)
      */
     private static async setPlanningDate(type: 'SCHEDULED' | 'DEADLINE', providedDate?: string): Promise<void> {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            return;
-        }
-
-        const document = editor.document;
-        const position = editor.selection.active;
-
-        // 获取关键词配置
-        const config = getConfigService();
-        const todoKeywords = config.getAllKeywordStrings();
-
-        // 查找当前位置所属的标题
-        const headingLineInfo = HeadingCommands.findCurrentHeading(document, position, todoKeywords);
-        if (!headingLineInfo) {
-            vscode.window.showInformationMessage('请将光标放在标题或其内容区域内');
-            return;
-        }
-
-        const { line: headingLine } = headingLineInfo;
-        const headingLineNumber = headingLine.lineNumber;
-
-        let dateStr: string | undefined;
-
-        if (providedDate) {
-            dateStr = providedDate;
-        } else {
-            // 提示输入日期 (简单实现，使用 InputBox)
-            // 理想情况下应该有一个日期选择器
-            const today = new Date();
-            const defaultDate = today.toISOString().split('T')[0];
-            dateStr = await vscode.window.showInputBox({
-                value: defaultDate,
-                prompt: `Enter ${type} date (YYYY-MM-DD)`,
-                placeHolder: 'YYYY-MM-DD'
-            });
-
-            if (!dateStr) {
+        try {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
                 return;
             }
-        }
 
-        // 简单的日期校验
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-            vscode.window.showErrorMessage('Invalid date format. Please use YYYY-MM-DD.');
-            return;
-        }
+            const document = editor.document;
+            const position = editor.selection.active;
 
-        const dayName = new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' });
-        const orgTimestamp = `<${dateStr} ${dayName}>`;
+            // 获取关键词配置
+            const config = getConfigService();
+            const todoKeywords = config.getAllKeywordStrings();
 
-        // 查找现有的规划行 (通常在标题后第一行)
-        let planningLineNumber = headingLineNumber + 1;
-        let foundPlanning = false;
-        let planningLineText = '';
-
-        if (planningLineNumber < document.lineCount) {
-            const nextLine = document.lineAt(planningLineNumber);
-            if (/^\s*(?:SCHEDULED:|DEADLINE:|CLOSED:)/.test(nextLine.text)) {
-                foundPlanning = true;
-                planningLineText = nextLine.text;
+            // 查找当前位置所属的标题
+            const headingLineInfo = HeadingCommands.findCurrentHeading(document, position, todoKeywords);
+            if (!headingLineInfo) {
+                vscode.window.showInformationMessage('请将光标放在标题或其内容区域内');
+                return;
             }
-        }
 
-        const pattern = new RegExp(`(${type}:\\s*<[^>]+>)`);
-        const newEntry = `${type}: ${orgTimestamp}`;
+            const { line: headingLine } = headingLineInfo;
+            const headingLineNumber = headingLine.lineNumber;
 
-        await editor.edit(editBuilder => {
-            if (foundPlanning) {
-                if (pattern.test(planningLineText)) {
-                    // 更新已存在的
-                    const updatedLine = planningLineText.replace(pattern, newEntry);
-                    editBuilder.replace(document.lineAt(planningLineNumber).range, updatedLine);
-                } else {
-                    // 在现有规划行添加新的
-                    const updatedLine = `${planningLineText.trimEnd()} ${newEntry}`;
-                    editBuilder.replace(document.lineAt(planningLineNumber).range, updatedLine);
-                }
+            let dateStr: string | undefined;
+
+            if (providedDate && typeof providedDate === 'string') {
+                dateStr = providedDate;
             } else {
-                // 插入新规划行 (缩进 2 空格)
-                const headingEnd = document.lineAt(headingLineNumber).range.end;
-                editBuilder.insert(headingEnd, `\n  ${newEntry}`);
-            }
-        });
+                // 提示输入日期 (简单实现，使用 InputBox)
+                const today = new Date();
+                const defaultDate = today.toISOString().split('T')[0];
+                dateStr = await vscode.window.showInputBox({
+                    value: defaultDate,
+                    prompt: `Enter ${type} date (YYYY-MM-DD)`,
+                    placeHolder: 'YYYY-MM-DD'
+                });
 
-        Logger.info(`Updated ${type} to ${dateStr}`);
+                if (!dateStr) {
+                    return;
+                }
+            }
+
+            // 简单的日期校验
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                vscode.window.showErrorMessage('Invalid date format. Please use YYYY-MM-DD.');
+                return;
+            }
+
+            // 安全获取星期名称，避免 RangeError
+            let dayName = '';
+            try {
+                const dateObj = new Date(dateStr);
+                if (!isNaN(dateObj.getTime())) {
+                    dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+                } else {
+                    dayName = '???';
+                }
+            } catch (e) {
+                dayName = '???';
+                Logger.warn('Failed to parse day name', e);
+            }
+
+            const orgTimestamp = `<${dateStr}${dayName ? ' ' + dayName : ''}>`;
+
+            // 查找现有的规划行 (通常在标题后第一行)
+            let planningLineNumber = headingLineNumber + 1;
+            let foundPlanning = false;
+            let planningLineText = '';
+
+            if (planningLineNumber < document.lineCount) {
+                const nextLine = document.lineAt(planningLineNumber);
+                if (/^\s*(?:SCHEDULED:|DEADLINE:|CLOSED:)/.test(nextLine.text)) {
+                    foundPlanning = true;
+                    planningLineText = nextLine.text;
+                }
+            }
+
+            const pattern = new RegExp(`(${type}:\\s*<[^>]+>)`);
+            const newEntry = `${type}: ${orgTimestamp}`;
+
+            const success = await editor.edit(editBuilder => {
+                if (foundPlanning) {
+                    if (pattern.test(planningLineText)) {
+                        // 更新已存在的
+                        const updatedLine = planningLineText.replace(pattern, newEntry);
+                        editBuilder.replace(document.lineAt(planningLineNumber).range, updatedLine);
+                    } else {
+                        // 在现有规划行添加新的
+                        const updatedLine = `${planningLineText.trimEnd()} ${newEntry}`;
+                        editBuilder.replace(document.lineAt(planningLineNumber).range, updatedLine);
+                    }
+                } else {
+                    // 插入新规划行 (缩进 2 空格)
+                    const headingEnd = document.lineAt(headingLineNumber).range.end;
+                    editBuilder.insert(headingEnd, `\n  ${newEntry}`);
+                }
+            });
+
+            if (success) {
+                Logger.info(`Updated ${type} to ${dateStr}`);
+            } else {
+                Logger.error(`Failed to apply edit for ${type}`);
+            }
+        } catch (error) {
+            Logger.error(`Error in setPlanningDate (${type})`, error);
+            vscode.window.showErrorMessage(`VOrg Error: Failed to set ${type}. See output for details.`);
+        }
     }
 }

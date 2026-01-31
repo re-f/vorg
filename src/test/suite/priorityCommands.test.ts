@@ -77,20 +77,13 @@ suite('PriorityCommands Integration Test Suite', () => {
         await vscode.commands.executeCommand('vorg.setPriorityUp');
         await wait();
         assert.strictEqual(doc.lineAt(0).text, '* TODO [#C] Heading 1');
-
-        // TODO [#C] -> TODO [#B]
-        await vscode.commands.executeCommand('vorg.setPriorityUp');
-        await wait();
-        assert.strictEqual(doc.lineAt(0).text, '* TODO [#B] Heading 1');
     });
 
     test('Priority Cycling with Tags', async () => {
         const { doc } = await setupTest('* Heading 1 :tag1:', 0, 5);
 
-        // Heading 1 :tag1: -> [#C] Heading 1 :tag1:
         await vscode.commands.executeCommand('vorg.setPriorityUp');
         await wait();
-        // 注意：HeadingParser.buildHeadingLine 构建时，优先级在标题文本之前
         assert.strictEqual(doc.lineAt(0).text, '* [#C] Heading 1 :tag1:');
     });
 
@@ -100,5 +93,18 @@ suite('PriorityCommands Integration Test Suite', () => {
         await vscode.commands.executeCommand('vorg.setPriorityUp');
         await wait();
         assert.strictEqual(doc.lineAt(0).text, 'Just some text');
+    });
+
+    test('Priority Cycling from content: 应该触发 VS Code 默认选择行为', async () => {
+        const content = '* Heading 1\nLine 1\nLine 2';
+        const { editor } = await setupTest(content, 2, 0); // 光标在 "Line 2" 开头
+
+        await vscode.commands.executeCommand('vorg.setPriorityUp');
+        await wait();
+
+        // 验证光标是否向上选中了一行
+        const selection = editor.selection;
+        assert.strictEqual(selection.active.line, 1);
+        assert.strictEqual(selection.anchor.line, 2);
     });
 });

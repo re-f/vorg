@@ -157,9 +157,11 @@
   - Stage 1.4 完成 (数据库连接管理)
   - Stage 1.5 完成 (File Repository)
   - **Stage 1 完成** ✅ (71/71 测试通过)
-- 2026-01-29: Phase 0 架构升级与增量索引
+- 2026-01-29: Phase 0 架构升级、增量索引与 Phase 2 核心编辑功能
   - Stage 2.1-2.3 完成 (Repositories & Extractor)
   - Stage 2.4-2.5 完成 (File & Workspace Indexer)
   - **Stage 2.6 完成** ✅ 实现健壮的复合主键架构，支持所有标题的反向链接
   - **Stage 2 核心功能完成** ✅ (140/140 测试通过)
   - **Stage 3 完成** ✅ 实现 `WorkspaceWatcher` 与 `IncrementalUpdateService`，支持 `.org` 和 `.org_archive` 实时同步
+  - **Phase 2 核心任务管理功能完成** ✅ 实现优先级循环、标签编辑、SCHEDULED/DEADLINE 设置
+  - **集成测试通过** ✅ 57/57 项集成测试通过，涵盖复杂正文触发场景

@@ -64,4 +64,52 @@ suite('DateCommands Integration Test Suite', () => {
         assert.ok(lines[1].includes('SCHEDULED: <2023-10-20 Fri>'));
         assert.ok(lines[1].includes('DEADLINE: <2023-10-25 Wed>'));
     });
+    test('Set Date when cursor is in content: 应该能找到父级标题并插入日期', async () => {
+        const content = '* Heading 1\nSome content\nMore content';
+        const { doc } = await setupTest(content, 1, 5); // 光标在 "Some content"
+
+        await vscode.commands.executeCommand('vorg.setScheduled', '2023-11-01');
+        await wait();
+
+        const lines = doc.getText().split('\n');
+        assert.strictEqual(lines[0], '* Heading 1');
+        assert.ok(lines[1].includes('SCHEDULED: <2023-11-01 Wed>'));
+        assert.strictEqual(lines[2], 'Some content');
+    });
+
+    test('Set Date with existing CLOSED: 应该能在同一行合并', async () => {
+        const content = '* Heading 1\n  CLOSED: [2023-10-19 Thu 10:00]';
+        const { doc } = await setupTest(content, 0, 5);
+
+        await vscode.commands.executeCommand('vorg.setScheduled', '2023-11-02');
+        await wait();
+
+        const lines = doc.getText().split('\n');
+        assert.ok(lines[1].includes('CLOSED: [2023-10-19 Thu 10:00]'));
+        assert.ok(lines[1].includes('SCHEDULED: <2023-11-02 Thu>'));
+    });
+
+    test('Set Date on sub-heading: 应该只影响当前子标题', async () => {
+        const content = '* Heading 1\n** Sub Heading\n   Content';
+        const { doc } = await setupTest(content, 1, 5); // 光标在 Sub Heading
+
+        await vscode.commands.executeCommand('vorg.setDeadline', '2023-11-05');
+        await wait();
+
+        const lines = doc.getText().split('\n');
+        assert.strictEqual(lines[1], '** Sub Heading');
+        assert.ok(lines[2].includes('DEADLINE: <2023-11-05 Sun>'));
+        assert.strictEqual(lines[3], '   Content');
+    });
+
+    test('Set Date: 无效日期格式应该报错但不崩溃 (测试命令行路径)', async () => {
+        const { doc } = await setupTest('* Heading 1', 0, 5);
+
+        // 传递非法格式
+        await vscode.commands.executeCommand('vorg.setScheduled', 'invalid-date');
+        await wait();
+
+        // 内容应该保持不变
+        assert.strictEqual(doc.getText(), '* Heading 1');
+    });
 });

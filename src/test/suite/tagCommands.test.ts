@@ -58,4 +58,13 @@ suite('TagCommands Integration Test Suite', () => {
 
         assert.strictEqual(doc.lineAt(0).text, '* TODO [#A] Heading 1 :urgent:');
     });
+    test('Set Tags from content: 应该能找到父级标题并设置标签', async () => {
+        const content = '* Heading 1\nSome content';
+        const { doc } = await setupTest(content, 1, 5); // 光标在 "Some content"
+
+        await vscode.commands.executeCommand('vorg.setTags', ['contenttag']);
+        await wait();
+
+        assert.strictEqual(doc.lineAt(0).text, '* Heading 1 :contenttag:');
+    });
 });
