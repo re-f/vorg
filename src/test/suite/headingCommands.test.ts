@@ -1,12 +1,17 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
+import { ensureTestReady } from './testUtils';
 
 /**
  * 标题命令集成测试
  * 
  * 验证 HeadingCommands.ts 中的标题操作在真实 VS Code 环境下的行为。
  */
-suite('HeadingCommands Integration Test Suite', () => {
+suite('HeadingCommands Integration Test Suite', function () {
+    this.timeout(10000);
+    suiteSetup(async () => {
+        await ensureTestReady();
+    });
     vscode.window.showInformationMessage('Start HeadingCommands integration tests.');
 
     async function setupTest(content: string, line: number, char: number) {
@@ -20,7 +25,7 @@ suite('HeadingCommands Integration Test Suite', () => {
         return { doc, editor };
     }
 
-    async function wait(ms: number = 1000) {
+    async function wait(ms: number = 50) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 

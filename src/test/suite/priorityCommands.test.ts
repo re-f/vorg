@@ -1,10 +1,15 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
+import { ensureTestReady } from './testUtils';
 
 /**
  * 优先级命令集成测试
  */
-suite('PriorityCommands Integration Test Suite', () => {
+suite('PriorityCommands Integration Test Suite', function () {
+    this.timeout(10000);
+    suiteSetup(async () => {
+        await ensureTestReady();
+    });
     vscode.window.showInformationMessage('Start PriorityCommands integration tests.');
 
     async function setupTest(content: string, line: number, char: number) {
@@ -18,7 +23,7 @@ suite('PriorityCommands Integration Test Suite', () => {
         return { doc, editor };
     }
 
-    async function wait(ms: number = 200) {
+    async function wait(ms: number = 50) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 

@@ -5,17 +5,20 @@ import * as fs from 'fs';
 import * as os from 'os';
 import { OrgSymbolIndexService } from '../../services/orgSymbolIndexService';
 import { DatabaseConnection } from '../../database/connection';
+import { ensureTestReady } from './testUtils';
 import { FileIndexer } from '../../database/fileIndexer';
 import { FileRepository } from '../../database/fileRepository';
 import { HeadingRepository } from '../../database/headingRepository';
 import { LinkRepository } from '../../database/linkRepository';
 import { UniorgAstExtractor } from '../../database/uniorgAstExtractor';
 
-suite('OrgSymbolIndexService Integration Tests', () => {
+suite('OrgSymbolIndexService Integration Tests', function () {
+    this.timeout(10000);
     let indexService: OrgSymbolIndexService;
     let testTempDir: string;
 
     suiteSetup(async () => {
+        await ensureTestReady();
         testTempDir = os.tmpdir();
         indexService = OrgSymbolIndexService.getInstance();
     });

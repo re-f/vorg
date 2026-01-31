@@ -1,10 +1,14 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
+import { ensureTestReady } from './testUtils';
 
 /**
  * 日期命令集成测试
  */
 suite('DateCommands Integration Test Suite', () => {
+    suiteSetup(async () => {
+        await ensureTestReady();
+    });
     vscode.window.showInformationMessage('Start DateCommands integration tests.');
 
     async function setupTest(content: string, line: number, char: number) {
@@ -18,7 +22,7 @@ suite('DateCommands Integration Test Suite', () => {
         return { doc, editor };
     }
 
-    async function wait(ms: number = 200) {
+    async function wait(ms: number = 50) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 

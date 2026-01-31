@@ -1,7 +1,11 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
+import { ensureTestReady } from './testUtils';
 
 suite('Extension Test Suite', () => {
+    suiteSetup(async () => {
+        await ensureTestReady();
+    });
     vscode.window.showInformationMessage('Start all tests.');
 
     test('Extension should be present', () => {

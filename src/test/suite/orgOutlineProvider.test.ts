@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { OrgOutlineProvider } from '../../outline/orgOutlineProvider';
+import { ensureTestReady } from './testUtils';
 
 /**
  * 辅助函数：提取纯显示名称（去除拼音信息）
@@ -18,6 +19,10 @@ function findSymbol(symbols: vscode.DocumentSymbol[], expectedName: string): vsc
 }
 
 suite('OrgOutlineProvider Test Suite', () => {
+
+    suiteSetup(async () => {
+        await ensureTestReady();
+    });
 
     test('Should handle org files with metadata headers', async () => {
         const content = `#+glossary_sources:  Glossary

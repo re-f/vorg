@@ -2,11 +2,16 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { ensureTestReady } from './testUtils';
 
 /**
  * 数据库集成与增量更新测试
  */
-suite('Database Integration Suite', () => {
+suite('Database Integration Suite', function () {
+    this.timeout(10000);
+    suiteSetup(async () => {
+        await ensureTestReady();
+    });
 
     test('Incremental update should not fail on nested transactions', async () => {
         // 1. Create a workspace folder for testing if possible or use a temp file
@@ -37,8 +42,10 @@ suite('Database Integration Suite', () => {
                 });
                 await doc.save();
                 // Wait a bit for the indexer to react
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
+            // Wait finally for all to settle
+            await new Promise(resolve => setTimeout(resolve, 600));
 
             // 3. Verify that the database initialized and handled events
             // We can't directly check the database easily from here without 
@@ -64,8 +71,8 @@ suite('Database Integration Suite', () => {
         });
         await vscode.window.showTextDocument(doc);
 
-        // Wait for indexer to pick it up
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Wait for indexer to pick it up (debounce is 500ms)
+        await new Promise(resolve => setTimeout(resolve, 600));
 
         // We can execute the command with provided tags to verify it still works
         await vscode.commands.executeCommand('vorg.setTags', ['tag1']);

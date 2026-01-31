@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
+import { ensureTestReady } from './testUtils';
 
 /**
  * 编辑命令集成测试
@@ -7,6 +8,9 @@ import * as vscode from 'vscode';
  * 验证 EditingCommands.ts 中的各种协调操作在真实 VS Code 环境下的行为。
  */
 suite('EditingCommands Integration Test Suite', () => {
+    suiteSetup(async () => {
+        await ensureTestReady();
+    });
     vscode.window.showInformationMessage('Start EditingCommands integration tests.');
 
     /**
@@ -26,7 +30,7 @@ suite('EditingCommands Integration Test Suite', () => {
     /**
      * 等待编辑器更新
      */
-    async function wait(ms: number = 100) {
+    async function wait(ms: number = 50) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
