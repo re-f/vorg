@@ -333,7 +333,7 @@
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "test:integration": "node ./out/test/runTest.js",
-    "test:unit": "mocha --ui tdd 'out/test/unit/{contextAnalyzer,listParser,propertyParser,tableParser,linkParser,listRenumber,listSplit}.test.js' && mocha 'out/test/unit/database/*.test.js'",
+    "test:unit": "npm run compile-tests && mocha --ui tdd --exclude \"out/test/unit/orgCompletionProviderContent.test.js\" \"out/test/unit/*.test.js\" && mocha \"out/test/unit/database/*.test.js\"",
     "package": "webpack --mode production --devtool hidden-source-map && vsce package --no-dependencies",
     "docs": "typedoc src --out docs/api",
     "docs:serve": "pnpm run docs && open docs/api/index.html"
