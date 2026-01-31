@@ -152,8 +152,15 @@ export class UniorgAstExtractor {
         if (ast.children) {
             for (const node of ast.children) {
                 // #+TITLE keyword 直接在 org-data children 中
-                if (node.type === 'keyword' && node.key === 'TITLE') {
-                    metadata.title = node.value;
+                if (node.type === 'keyword') {
+                    if (node.key === 'TITLE') {
+                        metadata.title = node.value;
+                    } else if (node.key === 'FILETAGS') {
+                        // 解析 :tag1:tag2: 格式
+                        if (node.value) {
+                            metadata.tags = node.value.split(':').filter((t: string) => t.trim() !== '');
+                        }
+                    }
                 }
 
                 // 查找 section 节点
