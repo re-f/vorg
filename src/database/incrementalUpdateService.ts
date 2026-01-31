@@ -99,6 +99,23 @@ export class IncrementalUpdateService implements vscode.Disposable {
     }
 
     /**
+     * Force full rebuild of the index
+     */
+    public async rebuildIndex(): Promise<void> {
+        if (this.isIndexing) return;
+        this.isIndexing = true;
+        try {
+            Logger.info('Forcing full workspace index rebuild...');
+            await this.workspaceIndexer.indexWorkspace(true);
+            Logger.info('Forced rebuild complete.');
+        } catch (error) {
+            Logger.error('Forced rebuild failed', error);
+        } finally {
+            this.isIndexing = false;
+        }
+    }
+
+    /**
      * Handle incremental file events
      */
     private async handleFileEvent(event: FileEvent) {

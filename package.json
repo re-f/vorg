@@ -74,6 +74,36 @@
           "type": "boolean",
           "default": true,
           "description": "是否在编辑器中显示操作按钮（CodeLens），如标题行的 Promote、Demote 等"
+        },
+        "vorg.perspectives": {
+          "type": "array",
+          "default": [
+            {
+              "label": "📌 High Priority",
+              "query": "(and (todo \"TODO\" \"NEXT\") (prio \"A\"))",
+              "description": "Urgent tasks"
+            },
+            {
+              "label": "📂 By File",
+              "query": "(group-by file (todo \"TODO\"))",
+              "description": "Active tasks grouped by file"
+            }
+          ],
+          "description": "Saved perspective views in the sidebar",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "query": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            }
+          }
         }
       }
     },
@@ -156,6 +186,12 @@
         "command": "vorg.debug.refreshHighlighting",
         "title": "VOrg: Debug - Refresh Highlighting",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "vorg.rebuildIndex",
+        "title": "VOrg: Force Rebuild Index",
+        "icon": "$(database)",
+        "category": "VOrg"
       },
       {
         "command": "vorg.metaReturn",
@@ -494,6 +530,7 @@
   "dependencies": {
     "pinyin-pro": "^3.27.0",
     "rehype-stringify": "^9.0.3",
+    "s-expression": "^3.1.1",
     "sql.js": "^1.13.0",
     "unified": "^11.0.5",
     "uniorg": "^1.3.0",

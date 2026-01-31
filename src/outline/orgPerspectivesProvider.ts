@@ -1,4 +1,8 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
+import { QueryService } from '../services/queryService';
+import { VOrgQLParser } from '../services/vorgQLParser';
+import { OrgHeading } from '../database/types';
 
 /**
  * 侧边栏透视项类型
@@ -10,15 +14,27 @@ export enum PerspectiveItemType {
 }
 
 /**
+ * 侧边栏透视配置
+ */
+interface PerspectiveConfig {
+    label: string;
+    query: string;
+    description: string;
+}
+
+/**
  * 侧边栏透视项
  */
 export class PerspectiveItem extends vscode.TreeItem {
+    public headings: OrgHeading[] = []; // 用于 Group 节点传递数据
+
     constructor(
-        public readonly label: string,
+        public label: string,
         public readonly type: PerspectiveItemType,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
         public query?: string,
-        description?: string
+        description?: string,
+        public readonly headingData?: OrgHeading
     ) {
         super(label, collapsibleState);
         this.description = description;
@@ -26,17 +42,43 @@ export class PerspectiveItem extends vscode.TreeItem {
         if (type === PerspectiveItemType.Folder) {
             this.contextValue = 'perspective';
             this.iconPath = new vscode.ThemeIcon('compass');
+            this.tooltip = `Query: ${query}`;
         } else if (type === PerspectiveItemType.Group) {
             this.iconPath = new vscode.ThemeIcon('symbol-folder');
             this.contextValue = 'group';
-        } else {
-            this.iconPath = new vscode.ThemeIcon('circle-outline');
+        } else if (type === PerspectiveItemType.Heading && headingData) {
+            // 设置标题项的图标和命令
+            this.iconPath = this.getTodoIcon(headingData.todoState);
+            this.command = {
+                command: 'vscode.open',
+                title: 'Open File',
+                arguments: [
+                    vscode.Uri.file(headingData.fileUri),
+                    { selection: new vscode.Range(headingData.startLine, 0, headingData.startLine, 0) }
+                ]
+            };
+            // 构造详细的 Description
+            const parts = [];
+            if (headingData.todoState) parts.push(headingData.todoState);
+            if (headingData.priority) parts.push(`[#${headingData.priority}]`);
+            this.description = parts.join(' ');
         }
+    }
+
+    private getTodoIcon(state?: string): vscode.ThemeIcon {
+        if (!state) return new vscode.ThemeIcon('circle-outline');
+        if (['DONE', 'CANCELLED', 'CNCL'].includes(state)) {
+            return new vscode.ThemeIcon('pass-filled', new vscode.ThemeColor('debugIcon.stepOverForeground'));
+        }
+        if (['TODO', 'NEXT', 'WAITING', 'HOLD'].includes(state)) {
+            return new vscode.ThemeIcon('circle-large-outline', new vscode.ThemeColor('charts.blue'));
+        }
+        return new vscode.ThemeIcon('circle-outline');
     }
 }
 
 /**
- * 模拟 VOrg-QL 语法展示功能器
+ * 侧边栏透视提供器
  */
 export class OrgPerspectivesProvider implements vscode.TreeDataProvider<PerspectiveItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<PerspectiveItem | undefined | null | void> = new vscode.EventEmitter<PerspectiveItem | undefined | null | void>();
@@ -58,70 +100,149 @@ export class OrgPerspectivesProvider implements vscode.TreeDataProvider<Perspect
     }
 
     async getChildren(element?: PerspectiveItem): Promise<PerspectiveItem[]> {
+        // 1. 顶层
         if (!element) {
-            // 顶层透视：通过 S-Expression 定义
-            return [
-                new PerspectiveItem(
-                    '� 紧急看板',
+            // 如果有临时搜索 Filter，将其作为一个虚拟的展开 Folder 处理
+            if (this.currentQuery) {
+                const tempFolder = new PerspectiveItem(
+                    'Search Results',
                     PerspectiveItemType.Folder,
                     vscode.TreeItemCollapsibleState.Expanded,
-                    '(group-by file (and (todo "TODO") (p "A")))',
-                    '按文件分组的高优先级任务'
-                ),
-                new PerspectiveItem(
-                    '🏷️ 标签视图',
-                    PerspectiveItemType.Folder,
-                    vscode.TreeItemCollapsibleState.Collapsed,
-                    '(group-by tag (todo "NEXT"))',
-                    '按标签聚合的下一步行动'
-                )
-            ];
+                    this.currentQuery
+                );
+                return this.resolveFolderChildren(tempFolder);
+            }
+
+            // 否则读取配置
+            const config = vscode.workspace.getConfiguration('vorg').get<PerspectiveConfig[]>('perspectives') || [];
+            return config.map(c => new PerspectiveItem(
+                c.label,
+                PerspectiveItemType.Folder,
+                vscode.TreeItemCollapsibleState.Collapsed,
+                c.query,
+                c.description
+            ));
         }
 
-        // 如果点击的是 Folder，且带有 group-by 模拟展示
+        // 2. Folder 层：执行查询并根据 group-by 决定返回 Group 还是 Heading
         if (element.type === PerspectiveItemType.Folder) {
-            if (element.label.includes('紧急看板')) {
-                return [
-                    new PerspectiveItem('📄 work.org', PerspectiveItemType.Group, vscode.TreeItemCollapsibleState.Expanded),
-                    new PerspectiveItem('� project-x.org', PerspectiveItemType.Group, vscode.TreeItemCollapsibleState.Collapsed)
-                ];
-            }
-            return [];
+            return this.resolveFolderChildren(element);
         }
 
-        // 如果点击的是 Group，展示具体的 Heading
-        if (element.type === PerspectiveItemType.Group) {
-            if (element.label === '📄 work.org') {
-                return [
-                    this.createMockHeading('修复系统崩溃 Bug', 'TODO', 'A', 'work.org'),
-                    this.createMockHeading('更新架构路线图', 'TODO', 'A', 'work.org')
-                ];
-            }
+        // 3. Group 层：直接返回缓存的 Headings
+        if (element.type === PerspectiveItemType.Group && element.headings) {
+            return element.headings.map(h => new PerspectiveItem(
+                h.title,
+                PerspectiveItemType.Heading,
+                vscode.TreeItemCollapsibleState.None,
+                undefined,
+                undefined,
+                h
+            ));
         }
 
         return [];
     }
 
-    private createMockHeading(label: string, todo: string, priority: string, file: string): PerspectiveItem {
-        const item = new PerspectiveItem(label, PerspectiveItemType.Heading, vscode.TreeItemCollapsibleState.None);
-        item.description = `${todo} [${priority}]`;
+    /**
+     * 处理 Folder 节点的子项解析（执行查询、分组）
+     */
+    private resolveFolderChildren(folder: PerspectiveItem): PerspectiveItem[] {
+        if (!folder.query) return [];
 
-        if (priority === 'A') {
-            item.iconPath = new vscode.ThemeIcon('error', new vscode.ThemeColor('charts.red'));
+        try {
+            // 2.1 执行查询
+            const headings = QueryService.executeSync(folder.query);
+
+            // 2.2 检查 group-by
+            const ast = VOrgQLParser.parse(folder.query);
+            const { type: groupType } = VOrgQLParser.extractGroupBy(ast);
+
+            if (groupType) {
+                // 需要分组
+                const grouped = this.groupHeadings(headings, groupType);
+                const groupItems: PerspectiveItem[] = [];
+
+                for (const [key, groupHeadings] of grouped.entries()) {
+                    const groupItem = new PerspectiveItem(
+                        key || '(No Group)',
+                        PerspectiveItemType.Group,
+                        vscode.TreeItemCollapsibleState.Collapsed,
+                        undefined,
+                        `${groupHeadings.length} items`
+                    );
+                    groupItem.headings = groupHeadings;
+
+                    // 定制图标
+                    if (groupType === 'tag') groupItem.iconPath = new vscode.ThemeIcon('tag');
+                    if (groupType === 'status' || groupType === 'todo') groupItem.iconPath = new vscode.ThemeIcon('checklist');
+                    if (groupType === 'priority') groupItem.iconPath = new vscode.ThemeIcon('alert');
+
+                    groupItems.push(groupItem);
+                }
+                return groupItems.sort((a, b) => a.label.localeCompare(b.label));
+            } else {
+                // 不需要分组，直接返回 Heading Items
+                return headings.map(h => new PerspectiveItem(
+                    h.title,
+                    PerspectiveItemType.Heading,
+                    vscode.TreeItemCollapsibleState.None,
+                    undefined,
+                    undefined,
+                    h
+                ));
+            }
+        } catch (error) {
+            console.error('Error fetching perspective:', error);
+            return [new PerspectiveItem(`Error: ${error}`, PerspectiveItemType.Heading, vscode.TreeItemCollapsibleState.None)];
         }
+    }
 
-        item.command = {
-            command: 'vscode.open',
-            title: 'Open File',
-            arguments: []
+    /**
+     * 在内存中对结果进行分组
+     */
+    private groupHeadings(headings: OrgHeading[], type: string): Map<string, OrgHeading[]> {
+        const groups = new Map<string, OrgHeading[]>();
+
+        const addToGroup = (key: string, h: OrgHeading) => {
+            const k = key || '(None)';
+            if (!groups.has(k)) groups.set(k, []);
+            groups.get(k)?.push(h);
         };
 
-        return item;
+        for (const h of headings) {
+            switch (type) {
+                case 'file':
+                case 'src':
+                    addToGroup(path.basename(h.fileUri), h);
+                    break;
+                case 'tag':
+                case '#':
+                    if (h.tags && h.tags.length > 0) {
+                        h.tags.forEach(t => addToGroup(t, h));
+                    } else {
+                        addToGroup('(No Tags)', h);
+                    }
+                    break;
+                case 'status':
+                case 'todo':
+                    addToGroup(h.todoState || '(No Status)', h);
+                    break;
+                case 'priority':
+                case 'prio':
+                case 'p':
+                    addToGroup(h.priority || '(No Priority)', h);
+                    break;
+                default:
+                    addToGroup('All', h);
+            }
+        }
+        return groups;
     }
 }
 
 /**
- * 此时解析只需展示逻辑闭环
+ * 解析标签和描述
  */
 export function parseLabelAndDescription(input: string) {
     const parts = input.split('#').map(p => p.trim());

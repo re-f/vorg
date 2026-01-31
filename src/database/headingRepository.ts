@@ -352,6 +352,27 @@ export class HeadingRepository {
     }
 
     /**
+     * 根据 VOrg-QL 翻译出的 SQL 执行查询
+     */
+    findByQL(where: string, params: Record<string, any>, limit: number = 500): OrgHeading[] {
+        let sql = `SELECT * FROM headings`;
+        if (where && where !== '1=1') {
+            sql += ` WHERE ${where}`;
+        }
+
+        // 默认按文件和行号排序
+        sql += ` ORDER BY file_uri ASC, start_line ASC`;
+
+        if (limit) {
+            params['$limit'] = limit;
+            sql += ` LIMIT $limit`;
+        }
+
+        const rows = SqlJsHelper.prepare(this.db, sql).all(params);
+        return rows.map((row: any) => this.rowToHeading(row));
+    }
+
+    /**
      * 获取所有 headings
      */
     findAll(): OrgHeading[] {

@@ -275,6 +275,18 @@ export async function activate(context: vscode.ExtensionContext) {
       Logger.error('Failed to start IncrementalUpdateService', err);
     });
     context.subscriptions.push(updateService);
+
+    // 注册强制重构索引命令
+    context.subscriptions.push(
+      vscode.commands.registerCommand('vorg.rebuildIndex', async () => {
+        try {
+          await updateService.rebuildIndex();
+          vscode.window.showInformationMessage('VOrg: 索引重建完成');
+        } catch (err) {
+          vscode.window.showErrorMessage(`VOrg: 索引重建失败: ${err}`);
+        }
+      })
+    );
   } catch (error) {
     // 即使数据库初始化失败，也要记录日志，但不能抛出错误，否则会阻止后续命令注册
     Logger.error('Failed to initialize Database/IncrementalUpdateService (Native module error suspected)', error);
@@ -330,17 +342,19 @@ export async function activate(context: vscode.ExtensionContext) {
       });
     }),
     vscode.commands.registerCommand('vorg.perspectives.edit', async (item: PerspectiveItem) => {
-      // 第一步：修改查询 (S-Expression)
+      const oldLabel = item.label;
+      const oldQuery = item.query;
+      const oldDescription = item.description;
+
       const newQuery = await vscode.window.showInputBox({
-        prompt: 'Step 1/2: Edit Query (S-Expression, e.g. (group-by file ...))',
-        value: item.query,
+        prompt: 'Step 1/2: Edit Query (S-Expression)',
+        value: oldQuery,
         ignoreFocusOut: true
       });
 
       if (newQuery === undefined) return;
 
-      // 第二步：修改标题和说明（合并显示）
-      const currentLabelDesc = `${item.label} # ${item.description || ''}`;
+      const currentLabelDesc = `${oldLabel} # ${oldDescription || ''}`;
       const newLabelDesc = await vscode.window.showInputBox({
         prompt: 'Step 2/2: Edit Title # Description',
         value: currentLabelDesc,
@@ -351,25 +365,35 @@ export async function activate(context: vscode.ExtensionContext) {
 
       const { label, description } = parseLabelAndDescription(newLabelDesc);
 
-      // 更新内存中的 mock 数据并刷新 (演示用)
-      if (item instanceof PerspectiveItem) {
-        (item as any).query = newQuery;
-        (item as any).label = label;
-        (item as any).description = description;
-        (item as any).tooltip = `Query: ${newQuery}${description ? '\n' + description : ''}`;
-        perspectivesProvider.refresh();
-      }
+      const config = vscode.workspace.getConfiguration('vorg');
+      const perspectives = config.get<any[]>('perspectives') || [];
 
-      vscode.window.showInformationMessage(`Perspective updated (Mock).`);
+      const index = perspectives.findIndex(p => p.label === oldLabel && p.query === oldQuery);
+      if (index !== -1) {
+        perspectives[index] = { label, query: newQuery, description };
+        await config.update('perspectives', perspectives, vscode.ConfigurationTarget.Global);
+        perspectivesProvider.refresh();
+        vscode.window.showInformationMessage(`Perspective "${label}" updated.`);
+      } else {
+        vscode.window.showErrorMessage(`Could not find perspective to update.`);
+      }
     }),
-    vscode.commands.registerCommand('vorg.perspectives.delete', async (item: vscode.TreeItem) => {
+    vscode.commands.registerCommand('vorg.perspectives.delete', async (item: PerspectiveItem) => {
       const answer = await vscode.window.showWarningMessage(
         `Are you sure you want to delete "${item.label}"?`,
         'Yes', 'No'
       );
       if (answer === 'Yes') {
-        vscode.window.showInformationMessage(`Deleted "${item.label}" (Placeholder).`);
-        perspectivesProvider.refresh();
+        const config = vscode.workspace.getConfiguration('vorg');
+        const perspectives = config.get<any[]>('perspectives') || [];
+
+        const index = perspectives.findIndex(p => p.label === item.label && p.query === item.query);
+        if (index !== -1) {
+          perspectives.splice(index, 1);
+          await config.update('perspectives', perspectives, vscode.ConfigurationTarget.Global);
+          perspectivesProvider.refresh();
+          vscode.window.showInformationMessage(`Perspective "${item.label}" deleted.`);
+        }
       }
     })
   );

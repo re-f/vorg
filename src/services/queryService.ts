@@ -1,6 +1,8 @@
 import { OrgHeading } from '../database/types';
 import { HeadingRepository } from '../database/headingRepository';
 import { DatabaseConnection } from '../database/connection';
+import { VOrgQLParser } from './vorgQLParser';
+import { VOrgQLTranslator } from './vorgQLTranslator';
 
 /**
  * Org 查询标准接口
@@ -39,6 +41,10 @@ export class QueryService {
 
         if (typeof query === 'string') {
             const trimmed = query.trim();
+            if (trimmed.startsWith('(')) {
+                // VOrg-QL S-Expression 模式
+                return this.executeQL(trimmed);
+            }
             if (trimmed.startsWith('{')) {
                 try {
                     criteria = JSON.parse(trimmed);
@@ -89,6 +95,26 @@ export class QueryService {
         }
 
         return criteria;
+    }
+
+    /**
+     * 执行 S-Expression 查询
+     */
+    private static executeQL(input: string): OrgHeading[] {
+        try {
+            const ast = VOrgQLParser.parse(input);
+            const translator = new VOrgQLTranslator();
+            const { where, params } = translator.translate(ast);
+
+            const db = DatabaseConnection.getInstance().getDatabase();
+            if (!db) return [];
+            const repo = new HeadingRepository(db);
+
+            return repo.findByQL(where, params);
+        } catch (error) {
+            console.error('VOrg-QL Execution Error:', error);
+            return [];
+        }
     }
 
     /**

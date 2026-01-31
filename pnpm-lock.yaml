@@ -14,6 +14,9 @@ importers:
       rehype-stringify:
         specifier: ^9.0.3
         version: 9.0.4
+      s-expression:
+        specifier: ^3.1.1
+        version: 3.1.1
       sql.js:
         specifier: ^1.13.0
         version: 1.13.0
@@ -2085,6 +2088,9 @@ packages:
 
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
+
+  s-expression@3.1.1:
+    resolution: {integrity: sha512-VMsW7sIvixXfIDmDll7XCePMYYY52UlUtA7OlFQUovqj3XtQ2UkZkjjAvnSFW8o+SbswzUEeCBMmpAx9LS3qrg==}
 
   safe-buffer@5.1.2:
     resolution: {integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==}
@@ -4833,6 +4839,8 @@ snapshots:
   run-parallel@1.2.0:
     dependencies:
       queue-microtask: 1.2.3
+
+  s-expression@3.1.1: {}
 
   safe-buffer@5.1.2: {}
 

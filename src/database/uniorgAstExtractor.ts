@@ -50,7 +50,9 @@ export class UniorgAstExtractor {
                     );
 
                     // 修正 endLine: 使用 section 的结束位置
-                    if (node.contentsEnd) {
+                    if (node.position && node.position.end && typeof node.position.end.line === 'number') {
+                        heading.endLine = node.position.end.line - 1;
+                    } else if (node.contentsEnd) {
                         heading.endLine = mapper.getLine(node.contentsEnd);
                     }
 
@@ -198,7 +200,14 @@ export class UniorgAstExtractor {
         mapper: OffsetMapper,
         parentId?: string
     ): OrgHeading {
-        const startLine = mapper.getLine(startOffset);
+        // Use AST position if available (1-based -> 0-based), fallback to offset mapper
+        let startLine: number;
+        if (node.position && node.position.start && typeof node.position.start.line === 'number') {
+            startLine = node.position.start.line - 1;
+        } else {
+            startLine = mapper.getLine(startOffset);
+        }
+
         const id = properties.ID || `${fileUri}:${startLine}`;
 
         // 提取 title (从 rawValue)
@@ -219,6 +228,22 @@ export class UniorgAstExtractor {
         const pinyinTitle = getPinyinString(title);
         const pinyinDisplayName = getPinyinString(displayName);
 
+        // Calculate endLine: prefer using node.position
+        let endLine = startLine;
+        // Check if node has position.end (unlikely for headline node to cover section, but safe to check)
+        // Usually we traverse 'section' for endLine, but here 'node' is 'headline'.
+        // So for the *headline* node, endLine IS startLine (usually). 
+        // The *section* endLine is handled in extractHeadings calling this.
+        // Wait, the previous code used `node.contentsEnd` which for a headline IS valid.
+
+        // Let's use mapper fallback for now inside here, but update 'extractHeadings' to set the correct Section endLine later.
+        // Actually, createHeadingFromNode initializes endLine, but extractHeadings overwrites it immediately for sections.
+        if (node.position && node.position.end && typeof node.position.end.line === 'number') {
+            endLine = node.position.end.line - 1;
+        } else {
+            endLine = mapper.getLine(node.contentsEnd || node.contentsBegin || 0);
+        }
+
         return {
             id,
             fileUri,
@@ -236,7 +261,7 @@ export class UniorgAstExtractor {
             closed,
             timestamps: [],
             startLine: startLine,
-            endLine: mapper.getLine(node.contentsEnd || node.contentsBegin || 0),
+            endLine: endLine, // Will be updated by caller if this is a section
             parentId,
             childrenIds: [],
             content: '',
