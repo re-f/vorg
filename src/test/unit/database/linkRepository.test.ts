@@ -25,13 +25,12 @@ describe('LinkRepository', () => {
         // 预先插入常用的测试文件 (满足外键约束)
         const testFiles = [
             '/test/source.org',
-            '/test/file.org',
-            '/test/file1.org',
-            '/test/file2.org',
-            '/test/source.org', // Added missing source.org
             '/test/source1.org',
             '/test/source2.org',
             '/test/source3.org',
+            '/test/file.org',
+            '/test/file1.org',
+            '/test/file2.org',
             '/test/target.org',
             '/test/target1.org',
             '/test/target2.org',
@@ -51,22 +50,23 @@ describe('LinkRepository', () => {
         // 预先插入常用的测试 headings (满足外键约束)
         const headingStmt = db.prepare(`
             INSERT OR IGNORE INTO headings (
-                id, file_uri, level, title, start_line, end_line, updated_at
+                id, file_uri, start_line, end_line, level, title, updated_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?)
         `);
 
+        // id, file_uri, start_line, end_line, level, title
         const testHeadings = [
-            ['source-heading-id', '/test/source.org', 1, 'Source Heading', 0, 10],
-            ['target-heading-id', '/test/target.org', 1, 'Target Heading', 0, 10],
-            ['heading-1', '/test/file.org', 1, 'Heading 1', 0, 10],
-            ['heading-2', '/test/file.org', 1, 'Heading 2', 11, 20],
-            ['other-heading', '/test/other.org', 1, 'Other Heading', 0, 10],
-            ['target-heading', '/test/target.org', 1, 'Target Heading', 0, 10]
+            ['source-heading-id', '/test/source.org', 0, 10, 1, 'Source Heading'],
+            ['target-heading-id', '/test/target.org', 0, 10, 1, 'Target Heading ID'],
+            ['heading-1', '/test/file.org', 0, 10, 1, 'Heading 1'],
+            ['heading-2', '/test/file.org', 11, 20, 1, 'Heading 2'],
+            ['other-heading', '/test/other.org', 0, 10, 1, 'Other Heading'],
+            ['target-heading', '/test/target.org', 20, 30, 1, 'Target Heading']
         ];
 
         const now = Math.floor(Date.now() / 1000);
-        for (const [id, fileUri, level, title, startLine, endLine] of testHeadings) {
-            headingStmt.run(id, fileUri, level, title, startLine, endLine, now);
+        for (const [id, fileUri, startLine, endLine, level, title] of testHeadings) {
+            headingStmt.run(id, fileUri, startLine, endLine, level, title, now);
         }
     });
 
@@ -77,14 +77,6 @@ describe('LinkRepository', () => {
             fs.unlinkSync(testDbPath);
         }
     });
-
-    // Helper: 插入测试用的 file 记录 (满足外键约束)
-    function insertTestFile(uri: string) {
-        db.prepare(`
-            INSERT OR IGNORE INTO files (uri, hash, updated_at)
-            VALUES (?, ?, ?)
-        `).run(uri, 'test-hash', Math.floor(Date.now() / 1000));
-    }
 
     describe('insert', () => {
         it('should insert a new link', () => {
@@ -105,20 +97,20 @@ describe('LinkRepository', () => {
             assert.strictEqual(found[0].linkType, 'file');
         });
 
-        it('should insert link with heading IDs', () => {
+        it('should insert link with heading references', () => {
             const link: OrgLink = {
                 sourceUri: '/test/source.org',
-                sourceHeadingId: 'source-heading-id',
-                targetHeadingId: 'target-heading-id',
+                sourceHeadingLine: 0, // Points to 'source-heading-id'
+                targetHeadingLine: 0, // Points to 'target-heading-id'
                 linkType: 'id',
                 linkText: 'Link to heading'
             };
 
             repo.insert(link);
 
-            const found = repo.findBySourceHeadingId('source-heading-id');
+            const found = repo.findBySourceHeading('/test/source.org', 0);
             assert.strictEqual(found.length, 1);
-            assert.strictEqual(found[0].targetHeadingId, 'target-heading-id');
+            assert.strictEqual(found[0].targetHeadingLine, 0);
         });
 
         it('should insert link with target ID', () => {
@@ -183,12 +175,12 @@ describe('LinkRepository', () => {
         it('should find all links from a source file', () => {
             const links: OrgLink[] = [
                 {
-                    sourceUri: '/test/source.org',
+                    sourceUri: '/test/source1.org',
                     targetUri: '/test/target1.org',
                     linkType: 'file'
                 },
                 {
-                    sourceUri: '/test/source.org',
+                    sourceUri: '/test/source1.org',
                     targetUri: '/test/target2.org',
                     linkType: 'file'
                 },
@@ -201,7 +193,7 @@ describe('LinkRepository', () => {
 
             repo.insertBatch(links);
 
-            const found = repo.findBySourceUri('/test/source.org');
+            const found = repo.findBySourceUri('/test/source1.org');
             assert.strictEqual(found.length, 2);
         });
 
@@ -275,12 +267,12 @@ describe('LinkRepository', () => {
             const links: OrgLink[] = [
                 {
                     sourceUri: '/test/source1.org',
-                    targetId: 'target-id',
+                    targetId: 'target-id-uuid',
                     linkType: 'id'
                 },
                 {
                     sourceUri: '/test/source2.org',
-                    targetId: 'target-id',
+                    targetId: 'target-id-uuid',
                     linkType: 'id'
                 },
                 {
@@ -292,29 +284,29 @@ describe('LinkRepository', () => {
 
             repo.insertBatch(links);
 
-            const found = repo.findByTargetId('target-id');
+            const found = repo.findByTargetId('target-id-uuid');
             assert.strictEqual(found.length, 2);
         });
     });
 
-    describe('findBySourceHeadingId', () => {
+    describe('findBySourceHeading', () => {
         it('should find links from a specific heading', () => {
             const links: OrgLink[] = [
                 {
                     sourceUri: '/test/file.org',
-                    sourceHeadingId: 'heading-1',
+                    sourceHeadingLine: 0, // heading-1
                     targetUri: '/test/target1.org',
                     linkType: 'file'
                 },
                 {
                     sourceUri: '/test/file.org',
-                    sourceHeadingId: 'heading-1',
+                    sourceHeadingLine: 0,
                     targetUri: '/test/target2.org',
                     linkType: 'file'
                 },
                 {
                     sourceUri: '/test/file.org',
-                    sourceHeadingId: 'heading-2',
+                    sourceHeadingLine: 11, // heading-2
                     targetUri: '/test/target3.org',
                     linkType: 'file'
                 }
@@ -322,34 +314,37 @@ describe('LinkRepository', () => {
 
             repo.insertBatch(links);
 
-            const found = repo.findBySourceHeadingId('heading-1');
+            const found = repo.findBySourceHeading('/test/file.org', 0);
             assert.strictEqual(found.length, 2);
         });
     });
 
-    describe('findByTargetHeadingId', () => {
+    describe('findByTargetHeading', () => {
         it('should find backlinks to a specific heading', () => {
             const links: OrgLink[] = [
                 {
                     sourceUri: '/test/source1.org',
-                    targetHeadingId: 'target-heading',
+                    targetUri: '/test/target.org',
+                    targetHeadingLine: 20, // target-heading
                     linkType: 'id'
                 },
                 {
                     sourceUri: '/test/source2.org',
-                    targetHeadingId: 'target-heading',
+                    targetUri: '/test/target.org',
+                    targetHeadingLine: 20,
                     linkType: 'id'
                 },
                 {
                     sourceUri: '/test/source3.org',
-                    targetHeadingId: 'other-heading',
+                    targetUri: '/test/other.org',
+                    targetHeadingLine: 0, // other-heading
                     linkType: 'id'
                 }
             ];
 
             repo.insertBatch(links);
 
-            const backlinks = repo.findByTargetHeadingId('target-heading');
+            const backlinks = repo.findByTargetHeading('/test/target.org', 20);
             assert.strictEqual(backlinks.length, 2);
         });
     });

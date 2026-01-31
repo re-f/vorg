@@ -85,35 +85,30 @@ export class UniorgAstExtractor {
      */
     extractLinks(ast: any, fileUri: string): OrgLink[] {
         const links: OrgLink[] = [];
+        let currentHeadingLine: number | undefined;
         let currentHeadingId: string | undefined;
-        let currentProperties: Record<string, string> = {};
 
         const traverse = (node: any) => {
             // 跟踪当前所在的 heading
-            if (node.type === 'section' && node.children) {
-                for (const child of node.children) {
-                    if (child.type === 'headline') {
-                        currentHeadingId = undefined;
-                        currentProperties = {};
-                    } else if (child.type === 'property-drawer') {
-                        currentProperties = this.extractPropertiesFromDrawer(child);
-                        if (currentProperties.ID) {
-                            currentHeadingId = currentProperties.ID;
-                        }
-                    }
-                    traverse(child);
-                }
-                return;
-            }
+            if (node.type === 'section') {
+                const headline = node.children?.find((c: any) => c.type === 'headline');
+                if (headline) {
+                    currentHeadingLine = headline.contentsBegin || 0;
 
-            if (node.type === 'headline') {
-                // 使用之前收集的 properties 或生成 ID
-                currentHeadingId = currentProperties.ID || `${fileUri}:${node.contentsBegin || 0}`;
+                    // 获取 ID (从 properties)
+                    const drawer = node.children?.find((c: any) => c.type === 'property-drawer');
+                    if (drawer) {
+                        const props = this.extractPropertiesFromDrawer(drawer);
+                        currentHeadingId = props.ID;
+                    } else {
+                        currentHeadingId = undefined;
+                    }
+                }
             }
 
             // 提取 link
             if (node.type === 'link') {
-                const link = this.extractLinkFromNode(node, fileUri, currentHeadingId);
+                const link = this.extractLinkFromNode(node, fileUri, currentHeadingLine, currentHeadingId);
                 if (link) {
                     links.push(link);
                 }
@@ -238,6 +233,7 @@ export class UniorgAstExtractor {
     private extractLinkFromNode(
         node: any,
         fileUri: string,
+        sourceHeadingLine?: number,
         sourceHeadingId?: string
     ): OrgLink | null {
         if (!node.path && !node.rawLink) {
@@ -258,6 +254,7 @@ export class UniorgAstExtractor {
 
         return {
             sourceUri: fileUri,
+            sourceHeadingLine,
             sourceHeadingId,
             lineNumber: node.contentsBegin || 0,
             ...target,

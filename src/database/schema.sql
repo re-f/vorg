@@ -31,8 +31,9 @@ CREATE INDEX IF NOT EXISTS idx_files_hash ON files(hash);
 -- Stores individual Org headings (nodes) with all metadata
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS headings (
-  id TEXT PRIMARY KEY,               -- Unique ID from :ID: property
   file_uri TEXT NOT NULL,            -- Reference to files table
+  start_line INTEGER NOT NULL,       -- Starting line number (0-indexed) part of PK
+  id TEXT,                           -- Optional unique ID from :ID: property (NULLABLE)
   level INTEGER NOT NULL,            -- Heading level (1-6)
   title TEXT NOT NULL,               -- Heading title (without stars, TODO, priority, tags)
   
@@ -51,7 +52,6 @@ CREATE TABLE IF NOT EXISTS headings (
   closed INTEGER,                    -- CLOSED date
   
   -- Position in file
-  start_line INTEGER NOT NULL,       -- Starting line number (0-indexed)
   end_line INTEGER NOT NULL,         -- Ending line number (0-indexed, inclusive)
   
   -- Hierarchy
@@ -64,10 +64,13 @@ CREATE TABLE IF NOT EXISTS headings (
   created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   
-  -- Foreign key constraint
+  PRIMARY KEY (file_uri, start_line),
   FOREIGN KEY (file_uri) REFERENCES files(uri) ON DELETE CASCADE,
-  FOREIGN KEY (parent_id) REFERENCES headings(id) ON DELETE SET NULL
+  CONSTRAINT uq_headings_id UNIQUE (id)
 );
+
+-- Index for ID lookups (unique where not null) - Handled by CONSTRAINT
+-- CREATE UNIQUE INDEX IF NOT EXISTS idx_heading_id ON headings(id) WHERE id IS NOT NULL;
 
 -- Indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_headings_file_uri ON headings(file_uri);
@@ -88,11 +91,12 @@ CREATE INDEX IF NOT EXISTS idx_headings_agenda
 -- Enables efficient tag-based queries
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS heading_tags (
-  heading_id TEXT NOT NULL,
+  file_uri TEXT NOT NULL,
+  heading_line INTEGER NOT NULL,
   tag TEXT NOT NULL,
   
-  PRIMARY KEY (heading_id, tag),
-  FOREIGN KEY (heading_id) REFERENCES headings(id) ON DELETE CASCADE
+  PRIMARY KEY (file_uri, heading_line, tag),
+  FOREIGN KEY (file_uri, heading_line) REFERENCES headings(file_uri, start_line) ON DELETE CASCADE
 );
 
 -- Index for tag queries
@@ -108,38 +112,40 @@ CREATE TABLE IF NOT EXISTS links (
   
   -- Source information
   source_uri TEXT NOT NULL,          -- Source file
-  source_heading_id TEXT,            -- Source heading (NULL if link is outside headings)
+  source_heading_line INTEGER,       -- Source heading start line (NULL if outside headings)
+  source_heading_id TEXT,            -- Source heading ID (if it has one)
   
   -- Target information
   target_uri TEXT,                   -- Target file (for file links)
-  target_heading_id TEXT,            -- Target heading (for id/heading links)
+  target_heading_line INTEGER,       -- Target heading start line (for internal links)
   target_id TEXT,                    -- Target ID (for id: links)
   
   -- Link metadata
   link_type TEXT NOT NULL,           -- Type: file, id, heading, http, https
   link_text TEXT,                    -- Link description/text
-  line_number INTEGER,               -- Line number where link appears
+  line_number INTEGER,               -- Line number where link appears (inside content)
   
   -- Metadata
   created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   
   -- Foreign key constraints
   FOREIGN KEY (source_uri) REFERENCES files(uri) ON DELETE CASCADE,
-  FOREIGN KEY (source_heading_id) REFERENCES headings(id) ON DELETE CASCADE,
-  FOREIGN KEY (target_heading_id) REFERENCES headings(id) ON DELETE SET NULL
+  FOREIGN KEY (source_uri, source_heading_line) REFERENCES headings(file_uri, start_line) ON DELETE CASCADE,
+  FOREIGN KEY (target_uri, target_heading_line) REFERENCES headings(file_uri, start_line) ON DELETE SET NULL
 );
 
 -- Indexes for link queries
 CREATE INDEX IF NOT EXISTS idx_links_source_uri ON links(source_uri);
+CREATE INDEX IF NOT EXISTS idx_links_source_heading ON links(source_uri, source_heading_line);
 CREATE INDEX IF NOT EXISTS idx_links_source_heading_id ON links(source_heading_id);
 CREATE INDEX IF NOT EXISTS idx_links_target_uri ON links(target_uri);
-CREATE INDEX IF NOT EXISTS idx_links_target_heading_id ON links(target_heading_id);
+CREATE INDEX IF NOT EXISTS idx_links_target_heading ON links(target_uri, target_heading_line);
 CREATE INDEX IF NOT EXISTS idx_links_target_id ON links(target_id);
 CREATE INDEX IF NOT EXISTS idx_links_link_type ON links(link_type);
 
 -- Composite index for backlink queries
 CREATE INDEX IF NOT EXISTS idx_links_backlinks 
-  ON links(target_heading_id, link_type);
+  ON links(target_uri, target_heading_line, link_type);
 
 -- ============================================================================
 -- TIMESTAMPS TABLE
@@ -147,7 +153,8 @@ CREATE INDEX IF NOT EXISTS idx_links_backlinks
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS timestamps (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  heading_id TEXT NOT NULL,
+  file_uri TEXT NOT NULL,
+  heading_line INTEGER NOT NULL,
   
   timestamp_date INTEGER NOT NULL,   -- Unix timestamp
   timestamp_type TEXT NOT NULL,      -- active, inactive, scheduled, deadline, closed
@@ -156,11 +163,11 @@ CREATE TABLE IF NOT EXISTS timestamps (
   
   created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   
-  FOREIGN KEY (heading_id) REFERENCES headings(id) ON DELETE CASCADE
+  FOREIGN KEY (file_uri, heading_line) REFERENCES headings(file_uri, start_line) ON DELETE CASCADE
 );
 
 -- Indexes for timestamp queries
-CREATE INDEX IF NOT EXISTS idx_timestamps_heading_id ON timestamps(heading_id);
+CREATE INDEX IF NOT EXISTS idx_timestamps_heading ON timestamps(file_uri, heading_line);
 CREATE INDEX IF NOT EXISTS idx_timestamps_date ON timestamps(timestamp_date);
 CREATE INDEX IF NOT EXISTS idx_timestamps_type ON timestamps(timestamp_type);
 

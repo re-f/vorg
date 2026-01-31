@@ -30,11 +30,14 @@ export class HeadingRepository {
       )
     `);
 
+        // Check if ID is a real Org ID (from properties)
+        const dbId = heading.properties?.ID || null;
+
         stmt.run({
             fileUri: heading.fileUri,
             startLine: heading.startLine,
             endLine: heading.endLine,
-            id: heading.id,
+            id: dbId,
             level: heading.level,
             title: heading.title,
             todoState: heading.todoState || null,
@@ -51,9 +54,9 @@ export class HeadingRepository {
 
         // 插入标签关联
         if (heading.tags && heading.tags.length > 0) {
-            const tagStmt = this.db.prepare('INSERT INTO heading_tags (heading_id, tag) VALUES (?, ?)');
+            const tagStmt = this.db.prepare('INSERT INTO heading_tags (file_uri, heading_line, tag) VALUES (?, ?, ?)');
             for (const tag of heading.tags) {
-                tagStmt.run(heading.id, tag);
+                tagStmt.run(heading.fileUri, heading.startLine, tag);
             }
         }
     }
@@ -83,18 +86,20 @@ export class HeadingRepository {
     `);
 
         const insertTag = this.db.prepare(`
-      INSERT INTO heading_tags (heading_id, tag)
-      VALUES (?, ?)
+      INSERT INTO heading_tags (file_uri, heading_line, tag)
+      VALUES (?, ?, ?)
     `);
 
         // 使用事务批量插入
         const insertMany = this.db.transaction((headings: OrgHeading[]) => {
             for (const heading of headings) {
+                const dbId = heading.properties?.ID || null;
+
                 insertHeading.run({
                     fileUri: heading.fileUri,
                     startLine: heading.startLine,
                     endLine: heading.endLine,
-                    id: heading.id,
+                    id: dbId,
                     level: heading.level,
                     title: heading.title,
                     todoState: heading.todoState || null,
@@ -109,10 +114,9 @@ export class HeadingRepository {
                     updatedAt: Math.floor(heading.updatedAt.getTime() / 1000)
                 });
 
-                // 插入标签
                 if (heading.tags && heading.tags.length > 0) {
                     for (const tag of heading.tags) {
-                        insertTag.run(heading.id, tag);
+                        insertTag.run(heading.fileUri, heading.startLine, tag);
                     }
                 }
             }
@@ -125,6 +129,7 @@ export class HeadingRepository {
      * 按 ID 查找 heading
      */
     findById(id: string): OrgHeading | null {
+        // Only finds explicit IDs
         const row = this.db.prepare(`
       SELECT * FROM headings WHERE id = ?
     `).get(id);
@@ -150,60 +155,54 @@ export class HeadingRepository {
     }
 
     /**
-     * 按 TODO 状态查找 headings
+     * 查找文件的 headings (按 TODO 状态)
      */
-    findByTodoState(state: string): OrgHeading[] {
-        const rows = this.db.prepare(`
-      SELECT * FROM headings 
-      WHERE todo_state = ?
-      ORDER BY file_uri, start_line
-    `).all(state);
-
+    findByTodoState(todoState: string): OrgHeading[] {
+        const rows = this.db.prepare(`SELECT * FROM headings WHERE todo_state = ?`).all(todoState);
         return rows.map(row => this.rowToHeading(row));
     }
 
     /**
-     * 按标签查找 headings
+     * 查找文件的 headings (按 tag)
      */
     findByTag(tag: string): OrgHeading[] {
         const rows = this.db.prepare(`
-      SELECT h.* FROM headings h
-      INNER JOIN heading_tags ht ON h.id = ht.heading_id
-      WHERE ht.tag = ?
-      ORDER BY h.file_uri, h.start_line
-    `).all(tag);
-
+            SELECT h.* 
+            FROM headings h
+            JOIN heading_tags ht ON h.file_uri = ht.file_uri AND h.start_line = ht.heading_line
+            WHERE ht.tag = ?
+        `).all(tag);
         return rows.map(row => this.rowToHeading(row));
     }
 
     /**
-     * 查找指定时间范围内的计划任务
+     * 查找日期范围内 Schedule 的 Headings
      */
     findScheduledBetween(start: Date, end: Date): OrgHeading[] {
         const startTs = Math.floor(start.getTime() / 1000);
         const endTs = Math.floor(end.getTime() / 1000);
 
         const rows = this.db.prepare(`
-      SELECT * FROM headings 
-      WHERE scheduled >= ? AND scheduled <= ?
-      ORDER BY scheduled ASC
-    `).all(startTs, endTs);
+            SELECT * FROM headings 
+            WHERE scheduled >= ? AND scheduled <= ?
+            ORDER BY scheduled ASC
+        `).all(startTs, endTs);
 
         return rows.map(row => this.rowToHeading(row));
     }
 
     /**
-     * 查找指定时间范围内的截止任务
+     * 查找日期范围内 Deadline 的 Headings
      */
     findDeadlineBetween(start: Date, end: Date): OrgHeading[] {
         const startTs = Math.floor(start.getTime() / 1000);
         const endTs = Math.floor(end.getTime() / 1000);
 
         const rows = this.db.prepare(`
-      SELECT * FROM headings 
-      WHERE deadline >= ? AND deadline <= ?
-      ORDER BY deadline ASC
-    `).all(startTs, endTs);
+            SELECT * FROM headings 
+            WHERE deadline >= ? AND deadline <= ?
+            ORDER BY deadline ASC
+        `).all(startTs, endTs);
 
         return rows.map(row => this.rowToHeading(row));
     }
@@ -212,66 +211,47 @@ export class HeadingRepository {
      * 删除文件的所有 headings
      */
     deleteByFileUri(uri: string): void {
-        // 先删除标签关联 (由于外键约束)
-        this.db.prepare(`
-      DELETE FROM heading_tags WHERE heading_id IN (SELECT id FROM headings WHERE file_uri = ?)
-    `).run(uri);
-
-        // 删除 headings
-        this.db.prepare(`
-      DELETE FROM headings WHERE file_uri = ?
-    `).run(uri);
+        const stmt = this.db.prepare('DELETE FROM headings WHERE file_uri = ?');
+        stmt.run(uri);
     }
 
     /**
-     * 统计文件的 heading 数量
+     * 统计文件的 headings 数量
      */
     countByFileUri(uri: string): number {
-        const result = this.db.prepare(`
-      SELECT COUNT(*) as count FROM headings WHERE file_uri = ?
-    `).get(uri) as { count: number };
-
+        const stmt = this.db.prepare('SELECT COUNT(*) as count FROM headings WHERE file_uri = ?');
+        const result = stmt.get(uri) as { count: number };
         return result.count;
     }
 
-    /**
-     * 私有: 查询 heading 的标签
-     */
-    private getTags(headingId: string): string[] {
-        const rows = this.db.prepare(`
-      SELECT tag FROM heading_tags 
-      WHERE heading_id = ?
-      ORDER BY tag
-    `).all(headingId) as Array<{ tag: string }>;
-
-        return rows.map(row => row.tag);
-    }
-
-    /**
-     * 私有: 将数据库行转换为 OrgHeading
-     */
     private rowToHeading(row: any): OrgHeading {
-        const tags = this.getTags(row.id);
+        // Recover ID: explicit >> generated
+        const id = row.id || `${row.file_uri}:${row.start_line}`;
+
+        // Fetch tags using composite key
+        const tags = this.db.prepare('SELECT tag FROM heading_tags WHERE file_uri = ? AND heading_line = ?')
+            .all(row.file_uri, row.start_line)
+            .map((r: any) => r.tag);
 
         return {
-            id: row.id,
+            id,
             fileUri: row.file_uri,
+            startLine: row.start_line,
+            endLine: row.end_line,
             level: row.level,
             title: row.title,
             todoState: row.todo_state,
-            todoCategory: row.todo_category as 'todo' | 'done' | undefined,
-            priority: row.priority as 'A' | 'B' | 'C' | undefined,
+            todoCategory: row.todo_category,
+            priority: row.priority,
             tags,
-            properties: {}, // TODO: 从 properties 表加载
+            properties: JSON.parse(row.properties || '{}'),
+            timestamps: [],
             scheduled: row.scheduled ? new Date(row.scheduled * 1000) : undefined,
             deadline: row.deadline ? new Date(row.deadline * 1000) : undefined,
             closed: row.closed ? new Date(row.closed * 1000) : undefined,
-            timestamps: [], // TODO: 从 timestamps 表加载
-            startLine: row.start_line,
-            endLine: row.end_line || row.start_line,
             parentId: row.parent_id,
-            childrenIds: [], // TODO: 计算子节点
-            content: row.content || '',
+            childrenIds: [],
+            content: row.content,
             createdAt: new Date(row.created_at * 1000),
             updatedAt: new Date(row.updated_at * 1000)
         };

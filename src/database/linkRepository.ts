@@ -16,22 +16,23 @@ export class LinkRepository {
   insert(link: OrgLink): void {
     const stmt = this.db.prepare(`
       INSERT INTO links (
-        source_uri, line_number, source_heading_id,
-        target_uri, target_heading_id, target_id,
+        source_uri, line_number, source_heading_line, source_heading_id,
+        target_uri, target_heading_line, target_id,
         link_type, link_text
       ) VALUES (
-        @sourceUri, @lineNumber, @sourceHeadingId,
-        @targetUri, @targetHeadingId, @targetId,
+        @sourceUri, @lineNumber, @sourceHeadingLine, @sourceHeadingId,
+        @targetUri, @targetHeadingLine, @targetId,
         @linkType, @linkText
       )
     `);
 
     stmt.run({
       sourceUri: link.sourceUri,
-      lineNumber: link.lineNumber || null,
+      lineNumber: link.lineNumber !== undefined ? link.lineNumber : null,
+      sourceHeadingLine: link.sourceHeadingLine !== undefined ? link.sourceHeadingLine : null,
       sourceHeadingId: link.sourceHeadingId || null,
       targetUri: link.targetUri || null,
-      targetHeadingId: link.targetHeadingId || null,
+      targetHeadingLine: link.targetHeadingLine !== undefined ? link.targetHeadingLine : null,
       targetId: link.targetId || null,
       linkType: link.linkType,
       linkText: link.linkText || null
@@ -48,12 +49,12 @@ export class LinkRepository {
 
     const stmt = this.db.prepare(`
       INSERT INTO links (
-        source_uri, line_number, source_heading_id,
-        target_uri, target_heading_id, target_id,
+        source_uri, line_number, source_heading_line, source_heading_id,
+        target_uri, target_heading_line, target_id,
         link_type, link_text
       ) VALUES (
-        @sourceUri, @lineNumber, @sourceHeadingId,
-        @targetUri, @targetHeadingId, @targetId,
+        @sourceUri, @lineNumber, @sourceHeadingLine, @sourceHeadingId,
+        @targetUri, @targetHeadingLine, @targetId,
         @linkType, @linkText
       )
     `);
@@ -63,10 +64,11 @@ export class LinkRepository {
       for (const link of links) {
         stmt.run({
           sourceUri: link.sourceUri,
-          lineNumber: link.lineNumber || null,
+          lineNumber: link.lineNumber !== undefined ? link.lineNumber : null,
+          sourceHeadingLine: link.sourceHeadingLine !== undefined ? link.sourceHeadingLine : null,
           sourceHeadingId: link.sourceHeadingId || null,
           targetUri: link.targetUri || null,
-          targetHeadingId: link.targetHeadingId || null,
+          targetHeadingLine: link.targetHeadingLine !== undefined ? link.targetHeadingLine : null,
           targetId: link.targetId || null,
           linkType: link.linkType,
           linkText: link.linkText || null
@@ -117,7 +119,7 @@ export class LinkRepository {
   }
 
   /**
-   * 查找源 heading 的所有链接
+   * 查找源 heading 的所有链接 (By ID)
    */
   findBySourceHeadingId(headingId: string): OrgLink[] {
     const rows = this.db.prepare(`
@@ -130,14 +132,27 @@ export class LinkRepository {
   }
 
   /**
-   * 查找目标 heading 的所有反向链接
+   * 查找源 heading 的所有链接 (By Composite Key)
    */
-  findByTargetHeadingId(headingId: string): OrgLink[] {
+  findBySourceHeading(uri: string, startLine: number): OrgLink[] {
     const rows = this.db.prepare(`
       SELECT * FROM links 
-      WHERE target_heading_id = ?
+      WHERE source_uri = ? AND source_heading_line = ?
+      ORDER BY line_number
+    `).all(uri, startLine) as any[];
+
+    return rows.map(row => this.rowToLink(row));
+  }
+
+  /**
+   * 查找目标 heading 的所有反向链接
+   */
+  findByTargetHeading(uri: string, startLine: number): OrgLink[] {
+    const rows = this.db.prepare(`
+      SELECT * FROM links 
+      WHERE target_uri = ? AND target_heading_line = ?
       ORDER BY source_uri, line_number
-    `).all(headingId) as any[];
+    `).all(uri, startLine) as any[];
 
     return rows.map(row => this.rowToLink(row));
   }
@@ -181,9 +196,10 @@ export class LinkRepository {
       id: row.id,
       sourceUri: row.source_uri,
       lineNumber: row.line_number,
+      sourceHeadingLine: row.source_heading_line,
       sourceHeadingId: row.source_heading_id,
       targetUri: row.target_uri,
-      targetHeadingId: row.target_heading_id,
+      targetHeadingLine: row.target_heading_line,
       targetId: row.target_id,
       linkType: row.link_type,
       linkText: row.link_text

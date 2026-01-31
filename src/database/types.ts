@@ -51,11 +51,17 @@ export interface OrgLink {
     /** Source file URI */
     sourceUri: string;
 
+    /** Source heading start line (if link is within a heading) */
+    sourceHeadingLine?: number;
+
     /** Source heading ID (if link is within a heading) */
     sourceHeadingId?: string;
 
     /** Target file URI (for file links) */
     targetUri?: string;
+
+    /** Target heading start line (for internal links) */
+    targetHeadingLine?: number;
 
     /** Target heading ID (for id/heading links) */
     targetHeadingId?: string;
