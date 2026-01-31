@@ -1,5 +1,6 @@
-import * as Database from 'better-sqlite3';
+import { Database } from 'sql.js';
 import { OrgHeading } from './types';
+import { SqlJsHelper } from './sqlJsHelper';
 
 /**
  * HeadingRepository
@@ -8,55 +9,57 @@ import { OrgHeading } from './types';
  * 使用 "删除重建" 模式,不提供 update 操作
  */
 export class HeadingRepository {
-    constructor(private db: Database.Database) { }
+    constructor(private db: Database) { }
 
     /**
      * 插入单个 heading
      */
     insert(heading: OrgHeading): void {
-        const stmt = this.db.prepare(`
+        const stmt = SqlJsHelper.prepare(this.db, `
       INSERT INTO headings (
         file_uri, start_line, end_line, id, level, title,
         todo_state, todo_category, priority,
         scheduled, deadline, closed,
-        parent_id, content,
+        parent_id, content, properties,
         created_at, updated_at
       ) VALUES (
-        @fileUri, @startLine, @endLine, @id, @level, @title,
-        @todoState, @todoCategory, @priority,
-        @scheduled, @deadline, @closed,
-        @parentId, @content,
-        @createdAt, @updatedAt
+        $fileUri, $startLine, $endLine, $id, $level, $title,
+        $todoState, $todoCategory, $priority,
+        $scheduled, $deadline, $closed,
+        $parentId, $content, $properties,
+        $createdAt, $updatedAt
       )
     `);
 
         // Check if ID is a real Org ID (from properties)
         const dbId = heading.properties?.ID || null;
 
+        // sql.js uses $paramName for named parameters
         stmt.run({
-            fileUri: heading.fileUri,
-            startLine: heading.startLine,
-            endLine: heading.endLine,
-            id: dbId,
-            level: heading.level,
-            title: heading.title,
-            todoState: heading.todoState || null,
-            todoCategory: heading.todoCategory || null,
-            priority: heading.priority || null,
-            scheduled: heading.scheduled ? Math.floor(heading.scheduled.getTime() / 1000) : null,
-            deadline: heading.deadline ? Math.floor(heading.deadline.getTime() / 1000) : null,
-            closed: heading.closed ? Math.floor(heading.closed.getTime() / 1000) : null,
-            parentId: heading.parentId || null,
-            content: heading.content || '',
-            createdAt: Math.floor(heading.createdAt.getTime() / 1000),
-            updatedAt: Math.floor(heading.updatedAt.getTime() / 1000)
+            $fileUri: heading.fileUri,
+            $startLine: heading.startLine,
+            $endLine: heading.endLine,
+            $id: dbId,
+            $level: heading.level,
+            $title: heading.title,
+            $todoState: heading.todoState || null,
+            $todoCategory: heading.todoCategory || null,
+            $priority: heading.priority || null,
+            $scheduled: heading.scheduled ? Math.floor(heading.scheduled.getTime() / 1000) : null,
+            $deadline: heading.deadline ? Math.floor(heading.deadline.getTime() / 1000) : null,
+            $closed: heading.closed ? Math.floor(heading.closed.getTime() / 1000) : null,
+            $parentId: heading.parentId || null,
+            $content: heading.content || '',
+            $properties: JSON.stringify(heading.properties || {}),
+            $createdAt: Math.floor(heading.createdAt.getTime() / 1000),
+            $updatedAt: Math.floor(heading.updatedAt.getTime() / 1000)
         });
 
         // 插入标签关联
         if (heading.tags && heading.tags.length > 0) {
-            const tagStmt = this.db.prepare('INSERT INTO heading_tags (file_uri, heading_line, tag) VALUES (?, ?, ?)');
+            const tagStmt = SqlJsHelper.prepare(this.db, 'INSERT INTO heading_tags (file_uri, heading_line, tag) VALUES (?, ?, ?)');
             for (const tag of heading.tags) {
-                tagStmt.run(heading.fileUri, heading.startLine, tag);
+                tagStmt.run([heading.fileUri, heading.startLine, tag]);
             }
         }
     }
@@ -69,7 +72,7 @@ export class HeadingRepository {
             return;
         }
 
-        const insertHeading = this.db.prepare(`
+        const headingSql = `
       INSERT INTO headings (
         file_uri, start_line, end_line, id, level, title,
         todo_state, todo_category, priority,
@@ -77,52 +80,78 @@ export class HeadingRepository {
         parent_id, content,
         created_at, updated_at
       ) VALUES (
-        @fileUri, @startLine, @endLine, @id, @level, @title,
-        @todoState, @todoCategory, @priority,
-        @scheduled, @deadline, @closed,
-        @parentId, @content,
-        @createdAt, @updatedAt
+        $fileUri, $startLine, $endLine, $id, $level, $title,
+        $todoState, $todoCategory, $priority,
+        $scheduled, $deadline, $closed,
+        $parentId, $content,
+        $createdAt, $updatedAt
       )
-    `);
+    `;
 
-        const insertTag = this.db.prepare(`
+        const tagSql = `
       INSERT INTO heading_tags (file_uri, heading_line, tag)
       VALUES (?, ?, ?)
-    `);
+    `;
 
-        // 使用事务批量插入
-        const insertMany = this.db.transaction((headings: OrgHeading[]) => {
+        // Pre-prepare statements for performance within loop
+        const headingStmt = this.db.prepare(headingSql);
+        const tagStmt = this.db.prepare(tagSql);
+
+        try {
             for (const heading of headings) {
                 const dbId = heading.properties?.ID || null;
 
-                insertHeading.run({
-                    fileUri: heading.fileUri,
-                    startLine: heading.startLine,
-                    endLine: heading.endLine,
-                    id: dbId,
-                    level: heading.level,
-                    title: heading.title,
-                    todoState: heading.todoState || null,
-                    todoCategory: heading.todoCategory || null,
-                    priority: heading.priority || null,
-                    scheduled: heading.scheduled ? Math.floor(heading.scheduled.getTime() / 1000) : null,
-                    deadline: heading.deadline ? Math.floor(heading.deadline.getTime() / 1000) : null,
-                    closed: heading.closed ? Math.floor(heading.closed.getTime() / 1000) : null,
-                    parentId: heading.parentId || null,
-                    content: heading.content || '',
-                    createdAt: Math.floor(heading.createdAt.getTime() / 1000),
-                    updatedAt: Math.floor(heading.updatedAt.getTime() / 1000)
+                headingStmt.bind({
+                    $fileUri: heading.fileUri,
+                    $startLine: heading.startLine,
+                    $endLine: heading.endLine,
+                    $id: dbId,
+                    $level: heading.level,
+                    $title: heading.title,
+                    $todoState: heading.todoState || null,
+                    $todoCategory: heading.todoCategory || null,
+                    $priority: heading.priority || null,
+                    $scheduled: heading.scheduled ? Math.floor(heading.scheduled.getTime() / 1000) : null,
+                    $deadline: heading.deadline ? Math.floor(heading.deadline.getTime() / 1000) : null,
+                    $closed: heading.closed ? Math.floor(heading.closed.getTime() / 1000) : null,
+                    $parentId: heading.parentId || null,
+                    $content: heading.content || '',
+                    $createdAt: Math.floor(heading.createdAt.getTime() / 1000),
+                    $updatedAt: Math.floor(heading.updatedAt.getTime() / 1000)
                 });
+                headingStmt.step();
+                headingStmt.reset();
 
                 if (heading.tags && heading.tags.length > 0) {
                     for (const tag of heading.tags) {
-                        insertTag.run(heading.fileUri, heading.startLine, tag);
+                        tagStmt.bind([heading.fileUri, heading.startLine, tag]);
+                        tagStmt.step();
+                        tagStmt.reset();
                     }
                 }
             }
-        });
+        } finally {
+            headingStmt.free();
+            tagStmt.free();
+        }
+    }
 
-        insertMany(headings);
+    /**
+     * 获取所有标签及其使用次数
+     */
+    getAllTags(): Map<string, number> {
+        const rows = SqlJsHelper.prepare(this.db, `
+            SELECT tag, COUNT(*) as count 
+            FROM heading_tags 
+            GROUP BY tag 
+            ORDER BY count DESC
+        `).all();
+
+        const tagMap = new Map<string, number>();
+        for (const row of (rows as any[])) {
+            tagMap.set(row.tag, row.count);
+        }
+        return tagMap;
     }
 
     /**
@@ -130,9 +159,9 @@ export class HeadingRepository {
      */
     findById(id: string): OrgHeading | null {
         // Only finds explicit IDs
-        const row = this.db.prepare(`
+        const row = SqlJsHelper.prepare(this.db, `
       SELECT * FROM headings WHERE id = ?
-    `).get(id);
+    `).get([id]);
 
         if (!row) {
             return null;
@@ -145,11 +174,11 @@ export class HeadingRepository {
      * 查找文件的所有 headings
      */
     findByFileUri(uri: string): OrgHeading[] {
-        const rows = this.db.prepare(`
+        const rows = SqlJsHelper.prepare(this.db, `
       SELECT * FROM headings 
       WHERE file_uri = ?
       ORDER BY start_line ASC
-    `).all(uri);
+    `).all([uri]);
 
         return rows.map(row => this.rowToHeading(row));
     }
@@ -158,7 +187,7 @@ export class HeadingRepository {
      * 查找文件的 headings (按 TODO 状态)
      */
     findByTodoState(todoState: string): OrgHeading[] {
-        const rows = this.db.prepare(`SELECT * FROM headings WHERE todo_state = ?`).all(todoState);
+        const rows = SqlJsHelper.prepare(this.db, `SELECT * FROM headings WHERE todo_state = ?`).all([todoState]);
         return rows.map(row => this.rowToHeading(row));
     }
 
@@ -166,12 +195,12 @@ export class HeadingRepository {
      * 查找文件的 headings (按 tag)
      */
     findByTag(tag: string): OrgHeading[] {
-        const rows = this.db.prepare(`
+        const rows = SqlJsHelper.prepare(this.db, `
             SELECT h.* 
             FROM headings h
             JOIN heading_tags ht ON h.file_uri = ht.file_uri AND h.start_line = ht.heading_line
             WHERE ht.tag = ?
-        `).all(tag);
+        `).all([tag]);
         return rows.map(row => this.rowToHeading(row));
     }
 
@@ -182,11 +211,11 @@ export class HeadingRepository {
         const startTs = Math.floor(start.getTime() / 1000);
         const endTs = Math.floor(end.getTime() / 1000);
 
-        const rows = this.db.prepare(`
+        const rows = SqlJsHelper.prepare(this.db, `
             SELECT * FROM headings 
             WHERE scheduled >= ? AND scheduled <= ?
             ORDER BY scheduled ASC
-        `).all(startTs, endTs);
+        `).all([startTs, endTs]);
 
         return rows.map(row => this.rowToHeading(row));
     }
@@ -198,11 +227,11 @@ export class HeadingRepository {
         const startTs = Math.floor(start.getTime() / 1000);
         const endTs = Math.floor(end.getTime() / 1000);
 
-        const rows = this.db.prepare(`
+        const rows = SqlJsHelper.prepare(this.db, `
             SELECT * FROM headings 
             WHERE deadline >= ? AND deadline <= ?
             ORDER BY deadline ASC
-        `).all(startTs, endTs);
+        `).all([startTs, endTs]);
 
         return rows.map(row => this.rowToHeading(row));
     }
@@ -211,16 +240,16 @@ export class HeadingRepository {
      * 删除文件的所有 headings
      */
     deleteByFileUri(uri: string): void {
-        const stmt = this.db.prepare('DELETE FROM headings WHERE file_uri = ?');
-        stmt.run(uri);
+        const stmt = SqlJsHelper.prepare(this.db, 'DELETE FROM headings WHERE file_uri = ?');
+        stmt.run([uri]);
     }
 
     /**
      * 统计文件的 headings 数量
      */
     countByFileUri(uri: string): number {
-        const stmt = this.db.prepare('SELECT COUNT(*) as count FROM headings WHERE file_uri = ?');
-        const result = stmt.get(uri) as { count: number };
+        const stmt = SqlJsHelper.prepare(this.db, 'SELECT COUNT(*) as count FROM headings WHERE file_uri = ?');
+        const result = stmt.get([uri]) as { count: number };
         return result.count;
     }
 
@@ -229,8 +258,8 @@ export class HeadingRepository {
         const id = row.id || `${row.file_uri}:${row.start_line}`;
 
         // Fetch tags using composite key
-        const tags = this.db.prepare('SELECT tag FROM heading_tags WHERE file_uri = ? AND heading_line = ?')
-            .all(row.file_uri, row.start_line)
+        const tags = SqlJsHelper.prepare(this.db, 'SELECT tag FROM heading_tags WHERE file_uri = ? AND heading_line = ? ORDER BY tag ASC')
+            .all([row.file_uri, row.start_line])
             .map((r: any) => r.tag);
 
         return {

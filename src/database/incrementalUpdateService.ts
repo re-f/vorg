@@ -82,7 +82,9 @@ export class IncrementalUpdateService implements vscode.Disposable {
      * Perform a full indexing of the workspace
      */
     private async runFullIndexing() {
-        if (this.isIndexing) return;
+        if (this.isIndexing) {
+            return;
+        }
         this.isIndexing = true;
 
         try {

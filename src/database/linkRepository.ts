@@ -1,5 +1,6 @@
-import * as Database from 'better-sqlite3';
+import { Database } from 'sql.js';
 import { OrgLink } from './types';
+import { SqlJsHelper } from './sqlJsHelper';
 
 /**
  * LinkRepository
@@ -8,34 +9,34 @@ import { OrgLink } from './types';
  * 支持正向链接和反向链接查询
  */
 export class LinkRepository {
-  constructor(private db: Database.Database) { }
+  constructor(private db: Database) { }
 
   /**
    * 插入单个 link
    */
   insert(link: OrgLink): void {
-    const stmt = this.db.prepare(`
+    const stmt = SqlJsHelper.prepare(this.db, `
       INSERT INTO links (
         source_uri, line_number, source_heading_line, source_heading_id,
         target_uri, target_heading_line, target_id,
         link_type, link_text
       ) VALUES (
-        @sourceUri, @lineNumber, @sourceHeadingLine, @sourceHeadingId,
-        @targetUri, @targetHeadingLine, @targetId,
-        @linkType, @linkText
+        $sourceUri, $lineNumber, $sourceHeadingLine, $sourceHeadingId,
+        $targetUri, $targetHeadingLine, $targetId,
+        $linkType, $linkText
       )
     `);
 
     stmt.run({
-      sourceUri: link.sourceUri,
-      lineNumber: link.lineNumber !== undefined ? link.lineNumber : null,
-      sourceHeadingLine: link.sourceHeadingLine !== undefined ? link.sourceHeadingLine : null,
-      sourceHeadingId: link.sourceHeadingId || null,
-      targetUri: link.targetUri || null,
-      targetHeadingLine: link.targetHeadingLine !== undefined ? link.targetHeadingLine : null,
-      targetId: link.targetId || null,
-      linkType: link.linkType,
-      linkText: link.linkText || null
+      $sourceUri: link.sourceUri,
+      $lineNumber: link.lineNumber !== undefined ? link.lineNumber : null,
+      $sourceHeadingLine: link.sourceHeadingLine !== undefined ? link.sourceHeadingLine : null,
+      $sourceHeadingId: link.sourceHeadingId || null,
+      $targetUri: link.targetUri || null,
+      $targetHeadingLine: link.targetHeadingLine !== undefined ? link.targetHeadingLine : null,
+      $targetId: link.targetId || null,
+      $linkType: link.linkType,
+      $linkText: link.linkText || null
     });
   }
 
@@ -47,47 +48,49 @@ export class LinkRepository {
       return;
     }
 
-    const stmt = this.db.prepare(`
+    const sql = `
       INSERT INTO links (
         source_uri, line_number, source_heading_line, source_heading_id,
         target_uri, target_heading_line, target_id,
         link_type, link_text
       ) VALUES (
-        @sourceUri, @lineNumber, @sourceHeadingLine, @sourceHeadingId,
-        @targetUri, @targetHeadingLine, @targetId,
-        @linkType, @linkText
+        $sourceUri, $lineNumber, $sourceHeadingLine, $sourceHeadingId,
+        $targetUri, $targetHeadingLine, $targetId,
+        $linkType, $linkText
       )
-    `);
+    `;
 
-    // 使用事务批量插入
-    const insertMany = this.db.transaction((links: OrgLink[]) => {
+    const stmt = this.db.prepare(sql);
+    try {
       for (const link of links) {
-        stmt.run({
-          sourceUri: link.sourceUri,
-          lineNumber: link.lineNumber !== undefined ? link.lineNumber : null,
-          sourceHeadingLine: link.sourceHeadingLine !== undefined ? link.sourceHeadingLine : null,
-          sourceHeadingId: link.sourceHeadingId || null,
-          targetUri: link.targetUri || null,
-          targetHeadingLine: link.targetHeadingLine !== undefined ? link.targetHeadingLine : null,
-          targetId: link.targetId || null,
-          linkType: link.linkType,
-          linkText: link.linkText || null
+        stmt.bind({
+          $sourceUri: link.sourceUri,
+          $lineNumber: link.lineNumber !== undefined ? link.lineNumber : null,
+          $sourceHeadingLine: link.sourceHeadingLine !== undefined ? link.sourceHeadingLine : null,
+          $sourceHeadingId: link.sourceHeadingId || null,
+          $targetUri: link.targetUri || null,
+          $targetHeadingLine: link.targetHeadingLine !== undefined ? link.targetHeadingLine : null,
+          $targetId: link.targetId || null,
+          $linkType: link.linkType,
+          $linkText: link.linkText || null
         });
+        stmt.step();
+        stmt.reset();
       }
-    });
-
-    insertMany(links);
+    } finally {
+      stmt.free();
+    }
   }
 
   /**
    * 查找源文件的所有链接
    */
   findBySourceUri(uri: string): OrgLink[] {
-    const rows = this.db.prepare(`
+    const rows = SqlJsHelper.prepare(this.db, `
       SELECT * FROM links 
       WHERE source_uri = ?
       ORDER BY line_number
-    `).all(uri) as any[];
+    `).all([uri]) as any[];
 
     return rows.map(row => this.rowToLink(row));
   }
@@ -96,11 +99,11 @@ export class LinkRepository {
    * 查找目标文件的所有反向链接
    */
   findByTargetUri(uri: string): OrgLink[] {
-    const rows = this.db.prepare(`
+    const rows = SqlJsHelper.prepare(this.db, `
       SELECT * FROM links 
       WHERE target_uri = ?
       ORDER BY source_uri, line_number
-    `).all(uri) as any[];
+    `).all([uri]) as any[];
 
     return rows.map(row => this.rowToLink(row));
   }
@@ -109,11 +112,11 @@ export class LinkRepository {
    * 按目标 ID 查找反向链接
    */
   findByTargetId(id: string): OrgLink[] {
-    const rows = this.db.prepare(`
+    const rows = SqlJsHelper.prepare(this.db, `
       SELECT * FROM links 
       WHERE target_id = ?
       ORDER BY source_uri, line_number
-    `).all(id) as any[];
+    `).all([id]) as any[];
 
     return rows.map(row => this.rowToLink(row));
   }
@@ -122,11 +125,11 @@ export class LinkRepository {
    * 查找源 heading 的所有链接 (By ID)
    */
   findBySourceHeadingId(headingId: string): OrgLink[] {
-    const rows = this.db.prepare(`
+    const rows = SqlJsHelper.prepare(this.db, `
       SELECT * FROM links 
       WHERE source_heading_id = ?
       ORDER BY line_number
-    `).all(headingId) as any[];
+    `).all([headingId]) as any[];
 
     return rows.map(row => this.rowToLink(row));
   }
@@ -135,11 +138,11 @@ export class LinkRepository {
    * 查找源 heading 的所有链接 (By Composite Key)
    */
   findBySourceHeading(uri: string, startLine: number): OrgLink[] {
-    const rows = this.db.prepare(`
+    const rows = SqlJsHelper.prepare(this.db, `
       SELECT * FROM links 
       WHERE source_uri = ? AND source_heading_line = ?
       ORDER BY line_number
-    `).all(uri, startLine) as any[];
+    `).all([uri, startLine]) as any[];
 
     return rows.map(row => this.rowToLink(row));
   }
@@ -148,11 +151,11 @@ export class LinkRepository {
    * 查找目标 heading 的所有反向链接
    */
   findByTargetHeading(uri: string, startLine: number): OrgLink[] {
-    const rows = this.db.prepare(`
+    const rows = SqlJsHelper.prepare(this.db, `
       SELECT * FROM links 
       WHERE target_uri = ? AND target_heading_line = ?
       ORDER BY source_uri, line_number
-    `).all(uri, startLine) as any[];
+    `).all([uri, startLine]) as any[];
 
     return rows.map(row => this.rowToLink(row));
   }
@@ -161,18 +164,18 @@ export class LinkRepository {
    * 删除文件的所有链接
    */
   deleteByFileUri(uri: string): void {
-    this.db.prepare(`
+    SqlJsHelper.prepare(this.db, `
       DELETE FROM links WHERE source_uri = ?
-    `).run(uri);
+    `).run([uri]);
   }
 
   /**
    * 统计文件的链接数量
    */
   countBySourceUri(uri: string): number {
-    const result = this.db.prepare(`
+    const result = SqlJsHelper.prepare(this.db, `
       SELECT COUNT(*) as count FROM links WHERE source_uri = ?
-    `).get(uri) as { count: number };
+    `).get([uri]) as { count: number };
 
     return result.count;
   }
@@ -181,9 +184,9 @@ export class LinkRepository {
    * 统计文件的反向链接数量
    */
   countByTargetUri(uri: string): number {
-    const result = this.db.prepare(`
+    const result = SqlJsHelper.prepare(this.db, `
       SELECT COUNT(*) as count FROM links WHERE target_uri = ?
-    `).get(uri) as { count: number };
+    `).get([uri]) as { count: number };
 
     return result.count;
   }

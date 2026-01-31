@@ -47,9 +47,9 @@ export class Logger {
     const seconds = now.getSeconds().toString().padStart(2, '0');
     const milliseconds = now.getMilliseconds().toString().padStart(3, '0');
     const timestamp = `${hours}:${minutes}:${seconds}.${milliseconds}`;
-    
+
     this.outputChannel.appendLine(`[${timestamp}] [${level}] ${message}`);
-    
+
     // 错误和警告同时输出到控制台（用于开发调试）
     if (level === 'ERROR') {
       console.error(`[VOrg] ${message}`);
@@ -71,9 +71,20 @@ export class Logger {
    * 记录警告日志
    * 
    * @param message - 日志消息
+   * @param error - 错误对象（可选）
    */
-  static warn(message: string): void {
-    this.log(message, 'WARN');
+  static warn(message: string, error?: unknown): void {
+    let fullMessage = message;
+
+    if (error) {
+      if (error instanceof Error) {
+        fullMessage = `${message}: ${error.message}`;
+      } else {
+        fullMessage = `${message}: ${String(error)}`;
+      }
+    }
+
+    this.log(fullMessage, 'WARN');
   }
 
   /**
@@ -84,7 +95,7 @@ export class Logger {
    */
   static error(message: string, error?: unknown): void {
     let fullMessage = message;
-    
+
     if (error) {
       if (error instanceof Error) {
         fullMessage = `${message}: ${error.message}`;
@@ -95,7 +106,7 @@ export class Logger {
         fullMessage = `${message}: ${String(error)}`;
       }
     }
-    
+
     this.log(fullMessage, 'ERROR');
   }
 

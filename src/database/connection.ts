@@ -1,11 +1,11 @@
 /**
- * Database Connection Manager
+ * Database Connection Manager (sql.js WASM-based)
  * 
- * Manages SQLite database connections with singleton pattern,
- * connection pooling, and error handling
+ * Manages SQLite database connections using sql.js (WASM) with singleton pattern,
+ * automatic persistence, and error handling
  */
 
-import * as Database from 'better-sqlite3';
+import initSqlJs, { Database, SqlJsStatic } from 'sql.js';
 import * as path from 'path';
 import * as fs from 'fs';
 import { DatabaseConfig } from './types';
@@ -16,7 +16,7 @@ import { SchemaManager } from './schemaManager';
  */
 const DEFAULT_CONFIG: DatabaseConfig = {
     dbPath: '',
-    enableWAL: true,
+    enableWAL: false, // WAL not supported in sql.js
     cacheSize: 2000,
     foreignKeys: true,
     busyTimeout: 5000
@@ -27,10 +27,12 @@ const DEFAULT_CONFIG: DatabaseConfig = {
  */
 export class DatabaseConnection {
     private static instance: DatabaseConnection | null = null;
-    private db: Database.Database | null = null;
+    private db: Database | null = null;
+    private SQL: SqlJsStatic | null = null;
     private config: DatabaseConfig;
     private schemaManager: SchemaManager | null = null;
     private isInitialized: boolean = false;
+    private saveInterval: NodeJS.Timeout | null = null;
 
     private constructor(config: Partial<DatabaseConfig> = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
@@ -75,18 +77,54 @@ export class DatabaseConnection {
                 fs.mkdirSync(dbDir, { recursive: true });
             }
 
-            // Create database connection
-            this.db = new Database(dbPath);
+            // Initialize sql.js
+            // Try multiple paths for sql-wasm.wasm to support both bundled and unbundled environments
+            const baseDir = __dirname;
+            const potentialWasmPaths = [
+                path.join(baseDir, 'sql-wasm.wasm'),         // Bundled (out/extension.js)
+                path.join(baseDir, '../sql-wasm.wasm'),      // Unbundled (out/database/connection.js)
+                path.join(baseDir, '../../node_modules/sql.js/dist/sql-wasm.wasm') // Development
+            ];
+
+            let wasmPath = '';
+            for (const p of potentialWasmPaths) {
+                if (fs.existsSync(p)) {
+                    wasmPath = p;
+                    break;
+                }
+            }
+
+            if (!wasmPath) {
+                throw new Error(`Could not find sql-wasm.wasm in any of: ${potentialWasmPaths.join(', ')}`);
+            }
+
+            console.log(`Using WASM from: ${wasmPath}`);
+            this.SQL = await initSqlJs({
+                locateFile: () => wasmPath
+            });
+
+            // Load existing database or create new one
+            if (fs.existsSync(dbPath)) {
+                const buffer = fs.readFileSync(dbPath);
+                this.db = new this.SQL.Database(buffer);
+                console.log(`Loaded existing database from: ${dbPath}`);
+            } else {
+                this.db = new this.SQL.Database();
+                console.log(`Created new database at: ${dbPath}`);
+            }
 
             // Configure database
             this.configure();
 
             // Initialize schema
-            this.schemaManager = new SchemaManager(this.db);
+            this.schemaManager = new SchemaManager(this.db as any);
             this.schemaManager.initialize();
 
+            // Setup auto-save (every 30 seconds)
+            this.setupAutoSave();
+
             this.isInitialized = true;
-            console.log(`Database initialized at: ${dbPath}`);
+            console.log(`Database initialized successfully`);
         } catch (error) {
             this.isInitialized = false;
             throw new Error(`Failed to initialize database: ${error}`);
@@ -101,35 +139,52 @@ export class DatabaseConnection {
             throw new Error('Database not initialized');
         }
 
-        // Enable WAL mode for better concurrency
-        if (this.config.enableWAL) {
-            this.db.pragma('journal_mode = WAL');
-        }
-
-        // Set cache size (in pages)
-        if (this.config.cacheSize) {
-            this.db.pragma(`cache_size = ${this.config.cacheSize}`);
-        }
-
-        // Enable foreign keys
+        // Enable foreign keys (sql.js supports this)
         if (this.config.foreignKeys) {
-            this.db.pragma('foreign_keys = ON');
+            this.db.run('PRAGMA foreign_keys = ON');
         }
 
-        // Set busy timeout (in milliseconds)
-        if (this.config.busyTimeout) {
-            this.db.pragma(`busy_timeout = ${this.config.busyTimeout}`);
+        // Note: WAL mode, cache_size, busy_timeout are not applicable in sql.js
+        // sql.js runs entirely in memory, so these optimizations aren't needed
+    }
+
+    /**
+     * Setup automatic save to disk
+     */
+    private setupAutoSave(): void {
+        // Clear existing interval if any
+        if (this.saveInterval) {
+            clearInterval(this.saveInterval);
         }
 
-        // Optimize for performance
-        this.db.pragma('synchronous = NORMAL');
-        this.db.pragma('temp_store = MEMORY');
+        // Save every 30 seconds
+        this.saveInterval = setInterval(() => {
+            this.save();
+        }, 30000);
+    }
+
+    /**
+     * Save database to disk
+     */
+    public save(): void {
+        if (!this.db || !this.config.dbPath) {
+            return;
+        }
+
+        try {
+            const data = this.db.export();
+            const buffer = Buffer.from(data);
+            fs.writeFileSync(this.config.dbPath, buffer);
+            console.log(`Database saved to: ${this.config.dbPath}`);
+        } catch (error) {
+            console.error('Failed to save database:', error);
+        }
     }
 
     /**
      * Get database instance
      */
-    public getDatabase(): Database.Database {
+    public getDatabase(): any {
         if (!this.db || !this.isInitialized) {
             throw new Error('Database not initialized. Call initialize() first.');
         }
@@ -160,13 +215,46 @@ export class DatabaseConnection {
         return this.config.dbPath;
     }
 
+    private transactionDepth: number = 0;
+
     /**
      * Execute a transaction
+     * Supports nested transactions by using a counter and only performing
+     * BEGIN/COMMIT/ROLLBACK on the outermost call.
      */
-    public transaction<T>(fn: (db: Database.Database) => T): T {
+    public transaction<T>(fn: (db: any) => T): T {
         const db = this.getDatabase();
-        const transaction = db.transaction(fn);
-        return transaction(db);
+
+        if (this.transactionDepth === 0) {
+            try {
+                db.run('BEGIN TRANSACTION');
+            } catch (error) {
+                throw new Error(`Failed to begin transaction: ${error}`);
+            }
+        }
+
+        this.transactionDepth++;
+
+        try {
+            const result = fn(db);
+            this.transactionDepth--;
+
+            if (this.transactionDepth === 0) {
+                db.run('COMMIT');
+            }
+            return result;
+        } catch (error) {
+            this.transactionDepth--;
+
+            if (this.transactionDepth === 0) {
+                try {
+                    db.run('ROLLBACK');
+                } catch (rollbackError) {
+                    console.error('Database rollback failed:', rollbackError);
+                }
+            }
+            throw error;
+        }
     }
 
     /**
@@ -175,6 +263,16 @@ export class DatabaseConnection {
     public close(): void {
         if (this.db) {
             try {
+                // Clear auto-save interval
+                if (this.saveInterval) {
+                    clearInterval(this.saveInterval);
+                    this.saveInterval = null;
+                }
+
+                // Save before closing
+                this.save();
+
+                // Close database
                 this.db.close();
                 this.db = null;
                 this.schemaManager = null;
@@ -205,12 +303,11 @@ export class DatabaseConnection {
         inTransaction: boolean;
         schemaVersion: number;
     } {
-        const db = this.db;
         return {
             path: this.config.dbPath,
-            isOpen: db !== null && db.open,
+            isOpen: this.db !== null,
             isInitialized: this.isInitialized,
-            inTransaction: db ? db.inTransaction : false,
+            inTransaction: false, // sql.js doesn't expose this
             schemaVersion: this.schemaManager ? this.schemaManager.getSchemaVersion() : 0
         };
     }
@@ -238,7 +335,9 @@ export class DatabaseConnection {
    * Backup database to a file
    */
     public async backup(backupPath: string): Promise<void> {
-        const db = this.getDatabase();
+        if (!this.db) {
+            throw new Error('Database not initialized');
+        }
 
         try {
             // Ensure backup directory exists
@@ -247,11 +346,10 @@ export class DatabaseConnection {
                 fs.mkdirSync(backupDir, { recursive: true });
             }
 
-            // Checkpoint WAL file to ensure all data is in main database file
-            db.pragma('wal_checkpoint(TRUNCATE)');
-
-            // Copy database file
-            fs.copyFileSync(this.config.dbPath, backupPath);
+            // Export and save to backup path
+            const data = this.db.export();
+            const buffer = Buffer.from(data);
+            fs.writeFileSync(backupPath, buffer);
 
             console.log(`Database backed up to: ${backupPath}`);
         } catch (error) {
@@ -287,7 +385,7 @@ export class DatabaseConnection {
 /**
  * Get global database instance
  */
-export function getDatabase(): Database.Database {
+export function getDatabase(): any {
     return DatabaseConnection.getInstance().getDatabase();
 }
 

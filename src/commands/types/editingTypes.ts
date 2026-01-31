@@ -20,8 +20,9 @@ export interface HeadingInfo {
   level: number;              // 标题层级
   stars: string;              // 星号
   todoKeyword: string | null; // TODO 关键字（TODO、DONE 等）
-  title: string;            // 完整的标题的文本
+  priority: string | null;    // 优先级 [#A], [#B], [#C]
+  title: string;              // 完整的标题文本（包含优先级和标签）
   tags?: string[];            // 标签数组
-  text?: string;              // 纯文本（不包含 TODO 关键字和标签）
+  text?: string;              // 纯文本（不包含 TODO 关键字、优先级和标签）
 }
 

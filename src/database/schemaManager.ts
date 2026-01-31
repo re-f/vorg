@@ -1,10 +1,10 @@
 /**
- * Database Schema Manager
+ * Database Schema Manager (sql.js compatible)
  * 
  * Handles database initialization, version management, and schema migrations
  */
 
-import * as Database from 'better-sqlite3';
+import { Database } from 'sql.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -21,10 +21,10 @@ const CURRENT_SCHEMA_VERSION = 1;
  * Schema Manager for VOrg database
  */
 export class SchemaManager {
-    private db: Database.Database;
+    private db: Database;
     private schemaPath: string;
 
-    constructor(db: Database.Database) {
+    constructor(db: Database) {
         this.db = db;
 
         // Try to find schema.sql in multiple locations
@@ -32,6 +32,7 @@ export class SchemaManager {
         // 2. Source directory (src/database/schema.sql)
         const possiblePaths = [
             path.join(__dirname, 'schema.sql'),
+            path.join(__dirname, '..', 'schema.sql'),
             path.join(__dirname, '..', '..', 'src', 'database', 'schema.sql'),
             path.join(process.cwd(), 'src', 'database', 'schema.sql')
         ];
@@ -58,7 +59,7 @@ export class SchemaManager {
             // Read schema file
             const schemaSQL = fs.readFileSync(this.schemaPath, 'utf-8');
 
-            // Execute schema in a transaction
+            // Execute schema (sql.js uses exec for multiple statements)
             this.db.exec(schemaSQL);
 
             // Verify schema version
@@ -79,8 +80,16 @@ export class SchemaManager {
     public getSchemaVersion(): number {
         try {
             const stmt = this.db.prepare('SELECT value FROM metadata WHERE key = ?');
-            const result = stmt.get('schema_version') as { value: string } | undefined;
-            return result ? parseInt(result.value, 10) : 0;
+            stmt.bind(['schema_version']);
+
+            if (stmt.step()) {
+                const row = stmt.getAsObject();
+                stmt.free();
+                return parseInt((row.value as string), 10);
+            }
+
+            stmt.free();
+            return 0;
         } catch (error) {
             // Metadata table doesn't exist yet
             return 0;
@@ -91,11 +100,10 @@ export class SchemaManager {
      * Set schema version in database
      */
     private setSchemaVersion(version: number): void {
-        const stmt = this.db.prepare(`
-      INSERT OR REPLACE INTO metadata (key, value, updated_at) 
-      VALUES (?, ?, ?)
-    `);
-        stmt.run('schema_version', version.toString(), Math.floor(Date.now() / 1000));
+        this.db.run(
+            `INSERT OR REPLACE INTO metadata (key, value, updated_at) VALUES (?, ?, ?)`,
+            ['schema_version', version.toString(), Math.floor(Date.now() / 1000)]
+        );
     }
 
     /**
@@ -136,24 +144,30 @@ export class SchemaManager {
      */
     public verify(): boolean {
         try {
-            // Check integrity
-            const integrityCheck = this.db.pragma('integrity_check') as Array<{ integrity_check: string }>;
-            if (integrityCheck[0].integrity_check !== 'ok') {
-                console.error('Database integrity check failed:', integrityCheck);
+            // Check integrity (sql.js uses exec for PRAGMA)
+            const integrityResult = this.db.exec('PRAGMA integrity_check');
+            if (integrityResult.length === 0 || integrityResult[0].values[0][0] !== 'ok') {
+                console.error('Database integrity check failed');
                 return false;
             }
 
             // Check foreign keys
-            const foreignKeyCheck = this.db.pragma('foreign_key_check') as Array<any>;
-            if (foreignKeyCheck.length > 0) {
-                console.error('Foreign key violations found:', foreignKeyCheck);
+            const foreignKeyResult = this.db.exec('PRAGMA foreign_key_check');
+            if (foreignKeyResult.length > 0 && foreignKeyResult[0].values.length > 0) {
+                console.error('Foreign key violations found:', foreignKeyResult);
                 return false;
             }
 
             // Verify required tables exist
             const requiredTables = ['files', 'headings', 'heading_tags', 'links', 'timestamps', 'metadata'];
-            const tables = this.db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[];
-            const tableNames = tables.map(t => t.name);
+            const tablesResult = this.db.exec("SELECT name FROM sqlite_master WHERE type='table'");
+
+            if (tablesResult.length === 0) {
+                console.error('No tables found in database');
+                return false;
+            }
+
+            const tableNames = tablesResult[0].values.map(row => row[0] as string);
 
             for (const tableName of requiredTables) {
                 if (!tableNames.includes(tableName)) {
@@ -184,21 +198,21 @@ export class SchemaManager {
     } {
         const schemaVersion = this.getSchemaVersion();
 
-        const tables = this.db.prepare("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'").get() as { count: number };
-        const indexes = this.db.prepare("SELECT COUNT(*) as count FROM sqlite_master WHERE type='index'").get() as { count: number };
-        const views = this.db.prepare("SELECT COUNT(*) as count FROM sqlite_master WHERE type='view'").get() as { count: number };
+        const tablesResult = this.db.exec("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'");
+        const indexesResult = this.db.exec("SELECT COUNT(*) as count FROM sqlite_master WHERE type='index'");
+        const viewsResult = this.db.exec("SELECT COUNT(*) as count FROM sqlite_master WHERE type='view'");
 
-        const pageSize = this.db.pragma('page_size', { simple: true }) as number;
-        const pageCount = this.db.pragma('page_count', { simple: true }) as number;
+        const pageSizeResult = this.db.exec('PRAGMA page_size');
+        const pageCountResult = this.db.exec('PRAGMA page_count');
 
         return {
             schemaVersion,
-            tableCount: tables.count,
-            indexCount: indexes.count,
-            viewCount: views.count,
-            pageSize,
-            pageCount,
-            databaseSize: pageSize * pageCount
+            tableCount: tablesResult[0]?.values[0][0] as number || 0,
+            indexCount: indexesResult[0]?.values[0][0] as number || 0,
+            viewCount: viewsResult[0]?.values[0][0] as number || 0,
+            pageSize: pageSizeResult[0]?.values[0][0] as number || 0,
+            pageCount: pageCountResult[0]?.values[0][0] as number || 0,
+            databaseSize: (pageSizeResult[0]?.values[0][0] as number || 0) * (pageCountResult[0]?.values[0][0] as number || 0)
         };
     }
 
@@ -210,24 +224,32 @@ export class SchemaManager {
         console.warn('Resetting database - all data will be lost!');
 
         // Disable foreign keys temporarily for clean drop
-        this.db.pragma('foreign_keys = OFF');
+        this.db.run('PRAGMA foreign_keys = OFF');
 
         // Get all tables
-        const tables = this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all() as { name: string }[];
+        const tablesResult = this.db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
 
-        // Drop all tables
-        for (const table of tables) {
-            this.db.prepare(`DROP TABLE IF EXISTS ${table.name}`).run();
+        if (tablesResult.length > 0) {
+            const tables = tablesResult[0].values.map(row => row[0] as string);
+
+            // Drop all tables
+            for (const tableName of tables) {
+                this.db.run(`DROP TABLE IF EXISTS ${tableName}`);
+            }
         }
 
         // Drop all views
-        const views = this.db.prepare("SELECT name FROM sqlite_master WHERE type='view'").all() as { name: string }[];
-        for (const view of views) {
-            this.db.prepare(`DROP VIEW IF EXISTS ${view.name}`).run();
+        const viewsResult = this.db.exec("SELECT name FROM sqlite_master WHERE type='view'");
+        if (viewsResult.length > 0) {
+            const views = viewsResult[0].values.map(row => row[0] as string);
+
+            for (const viewName of views) {
+                this.db.run(`DROP VIEW IF EXISTS ${viewName}`);
+            }
         }
 
         // Re-enable foreign keys
-        this.db.pragma('foreign_keys = ON');
+        this.db.run('PRAGMA foreign_keys = ON');
 
         // Reinitialize
         this.initialize();

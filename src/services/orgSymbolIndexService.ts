@@ -426,6 +426,23 @@ export class OrgSymbolIndexService implements vscode.Disposable {
   }
 
   /**
+   * 获取所有唯一的标签及其出现次数
+   */
+  getAllTags(): Map<string, number> {
+    const tagMap = new Map<string, number>();
+    for (const symbols of this.symbolCache.values()) {
+      for (const symbol of symbols) {
+        if (symbol.tags) {
+          for (const tag of symbol.tags) {
+            tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
+          }
+        }
+      }
+    }
+    return tagMap;
+  }
+
+  /**
    * 获取索引的统计信息
    */
   getStats(): { fileCount: number; symbolCount: number; isIndexed: boolean } {

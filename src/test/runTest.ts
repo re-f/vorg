@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { runTests } from '@vscode/test-electron';
+import { runTests, downloadAndUnzipVSCode } from '@vscode/test-electron';
 
 async function main() {
     try {
@@ -11,7 +11,7 @@ async function main() {
 
         // 运行测试
         await runTests({
-            version: '1.92.0',
+            version: 'stable',
             extensionDevelopmentPath,
             extensionTestsPath
         });

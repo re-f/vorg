@@ -4,13 +4,14 @@
  * Handles CRUD operations for OrgFile entities
  */
 
-import * as Database from 'better-sqlite3';
+import { Database } from 'sql.js';
 import { OrgFile } from './types';
+import { SqlJsHelper } from './sqlJsHelper';
 
 export class FileRepository {
-    private db: Database.Database;
+    private db: Database;
 
-    constructor(db: Database.Database) {
+    constructor(db: Database) {
         this.db = db;
     }
 
@@ -18,19 +19,19 @@ export class FileRepository {
      * Insert a new file
      */
     public insert(file: Omit<OrgFile, 'createdAt'>): void {
-        const stmt = this.db.prepare(`
+        const stmt = SqlJsHelper.prepare(this.db, `
       INSERT INTO files (uri, title, properties, tags, updated_at, hash)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
 
-        stmt.run(
+        stmt.run([
             file.uri,
             file.title || null,
             JSON.stringify(file.properties),
             JSON.stringify(file.tags),
             Math.floor(file.updatedAt.getTime() / 1000),
             file.hash
-        );
+        ]);
     }
 
     /**
@@ -67,11 +68,11 @@ export class FileRepository {
 
         values.push(file.uri);
 
-        const stmt = this.db.prepare(`
+        const stmt = SqlJsHelper.prepare(this.db, `
       UPDATE files SET ${updates.join(', ')} WHERE uri = ?
     `);
 
-        stmt.run(...values);
+        stmt.run(values);
     }
 
     /**
@@ -90,8 +91,8 @@ export class FileRepository {
      * Find file by URI
      */
     public findByUri(uri: string): OrgFile | null {
-        const stmt = this.db.prepare('SELECT * FROM files WHERE uri = ?');
-        const row = stmt.get(uri) as any;
+        const stmt = SqlJsHelper.prepare(this.db, 'SELECT * FROM files WHERE uri = ?');
+        const row = stmt.get([uri]) as any;
 
         if (!row) {
             return null;
@@ -104,7 +105,7 @@ export class FileRepository {
      * Find all files
      */
     public findAll(): OrgFile[] {
-        const stmt = this.db.prepare('SELECT * FROM files ORDER BY uri');
+        const stmt = SqlJsHelper.prepare(this.db, 'SELECT * FROM files ORDER BY uri');
         const rows = stmt.all() as any[];
 
         return rows.map(row => this.rowToFile(row));
@@ -114,8 +115,8 @@ export class FileRepository {
      * Find files by hash
      */
     public findByHash(hash: string): OrgFile[] {
-        const stmt = this.db.prepare('SELECT * FROM files WHERE hash = ?');
-        const rows = stmt.all(hash) as any[];
+        const stmt = SqlJsHelper.prepare(this.db, 'SELECT * FROM files WHERE hash = ?');
+        const rows = stmt.all([hash]) as any[];
 
         return rows.map(row => this.rowToFile(row));
     }
@@ -125,8 +126,8 @@ export class FileRepository {
      */
     public findUpdatedAfter(date: Date): OrgFile[] {
         const timestamp = Math.floor(date.getTime() / 1000);
-        const stmt = this.db.prepare('SELECT * FROM files WHERE updated_at > ? ORDER BY updated_at DESC');
-        const rows = stmt.all(timestamp) as any[];
+        const stmt = SqlJsHelper.prepare(this.db, 'SELECT * FROM files WHERE updated_at > ? ORDER BY updated_at DESC');
+        const rows = stmt.all([timestamp]) as any[];
 
         return rows.map(row => this.rowToFile(row));
     }
@@ -135,15 +136,15 @@ export class FileRepository {
      * Delete file by URI
      */
     public delete(uri: string): void {
-        const stmt = this.db.prepare('DELETE FROM files WHERE uri = ?');
-        stmt.run(uri);
+        const stmt = SqlJsHelper.prepare(this.db, 'DELETE FROM files WHERE uri = ?');
+        stmt.run([uri]);
     }
 
     /**
      * Delete all files
      */
     public deleteAll(): void {
-        const stmt = this.db.prepare('DELETE FROM files');
+        const stmt = SqlJsHelper.prepare(this.db, 'DELETE FROM files');
         stmt.run();
     }
 
@@ -151,7 +152,7 @@ export class FileRepository {
      * Count total files
      */
     public count(): number {
-        const stmt = this.db.prepare('SELECT COUNT(*) as count FROM files');
+        const stmt = SqlJsHelper.prepare(this.db, 'SELECT COUNT(*) as count FROM files');
         const result = stmt.get() as { count: number };
         return result.count;
     }
@@ -160,8 +161,8 @@ export class FileRepository {
      * Check if file exists
      */
     public exists(uri: string): boolean {
-        const stmt = this.db.prepare('SELECT 1 FROM files WHERE uri = ? LIMIT 1');
-        const result = stmt.get(uri);
+        const stmt = SqlJsHelper.prepare(this.db, 'SELECT 1 FROM files WHERE uri = ? LIMIT 1');
+        const result = stmt.get([uri]);
         return result !== undefined;
     }
 

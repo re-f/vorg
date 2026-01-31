@@ -31,8 +31,8 @@ export class HeadingParser {
    */
   static parseHeading(lineText: string, includeTags: boolean = true, todoKeywords?: string[]): HeadingInfo {
     const keywords = todoKeywords || HeadingParser.getDefaultKeywords();
-    // The regex needs to escape '*' and '\s' when constructing with new RegExp()
-    const keywordRegex = new RegExp(`^(\\*+)\\s+(?:(${keywords.join('|')})\\s+)?(.*)$`);
+    // 匹配星号、TODO 关键字（可选）、优先级（可选，格式如 [#A]）和标题文本
+    const keywordRegex = new RegExp(`^(\\*+)\\s+(?:(${keywords.join('|')})\\s+)?(?:\\[#([A-C])\\]\\s+)?(.*)$`);
     const headingMatch = lineText.match(keywordRegex);
 
     if (!headingMatch) {
@@ -40,15 +40,17 @@ export class HeadingParser {
         level: 0,
         stars: '',
         todoKeyword: null,
+        priority: null,
         title: lineText
       };
     }
 
-    const titleText = headingMatch[3] || '';
+    const titleText = headingMatch[4] || '';
     const result: HeadingInfo = {
       level: headingMatch[1].length,
       stars: headingMatch[1],
       todoKeyword: headingMatch[2] || null,
+      priority: headingMatch[3] ? `[#${headingMatch[3]}]` : null,
       title: titleText
     };
 
@@ -210,14 +212,24 @@ export class HeadingParser {
    */
   static buildHeadingLine(
     level: number,
-    title: string,
-    todoState?: string | null
+    pureTitle: string,
+    todoState?: string | null,
+    priority?: string | null,
+    tags?: string[]
   ): string {
     const stars = '*'.repeat(level);
+    let line = stars;
     if (todoState) {
-      return `${stars} ${todoState} ${title}`;
+      line += ` ${todoState}`;
     }
-    return `${stars} ${title}`;
+    if (priority) {
+      line += ` ${priority}`;
+    }
+    line += ` ${pureTitle}`;
+    if (tags && tags.length > 0) {
+      line += ` :${tags.join(':')}:`;
+    }
+    return line;
   }
 
   /**
@@ -236,8 +248,33 @@ export class HeadingParser {
 
     return this.buildHeadingLine(
       headingInfo.level,
-      headingInfo.title,
-      newState || null
+      headingInfo.text || headingInfo.title, // 优先使用纯文本
+      newState || null,
+      headingInfo.priority,
+      headingInfo.tags
+    );
+  }
+
+  /**
+   * 更新标题的标签
+   * 返回新的标题行文本
+   */
+  static updateTags(
+    lineText: string,
+    newTags: string[],
+    todoKeywords?: string[]
+  ): string {
+    const headingInfo = this.parseHeading(lineText, true, todoKeywords);
+    if (headingInfo.level === 0) {
+      return lineText;
+    }
+
+    return this.buildHeadingLine(
+      headingInfo.level,
+      headingInfo.text || headingInfo.title,
+      headingInfo.todoKeyword,
+      headingInfo.priority,
+      newTags
     );
   }
 

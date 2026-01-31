@@ -62,17 +62,20 @@ export class OrgOutlineProvider implements vscode.DocumentSymbolProvider {
       if (headingInfo.level > 0) {
         const level = headingInfo.level;
         const todoStatus = headingInfo.todoKeyword;
-        const pureTitle = headingInfo.text || headingInfo.title;
+        const pureTitle = headingInfo.text || headingInfo.title || '';
         const tags = headingInfo.tags || [];
+
+        // 如果标题为空，使用默认文本（避免 VS Code 的 "name must not be falsy" 错误）
+        const effectiveTitle = pureTitle.trim() || '(Untitled)';
 
         // 确定符号类型
         const kind = HeadingSymbolUtils.getSymbolKind(level);
 
         // 构建显示名称
-        const displayName = HeadingParser.buildDisplayName(pureTitle, todoStatus, tags);
+        const displayName = HeadingParser.buildDisplayName(effectiveTitle, todoStatus, tags);
 
         // 计算拼音（用于搜索）
-        const pinyinText = getPinyinString(pureTitle);
+        const pinyinText = getPinyinString(effectiveTitle);
         const pinyinDisplayName = getPinyinString(displayName);
 
         // 将拼音信息添加到 name 中（用零宽空格分隔，不影响显示但能被搜索）

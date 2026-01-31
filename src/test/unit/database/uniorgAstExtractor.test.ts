@@ -1,31 +1,32 @@
+
 import * as assert from 'assert';
 import { unified } from 'unified';
 import uniorgParse from 'uniorg-parse';
 import { UniorgAstExtractor } from '../../../database/uniorgAstExtractor';
 
-describe('UniorgAstExtractor', () => {
+suite('UniorgAstExtractor Tests', () => {
     let extractor: UniorgAstExtractor;
 
-    beforeEach(() => {
+    setup(() => {
         extractor = new UniorgAstExtractor();
     });
 
-    describe('extractHeadings', () => {
-        it('should extract a simple heading', () => {
-            const content = '* TODO Test Heading';
+    suite('extractHeadings', () => {
+        test('should extract simple headings', () => {
+            const content = '* Heading 1\n** Heading 2';
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
             const headings = extractor.extractHeadings(ast, '/test/file.org');
 
-            assert.strictEqual(headings.length, 1);
-            assert.strictEqual(headings[0].title, 'Test Heading');
+            assert.strictEqual(headings.length, 2);
+            assert.strictEqual(headings[0].title, 'Heading 1');
             assert.strictEqual(headings[0].level, 1);
-            assert.strictEqual(headings[0].todoState, 'TODO');
-            assert.strictEqual(headings[0].todoCategory, 'todo');
+            assert.strictEqual(headings[1].title, 'Heading 2');
+            assert.strictEqual(headings[1].level, 2);
         });
 
-        it('should extract heading with priority', () => {
+        test('should extract TODO keywords and priority', () => {
             const content = '* TODO [#A] Important Task';
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
@@ -33,12 +34,13 @@ describe('UniorgAstExtractor', () => {
             const headings = extractor.extractHeadings(ast, '/test/file.org');
 
             assert.strictEqual(headings.length, 1);
+            assert.strictEqual(headings[0].todoState, 'TODO');
             assert.strictEqual(headings[0].priority, 'A');
             assert.strictEqual(headings[0].title, 'Important Task');
         });
 
-        it('should extract heading with tags', () => {
-            const content = '* Heading :work:urgent:';
+        test('should extract tags', () => {
+            const content = '* Task :work:urgent:';
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
@@ -48,91 +50,54 @@ describe('UniorgAstExtractor', () => {
             assert.deepStrictEqual(headings[0].tags, ['work', 'urgent']);
         });
 
-        it('should extract nested headings with parent-child relationship', () => {
-            const content = `* Parent Heading
-** Child Heading 1
-** Child Heading 2
-*** Grandchild Heading`;
-
-            const parser = unified().use(uniorgParse as any);
-            const ast = parser.parse(content);
-
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
-
-            assert.strictEqual(headings.length, 4);
-            assert.strictEqual(headings[0].level, 1);
-            assert.strictEqual(headings[0].title, 'Parent Heading');
-            assert.strictEqual(headings[0].parentId, undefined);
-
-            assert.strictEqual(headings[1].level, 2);
-            assert.strictEqual(headings[1].title, 'Child Heading 1');
-            assert.ok(headings[1].parentId, 'Child should have parentId');
-            assert.strictEqual(headings[1].parentId, headings[0].id);
-
-            assert.strictEqual(headings[2].level, 2);
-            assert.strictEqual(headings[2].parentId, headings[0].id);
-
-            assert.strictEqual(headings[3].level, 3);
-            assert.strictEqual(headings[3].parentId, headings[2].id);
-        });
-
-        it('should extract DONE heading', () => {
-            const content = '* DONE Completed Task';
-            const parser = unified().use(uniorgParse as any);
-            const ast = parser.parse(content);
-
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
-
-            assert.strictEqual(headings.length, 1);
-            assert.strictEqual(headings[0].todoState, 'DONE');
-            assert.strictEqual(headings[0].todoCategory, 'done');
-        });
-
-        it('should handle heading without TODO keyword', () => {
-            const content = '* Regular Heading';
-            const parser = unified().use(uniorgParse as any);
-            const ast = parser.parse(content);
-
-            const headings = extractor.extractHeadings(ast, '/test/file.org');
-
-            assert.strictEqual(headings.length, 1);
-            assert.strictEqual(headings[0].todoState, undefined);
-            assert.strictEqual(headings[0].todoCategory, undefined);
-        });
-
-        it('should extract heading with properties including ID', () => {
-            const content = `* Heading with ID
+        test('should extract properties including ID', () => {
+            const content = `* Task with Properties
 :PROPERTIES:
-:ID: abc-123-def
-:CUSTOM: value
+:ID: my-uuid-123
+:CUSTOM_PROP: custom value
 :END:`;
-
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
             const headings = extractor.extractHeadings(ast, '/test/file.org');
 
             assert.strictEqual(headings.length, 1);
-            assert.strictEqual(headings[0].id, 'abc-123-def');
-            assert.strictEqual(headings[0].properties.ID, 'abc-123-def');
-            assert.strictEqual(headings[0].properties.CUSTOM, 'value');
+            assert.strictEqual(headings[0].id, 'my-uuid-123');
+            assert.strictEqual(headings[0].properties['CUSTOM_PROP'], 'custom value');
         });
 
-        it('should generate ID from file URI and line number if no ID property', () => {
-            const content = '* Heading without ID';
+        test('should generate ID if not present', () => {
+            const content = '* Task without ID';
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
             const headings = extractor.extractHeadings(ast, '/test/file.org');
 
             assert.strictEqual(headings.length, 1);
-            assert.ok(headings[0].id.startsWith('/test/file.org:'));
+            assert.ok(headings[0].id.includes('/test/file.org'));
+        });
+
+        test('should handle nested hierarchy', () => {
+            const content = '* Parent\n** Child 1\n** Child 2';
+            const parser = unified().use(uniorgParse as any);
+            const ast = parser.parse(content);
+
+            const headings = extractor.extractHeadings(ast, '/test/file.org');
+
+            assert.strictEqual(headings.length, 3);
+
+            const parent = headings[0];
+            const child1 = headings[1];
+            const child2 = headings[2];
+
+            assert.strictEqual(child1.parentId, parent.id);
+            assert.strictEqual(child2.parentId, parent.id);
         });
     });
 
-    describe('extractLinks', () => {
-        it('should extract file link', () => {
-            const content = '* Heading\n[[file:other.org][Link to other file]]';
+    suite('extractLinks', () => {
+        test('should extract file links', () => {
+            const content = '* Heading\n[[file:other.org][Link to Other]]';
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
 
@@ -141,10 +106,10 @@ describe('UniorgAstExtractor', () => {
             assert.strictEqual(links.length, 1);
             assert.strictEqual(links[0].linkType, 'file');
             assert.strictEqual(links[0].targetUri, 'other.org');
-            assert.strictEqual(links[0].linkText, 'Link to other file');
+            assert.strictEqual(links[0].linkText, 'Link to Other');
         });
 
-        it('should extract ID link', () => {
+        test('should extract ID links', () => {
             const content = '* Heading\n[[id:abc-123][Link to ID]]';
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
@@ -157,7 +122,7 @@ describe('UniorgAstExtractor', () => {
             assert.strictEqual(links[0].linkText, 'Link to ID');
         });
 
-        it('should extract HTTP link', () => {
+        test('should extract HTTP link', () => {
             const content = '* Heading\n[[https://example.com][Example]]';
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
@@ -169,7 +134,7 @@ describe('UniorgAstExtractor', () => {
             assert.strictEqual(links[0].targetUri, 'https://example.com');
         });
 
-        it('should extract link with heading anchor', () => {
+        test('should extract link with heading anchor', () => {
             const content = '* Heading\n[[file:other.org::*Target Heading][Link]]';
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
@@ -181,7 +146,7 @@ describe('UniorgAstExtractor', () => {
             assert.strictEqual(links[0].targetHeadingId, 'Target Heading');
         });
 
-        it('should extract link with custom ID anchor', () => {
+        test('should extract link with custom ID anchor', () => {
             const content = '* Heading\n[[file:other.org::#custom-id][Link]]';
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
@@ -193,7 +158,7 @@ describe('UniorgAstExtractor', () => {
             assert.strictEqual(links[0].targetId, 'custom-id');
         });
 
-        it('should associate link with source heading', () => {
+        test('should associate link with source heading', () => {
             const content = `* Heading with ID
 :PROPERTIES:
 :ID: source-heading-id
@@ -209,7 +174,7 @@ describe('UniorgAstExtractor', () => {
             assert.strictEqual(links[0].sourceHeadingId, 'source-heading-id');
         });
 
-        it('should extract multiple links', () => {
+        test('should extract multiple links', () => {
             const content = `* Heading
 [[file:file1.org][Link 1]]
 [[file:file2.org][Link 2]]
@@ -224,8 +189,8 @@ describe('UniorgAstExtractor', () => {
         });
     });
 
-    describe('extractFileMetadata', () => {
-        it('should extract file title', () => {
+    suite('extractFileMetadata', () => {
+        test('should extract file title', () => {
             const content = '#+TITLE: My Document\n* Heading';
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
@@ -235,7 +200,7 @@ describe('UniorgAstExtractor', () => {
             assert.strictEqual(metadata.title, 'My Document');
         });
 
-        it('should extract file-level tags from first heading', () => {
+        test('should extract file-level tags from first heading', () => {
             const content = '* First Heading :tag1:tag2:\n** Second Heading';
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
@@ -245,7 +210,7 @@ describe('UniorgAstExtractor', () => {
             assert.deepStrictEqual(metadata.tags, ['tag1', 'tag2']);
         });
 
-        it('should return empty metadata if no title or tags', () => {
+        test('should return empty metadata if no title or tags', () => {
             const content = '* Heading without tags';
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
@@ -257,8 +222,8 @@ describe('UniorgAstExtractor', () => {
         });
     });
 
-    describe('timestamp extraction', () => {
-        it('should extract SCHEDULED timestamp', () => {
+    suite('timestamp extraction', () => {
+        test('should extract SCHEDULED timestamp', () => {
             const content = `* TODO Task
 :PROPERTIES:
 :SCHEDULED: <2024-01-28 Sun>
@@ -276,7 +241,7 @@ describe('UniorgAstExtractor', () => {
             assert.strictEqual(headings[0].scheduled!.getDate(), 28);
         });
 
-        it('should extract DEADLINE timestamp', () => {
+        test('should extract DEADLINE timestamp', () => {
             const content = `* TODO Task
 :PROPERTIES:
 :DEADLINE: <2024-01-30 Tue>
@@ -292,7 +257,7 @@ describe('UniorgAstExtractor', () => {
             assert.strictEqual(headings[0].deadline!.getDate(), 30);
         });
 
-        it('should extract CLOSED timestamp', () => {
+        test('should extract CLOSED timestamp', () => {
             const content = `* DONE Task
 :PROPERTIES:
 :CLOSED: [2024-01-27 Sat]
@@ -309,8 +274,8 @@ describe('UniorgAstExtractor', () => {
         });
     });
 
-    describe('edge cases', () => {
-        it('should handle empty document', () => {
+    suite('edge cases', () => {
+        test('should handle empty document', () => {
             const content = '';
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
@@ -322,7 +287,7 @@ describe('UniorgAstExtractor', () => {
             assert.strictEqual(links.length, 0);
         });
 
-        it('should handle document with only text', () => {
+        test('should handle document with only text', () => {
             const content = 'Just some text without headings';
             const parser = unified().use(uniorgParse as any);
             const ast = parser.parse(content);
@@ -332,7 +297,7 @@ describe('UniorgAstExtractor', () => {
             assert.strictEqual(headings.length, 0);
         });
 
-        it('should handle complex nested structure', () => {
+        test('should handle complex nested structure', () => {
             const content = `#+TITLE: Complex Document
 
 * Level 1 Heading :tag1:

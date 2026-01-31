@@ -35,6 +35,11 @@ import { OrgSymbolIndexService } from './services/orgSymbolIndexService';
 import { OrgCompletionProvider } from './completion/orgCompletionProvider';
 import { PropertyParser } from './parsers/propertyParser';
 import { PropertyService } from './services/propertyService';
+import { PriorityCommands } from './commands/editing/priorityCommands';
+import { TagCommands } from './commands/editing/tagCommands';
+import { DateCommands } from './commands/editing/dateCommands';
+// import { DatabaseConnection } from './database/connection'; // 已移除顶级导入
+import * as path from 'path';
 
 /**
  * 补全 ID 处理辅助函数
@@ -199,7 +204,7 @@ async function insertIdToTargetDocument(
   }
 }
 
-import { IncrementalUpdateService } from './database/incrementalUpdateService';
+// import { IncrementalUpdateService } from './database/incrementalUpdateService'; // 已移除顶级导入
 
 /**
  * 激活扩展
@@ -213,8 +218,36 @@ export async function activate(context: vscode.ExtensionContext) {
   Logger.initialize(context);
   Logger.info('VOrg extension is now active!');
 
+  //-分割线
+
+
+  // 注册所有命令（尽早注册，避免后面初始化失败导致命令不可用）
+  LinkCommands.registerCommands(context);
+  EditingCommands.registerCommands(context);
+  DebugCommands.registerCommands(context);
+  PriorityCommands.registerCommands(context);
+  TagCommands.registerCommands(context);
+  DateCommands.registerCommands(context);
+
+  // 初始化预览管理器和预览命令
+  const previewManager = new PreviewManager(context);
+  const previewCommands = new PreviewCommands(context);
+  previewCommands.registerCommands(context);
+  previewCommands.registerEventListeners(context);
+
   // 初始化数据库增量更新服务
   try {
+    // 动态导入数据库相关模块，防止 native module 加载失败导致整个扩展无法激活
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { DatabaseConnection } = await import('./database/connection');
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { IncrementalUpdateService } = await import('./database/incrementalUpdateService');
+
+    // 确保数据库已初始化
+    const dbPath = path.join(context.globalStorageUri.fsPath, 'vorg.db');
+    await DatabaseConnection.getInstance().initialize(dbPath);
+    Logger.info(`Database initialized successfully at: ${dbPath}`);
+
     const updateService = new IncrementalUpdateService();
     // 异步启动，不阻塞核心功能激活
     updateService.start().catch(err => {
@@ -222,7 +255,9 @@ export async function activate(context: vscode.ExtensionContext) {
     });
     context.subscriptions.push(updateService);
   } catch (error) {
-    Logger.error('Failed to initialize IncrementalUpdateService', error);
+    // 即使数据库初始化失败，也要记录日志，但不能抛出错误，否则会阻止后续命令注册
+    Logger.error('Failed to initialize Database/IncrementalUpdateService (Native module error suspected)', error);
+    vscode.window.showWarningMessage('VOrg: 数据库索引服务启动失败（可能是原生模块不兼容），大部分编辑功能仍可使用。');
   }
 
   // 初始化配置服务
@@ -450,16 +485,8 @@ export async function activate(context: vscode.ExtensionContext) {
   // 确保在 VS Code 设置中启用了面包屑功能：
   // "breadcrumbs.enabled": true
 
-  // 注册预览管理器
-  const previewManager = new PreviewManager(context);
+  // 命令已在 activate 开头注册
 
-  // 注册各种命令
-  const previewCommands = new PreviewCommands(context);
-  previewCommands.registerCommands(context);
-  previewCommands.registerEventListeners(context); // 注册预览事件监听器
-  LinkCommands.registerCommands(context);
-  EditingCommands.registerCommands(context);
-  DebugCommands.registerCommands(context);
 
   // 监听文档变化，应用语法高亮
   context.subscriptions.push(

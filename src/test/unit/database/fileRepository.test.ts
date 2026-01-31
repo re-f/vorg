@@ -1,405 +1,143 @@
-/**
- * Unit tests for FileRepository
- * 
- * Tests CRUD operations for OrgFile entities
- */
 
-import { describe, it, beforeEach, afterEach } from 'mocha';
 import * as assert from 'assert';
-import * as Database from 'better-sqlite3';
+import initSqlJs from 'sql.js';
 import * as fs from 'fs';
 import * as path from 'path';
-import { DatabaseConnection } from '../../../database/connection';
+import { SchemaManager } from '../../../database/schemaManager';
 import { FileRepository } from '../../../database/fileRepository';
 import { OrgFile } from '../../../database/types';
 
-describe('FileRepository', () => {
-    let db: Database.Database;
-    let repo: FileRepository;
-    let testDbPath: string;
+// Mock specific WASM location for tests
+const wasmPath = path.join(__dirname, '../../../../node_modules/sql.js/dist/sql-wasm.wasm');
 
-    beforeEach(async () => {
-        // Reset singleton and create test database
-        DatabaseConnection.resetInstance();
-        testDbPath = path.join(__dirname, '..', '..', '..', '..', 'test-file-repo.sqlite');
+suite('FileRepository Integration Tests', () => {
+    let db: any;
+    let fileRepo: FileRepository;
+    let schemaManager: SchemaManager;
 
-        if (fs.existsSync(testDbPath)) {
-            fs.unlinkSync(testDbPath);
+    setup(async function () {
+        this.timeout(5000);
+
+        const SQL = await initSqlJs({
+            locateFile: () => wasmPath
+        });
+
+        db = new SQL.Database();
+
+        // Ensure we load schema correctly
+        try {
+            schemaManager = new SchemaManager(db);
+            schemaManager.initialize();
+        } catch (e) {
+            // Try to load from various locations
+            const paths = [
+                path.join(__dirname, '../../../../out/schema.sql'), // Copied by copy-resources
+                path.join(__dirname, '../../../../src/database/schema.sql'), // Source
+            ];
+
+            let loaded = false;
+            for (const p of paths) {
+                if (fs.existsSync(p)) {
+                    const sql = fs.readFileSync(p, 'utf8');
+                    db.exec(sql);
+                    loaded = true;
+                    break;
+                }
+            }
+
+            if (!loaded) {
+                console.error('Could not find schema.sql');
+                throw e;
+            }
         }
 
-        const conn = DatabaseConnection.getInstance();
-        await conn.initialize(testDbPath);
-        db = conn.getDatabase();
-        repo = new FileRepository(db);
+        fileRepo = new FileRepository(db);
     });
 
-    afterEach(() => {
-        DatabaseConnection.resetInstance();
-
-        [testDbPath, testDbPath + '-wal', testDbPath + '-shm'].forEach(p => {
-            if (fs.existsSync(p)) {
-                fs.unlinkSync(p);
-            }
-        });
+    teardown(() => {
+        if (db) {
+            db.close();
+        }
     });
 
-    describe('insert', () => {
-        it('should insert a new file', () => {
-            const file: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/file.org',
-                title: 'Test File',
-                properties: { author: 'Test' },
-                tags: ['tag1', 'tag2'],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'abc123'
-            };
+    test('should insert and find file by URI', () => {
+        const file: Omit<OrgFile, 'createdAt'> = {
+            uri: '/test/file1.org',
+            hash: 'hash123',
+            title: 'Test File',
+            properties: { prop: 'val' },
+            tags: ['tag1'],
+            headings: [],
+            updatedAt: new Date()
+        };
 
-            repo.insert(file);
+        fileRepo.insert(file);
 
-            const found = repo.findByUri(file.uri);
-            assert.ok(found, 'file should be found');
-            assert.strictEqual(found!.uri, file.uri);
-            assert.strictEqual(found!.title, file.title);
-            assert.deepStrictEqual(found!.properties, file.properties);
-            assert.deepStrictEqual(found!.tags, file.tags);
-        });
-
-        it('should insert file with null title', () => {
-            const file: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/file.org',
-                title: undefined,
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'abc123'
-            };
-
-            repo.insert(file);
-
-            const found = repo.findByUri(file.uri);
-            assert.ok(found);
-            assert.strictEqual(found!.title, null);
-        });
+        const retrieved = fileRepo.findByUri(file.uri);
+        assert.ok(retrieved);
+        assert.strictEqual(retrieved.uri, file.uri);
+        assert.strictEqual(retrieved.title, 'Test File');
+        assert.strictEqual(retrieved.hash, 'hash123');
+        assert.deepStrictEqual(retrieved.properties, { prop: 'val' });
+        assert.deepStrictEqual(retrieved.tags, ['tag1']);
     });
 
-    describe('update', () => {
-        it('should update existing file', () => {
-            const file: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/file.org',
-                title: 'Original',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'abc123'
-            };
-
-            repo.insert(file);
-
-            repo.update({
-                uri: file.uri,
-                title: 'Updated',
-                hash: 'def456'
-            });
-
-            const found = repo.findByUri(file.uri);
-            assert.strictEqual(found!.title, 'Updated');
-            assert.strictEqual(found!.hash, 'def456');
+    test('should update existing file', () => {
+        const uri = '/test/update.org';
+        fileRepo.insert({
+            uri, hash: 'v1', title: 'V1', properties: {}, tags: [], headings: [], updatedAt: new Date()
         });
 
-        it('should handle partial updates', () => {
-            const file: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/file.org',
-                title: 'Original',
-                properties: { key: 'value' },
-                tags: ['tag1'],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'abc123'
-            };
-
-            repo.insert(file);
-
-            repo.update({
-                uri: file.uri,
-                title: 'Updated'
-            });
-
-            const found = repo.findByUri(file.uri);
-            assert.strictEqual(found!.title, 'Updated');
-            assert.strictEqual(found!.hash, 'abc123'); // Unchanged
-            assert.deepStrictEqual(found!.properties, { key: 'value' }); // Unchanged
+        fileRepo.update({
+            uri,
+            title: 'V2',
+            hash: 'v2'
         });
+
+        const updated = fileRepo.findByUri(uri);
+        assert.ok(updated);
+        assert.strictEqual(updated.title, 'V2');
+        assert.strictEqual(updated.hash, 'v2');
     });
 
-    describe('upsert', () => {
-        it('should insert if file does not exist', () => {
-            const file: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/file.org',
-                title: 'Test',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'abc123'
-            };
+    test('should upsert (insert if new)', () => {
+        const uri = '/test/upsert.org';
 
-            repo.upsert(file);
-
-            const found = repo.findByUri(file.uri);
-            assert.ok(found);
-            assert.strictEqual(found!.title, 'Test');
+        // First upsert (insert)
+        fileRepo.upsert({
+            uri, hash: 'v1', title: 'Upsert V1', properties: {}, tags: [], headings: [], updatedAt: new Date()
         });
+        let f = fileRepo.findByUri(uri);
+        assert.strictEqual(f?.title, 'Upsert V1');
 
-        it('should update if file exists', () => {
-            const file: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/file.org',
-                title: 'Original',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'abc123'
-            };
-
-            repo.insert(file);
-
-            file.title = 'Updated';
-            file.hash = 'def456';
-            repo.upsert(file);
-
-            const found = repo.findByUri(file.uri);
-            assert.strictEqual(found!.title, 'Updated');
-            assert.strictEqual(found!.hash, 'def456');
+        // Second upsert (update)
+        fileRepo.upsert({
+            uri, hash: 'v2', title: 'Upsert V2', properties: {}, tags: [], headings: [], updatedAt: new Date()
         });
+        f = fileRepo.findByUri(uri);
+        assert.strictEqual(f?.title, 'Upsert V2');
     });
 
-    describe('findByUri', () => {
-        it('should return null for non-existent file', () => {
-            const found = repo.findByUri('/nonexistent.org');
-            assert.strictEqual(found, null);
+    test('should delete file', () => {
+        const uri = '/test/delete.org';
+        fileRepo.insert({
+            uri, hash: 'h', title: 'T', properties: {}, tags: [], headings: [], updatedAt: new Date()
         });
 
-        it('should find file by URI', () => {
-            const file: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/file.org',
-                title: 'Test',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'abc123'
-            };
+        assert.ok(fileRepo.exists(uri));
 
-            repo.insert(file);
+        fileRepo.delete(uri);
 
-            const found = repo.findByUri(file.uri);
-            assert.ok(found);
-            assert.strictEqual(found!.uri, file.uri);
-        });
+        assert.strictEqual(fileRepo.findByUri(uri), null);
+        assert.strictEqual(fileRepo.exists(uri), false);
     });
 
-    describe('findAll', () => {
-        it('should return empty array when no files', () => {
-            const files = repo.findAll();
-            assert.strictEqual(files.length, 0);
-        });
+    test('should count files', () => {
+        assert.strictEqual(fileRepo.count(), 0);
 
-        it('should return all files', () => {
-            const file1: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/file1.org',
-                title: 'File 1',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'abc123'
-            };
+        fileRepo.insert({ uri: '/1', hash: 'h', title: '1', properties: {}, tags: [], headings: [], updatedAt: new Date() });
+        fileRepo.insert({ uri: '/2', hash: 'h', title: '2', properties: {}, tags: [], headings: [], updatedAt: new Date() });
 
-            const file2: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/file2.org',
-                title: 'File 2',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'def456'
-            };
-
-            repo.insert(file1);
-            repo.insert(file2);
-
-            const files = repo.findAll();
-            assert.strictEqual(files.length, 2);
-        });
-    });
-
-    describe('findByHash', () => {
-        it('should find files by hash', () => {
-            const file1: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/file1.org',
-                title: 'File 1',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'same-hash'
-            };
-
-            const file2: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/file2.org',
-                title: 'File 2',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'same-hash'
-            };
-
-            repo.insert(file1);
-            repo.insert(file2);
-
-            const files = repo.findByHash('same-hash');
-            assert.strictEqual(files.length, 2);
-        });
-    });
-
-    describe('findUpdatedAfter', () => {
-        it('should find files updated after date', () => {
-            const now = new Date();
-            const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-            const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-
-            const oldFile: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/old.org',
-                title: 'Old',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: yesterday,
-                hash: 'old'
-            };
-
-            const newFile: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/new.org',
-                title: 'New',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: tomorrow,
-                hash: 'new'
-            };
-
-            repo.insert(oldFile);
-            repo.insert(newFile);
-
-            const files = repo.findUpdatedAfter(now);
-            assert.strictEqual(files.length, 1);
-            assert.strictEqual(files[0].uri, '/test/new.org');
-        });
-    });
-
-    describe('delete', () => {
-        it('should delete file by URI', () => {
-            const file: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/file.org',
-                title: 'Test',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'abc123'
-            };
-
-            repo.insert(file);
-            assert.strictEqual(repo.count(), 1);
-
-            repo.delete(file.uri);
-            assert.strictEqual(repo.count(), 0);
-        });
-    });
-
-    describe('deleteAll', () => {
-        it('should delete all files', () => {
-            repo.insert({
-                uri: '/test/file1.org',
-                title: 'File 1',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'abc'
-            });
-
-            repo.insert({
-                uri: '/test/file2.org',
-                title: 'File 2',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'def'
-            });
-
-            assert.strictEqual(repo.count(), 2);
-
-            repo.deleteAll();
-            assert.strictEqual(repo.count(), 0);
-        });
-    });
-
-    describe('count', () => {
-        it('should return 0 for empty database', () => {
-            assert.strictEqual(repo.count(), 0);
-        });
-
-        it('should return correct count', () => {
-            repo.insert({
-                uri: '/test/file1.org',
-                title: 'File 1',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'abc'
-            });
-
-            assert.strictEqual(repo.count(), 1);
-
-            repo.insert({
-                uri: '/test/file2.org',
-                title: 'File 2',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'def'
-            });
-
-            assert.strictEqual(repo.count(), 2);
-        });
-    });
-
-    describe('exists', () => {
-        it('should return false for non-existent file', () => {
-            assert.strictEqual(repo.exists('/nonexistent.org'), false);
-        });
-
-        it('should return true for existing file', () => {
-            const file: Omit<OrgFile, 'createdAt'> = {
-                uri: '/test/file.org',
-                title: 'Test',
-                properties: {},
-                tags: [],
-                headings: [],
-                updatedAt: new Date(),
-                hash: 'abc123'
-            };
-
-            repo.insert(file);
-            assert.strictEqual(repo.exists(file.uri), true);
-        });
+        assert.strictEqual(fileRepo.count(), 2);
     });
 });

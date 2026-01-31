@@ -20,7 +20,7 @@ suite('HeadingCommands Integration Test Suite', () => {
         return { doc, editor };
     }
 
-    async function wait(ms: number = 100) {
+    async function wait(ms: number = 1000) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 

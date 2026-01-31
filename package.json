@@ -193,6 +193,36 @@
         "title": "VOrg: Ctrl+C Ctrl+C (Context Action)",
         "icon": "$(check)",
         "enablement": "editorLangId == 'org'"
+      },
+      {
+        "command": "vorg.setPriorityUp",
+        "title": "VOrg: Set Priority Up",
+        "icon": "$(chevron-up)",
+        "enablement": "editorLangId == 'org'"
+      },
+      {
+        "command": "vorg.setPriorityDown",
+        "title": "VOrg: Set Priority Down",
+        "icon": "$(chevron-down)",
+        "enablement": "editorLangId == 'org'"
+      },
+      {
+        "command": "vorg.setTags",
+        "title": "VOrg: Set Tags",
+        "icon": "$(tag)",
+        "enablement": "editorLangId == 'org'"
+      },
+      {
+        "command": "vorg.setScheduled",
+        "title": "VOrg: Set Scheduled",
+        "icon": "$(calendar)",
+        "enablement": "editorLangId == 'org'"
+      },
+      {
+        "command": "vorg.setDeadline",
+        "title": "VOrg: Set Deadline",
+        "icon": "$(calendar)",
+        "enablement": "editorLangId == 'org'"
       }
     ],
     "menus": {
@@ -322,11 +352,39 @@
         "key": "ctrl+c ctrl+c",
         "mac": "ctrl+c ctrl+c",
         "when": "editorLangId == org"
+      },
+      {
+        "command": "vorg.setPriorityUp",
+        "key": "shift+up",
+        "when": "editorTextFocus && editorLangId == 'org' && !editorReadonly"
+      },
+      {
+        "command": "vorg.setPriorityDown",
+        "key": "shift+down",
+        "when": "editorTextFocus && editorLangId == 'org' && !editorReadonly"
+      },
+      {
+        "command": "vorg.setTags",
+        "key": "ctrl+c ctrl+q",
+        "mac": "ctrl+c ctrl+q",
+        "when": "editorTextFocus && editorLangId == 'org' && !editorReadonly"
+      },
+      {
+        "command": "vorg.setScheduled",
+        "key": "ctrl+c ctrl+s",
+        "mac": "ctrl+c ctrl+s",
+        "when": "editorTextFocus && editorLangId == 'org' && !editorReadonly"
+      },
+      {
+        "command": "vorg.setDeadline",
+        "key": "ctrl+c ctrl+d",
+        "mac": "ctrl+c ctrl+d",
+        "when": "editorTextFocus && editorLangId == 'org' && !editorReadonly"
       }
     ]
   },
   "scripts": {
-    "vscode:prepublish": "webpack --mode production --devtool hidden-source-map",
+    "vscode:prepublish": "webpack --mode production --devtool hidden-source-map && node copy-resources.js",
     "compile": "webpack --mode development",
     "watch": "webpack --mode development --watch",
     "compile-tests": "tsc -p ./",
@@ -334,20 +392,21 @@
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "test:integration": "node ./out/test/runTest.js",
-    "test:unit": "npm run compile-tests && mocha --ui tdd --exclude \"out/test/unit/orgCompletionProviderContent.test.js\" \"out/test/unit/*.test.js\" && mocha \"out/test/unit/database/*.test.js\"",
-    "package": "webpack --mode production --devtool hidden-source-map && vsce package --no-dependencies",
+    "test:unit": "npm run compile-tests && mocha --ui tdd --exclude \"out/test/unit/orgCompletionProviderContent.test.js\" \"out/test/unit/*.test.js\" \"out/test/unit/database/*.test.js\"",
+    "package": "vsce package --no-dependencies",
     "docs": "typedoc src --out docs/api",
     "docs:serve": "pnpm run docs && open docs/api/index.html"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
     "@types/glob": "^7.1.3",
     "@types/minimatch": "^6.0.0",
     "@types/mocha": "^8.2.2",
     "@types/node": "14.x",
+    "@types/sql.js": "^1.4.9",
     "@types/vscode": "^1.60.0",
     "@typescript-eslint/eslint-plugin": "^4.26.0",
     "@typescript-eslint/parser": "^4.26.0",
+    "@vscode/test-electron": "^2.3.8",
     "@vscode/vsce": "^3.6.2",
     "eslint": "^7.27.0",
     "glob": "^7.1.7",
@@ -356,14 +415,13 @@
     "ts-loader": "^9.5.4",
     "typedoc": "^0.25.0",
     "typescript": "^4.3.2",
-    "@vscode/test-electron": "^2.3.8",
     "webpack": "^5.102.1",
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
-    "better-sqlite3": "^12.6.2",
     "pinyin-pro": "^3.27.0",
     "rehype-stringify": "^9.0.3",
+    "sql.js": "^1.13.0",
     "unified": "^11.0.5",
     "uniorg": "^1.3.0",
     "uniorg-parse": "^3.2.0",

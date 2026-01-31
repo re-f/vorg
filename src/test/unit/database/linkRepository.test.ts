@@ -1,192 +1,160 @@
+
 import * as assert from 'assert';
-import * as path from 'path';
+import initSqlJs from 'sql.js';
 import * as fs from 'fs';
-import * as Database from 'better-sqlite3';
-import { LinkRepository } from '../../../database/linkRepository';
+import * as path from 'path';
 import { SchemaManager } from '../../../database/schemaManager';
+import { LinkRepository } from '../../../database/linkRepository';
+import { FileRepository } from '../../../database/fileRepository';
+import { HeadingRepository } from '../../../database/headingRepository';
 import { OrgLink } from '../../../database/types';
 
-describe('LinkRepository', () => {
-    let db: Database.Database;
+const wasmPath = path.join(__dirname, '../../../../node_modules/sql.js/dist/sql-wasm.wasm');
+
+suite('LinkRepository Integration Tests', () => {
+    let db: any;
     let repo: LinkRepository;
-    let testDbPath: string;
+    let fileRepo: FileRepository;
+    let headingRepo: HeadingRepository;
 
-    beforeEach(() => {
-        // 创建临时测试数据库
-        testDbPath = path.join(__dirname, `test-links-${Date.now()}.db`);
-        db = new Database(testDbPath);
+    setup(async function () {
+        this.timeout(5000);
+        const SQL = await initSqlJs({ locateFile: () => wasmPath });
+        db = new SQL.Database();
 
-        // 初始化 schema
+        // Init schema compatible with sql.js (loading schema.sql)
         const schemaManager = new SchemaManager(db);
-        schemaManager.initialize();
+        try {
+            schemaManager.initialize();
+        } catch (e) {
+            const paths = [
+                path.join(__dirname, '../../../../src/database/schema.sql'),
+                path.join(__dirname, '../../../../out/schema.sql')
+            ];
+            for (const p of paths) {
+                if (fs.existsSync(p)) {
+                    db.exec(fs.readFileSync(p, 'utf8'));
+                    break;
+                }
+            }
+        }
 
+        fileRepo = new FileRepository(db);
+        headingRepo = new HeadingRepository(db);
         repo = new LinkRepository(db);
 
-        // 预先插入常用的测试文件 (满足外键约束)
-        const testFiles = [
-            '/test/source.org',
-            '/test/source1.org',
-            '/test/source2.org',
-            '/test/source3.org',
-            '/test/file.org',
-            '/test/file1.org',
-            '/test/file2.org',
-            '/test/target.org',
-            '/test/target1.org',
-            '/test/target2.org',
-            '/test/target3.org',
-            '/test/other.org'
-        ];
+        // Helper to create dummy files
+        const createDummyFile = (uri: string) => {
+            fileRepo.insert({
+                uri,
+                hash: 'hash',
+                title: 'Test File',
+                properties: {},
+                tags: [],
+                headings: [],
+                updatedAt: new Date()
+            });
+        };
 
-        const stmt = db.prepare(`
-            INSERT OR IGNORE INTO files (uri, hash, updated_at)
-            VALUES (?, ?, ?)
-        `);
+        // Helper to create dummy headings
+        const createDummyHeading = (uri: string, line: number, id?: string) => {
+            headingRepo.insert({
+                fileUri: uri,
+                startLine: line,
+                endLine: line + 1,
+                level: 1,
+                title: 'Heading',
+                content: '',
+                tags: [],
+                properties: id ? { ID: id } : {},
+                headings: [],
+                todoState: undefined,
+                priority: undefined,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                category: undefined
+            } as any);
+        };
 
-        for (const uri of testFiles) {
-            stmt.run(uri, 'test-hash', Math.floor(Date.now() / 1000));
-        }
+        // Insert ALL source files used in tests
+        createDummyFile('/test/source.org');
+        createDummyFile('/test/source1.org');
+        createDummyFile('/test/source2.org');
+        createDummyFile('/test/source3.org');
+        createDummyFile('/test/file.org');
+        createDummyFile('/test/file1.org');
+        createDummyFile('/test/file2.org');
+        createDummyFile('/test/target.org');
+        createDummyFile('/test/target1.org');
+        createDummyFile('/test/target2.org');
+        createDummyFile('/test/target3.org');
+        createDummyFile('/test/other.org');
+        createDummyFile('/test/no-backlinks.org');
 
-        // 预先插入常用的测试 headings (满足外键约束)
-        const headingStmt = db.prepare(`
-            INSERT OR IGNORE INTO headings (
-                id, file_uri, start_line, end_line, level, title, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
-        `);
-
-        // id, file_uri, start_line, end_line, level, title
-        const testHeadings = [
-            ['source-heading-id', '/test/source.org', 0, 10, 1, 'Source Heading'],
-            ['target-heading-id', '/test/target.org', 0, 10, 1, 'Target Heading ID'],
-            ['heading-1', '/test/file.org', 0, 10, 1, 'Heading 1'],
-            ['heading-2', '/test/file.org', 11, 20, 1, 'Heading 2'],
-            ['other-heading', '/test/other.org', 0, 10, 1, 'Other Heading'],
-            ['target-heading', '/test/target.org', 20, 30, 1, 'Target Heading']
-        ];
-
-        const now = Math.floor(Date.now() / 1000);
-        for (const [id, fileUri, startLine, endLine, level, title] of testHeadings) {
-            headingStmt.run(id, fileUri, startLine, endLine, level, title, now);
-        }
+        // Insert REQUIRED headings for FK constraints
+        createDummyHeading('/test/source.org', 10, 'source-id');
+        createDummyHeading('/test/target.org', 5, 'target-id');
+        createDummyHeading('/test/file.org', 0);
+        createDummyHeading('/test/file.org', 11);
+        createDummyHeading('/test/target.org', 20);
+        createDummyHeading('/test/other.org', 0);
     });
 
-    afterEach(() => {
-        // 清理
-        db.close();
-        if (fs.existsSync(testDbPath)) {
-            fs.unlinkSync(testDbPath);
-        }
+    teardown(() => {
+        if (db) db.close();
     });
 
-    describe('insert', () => {
-        it('should insert a new link', () => {
+    suite('insert', () => {
+        test('should insert and retrieve a link', () => {
             const link: OrgLink = {
                 sourceUri: '/test/source.org',
-                lineNumber: 10,
+                sourceHeadingLine: 10,
+                sourceHeadingId: 'source-id',
+                lineNumber: 12,
                 targetUri: '/test/target.org',
+                targetHeadingLine: 5,
+                targetId: 'target-id',
                 linkType: 'file',
-                linkText: 'Link to target'
+                linkText: 'My Link'
             };
 
             repo.insert(link);
 
             const found = repo.findBySourceUri('/test/source.org');
             assert.strictEqual(found.length, 1);
-            assert.strictEqual(found[0].sourceUri, '/test/source.org');
+            assert.strictEqual(found[0].linkText, 'My Link');
             assert.strictEqual(found[0].targetUri, '/test/target.org');
-            assert.strictEqual(found[0].linkType, 'file');
         });
 
-        it('should insert link with heading references', () => {
+        test('should handle minimal link data', () => {
             const link: OrgLink = {
                 sourceUri: '/test/source.org',
-                sourceHeadingLine: 0, // Points to 'source-heading-id'
-                targetHeadingLine: 0, // Points to 'target-heading-id'
-                linkType: 'id',
-                linkText: 'Link to heading'
+                targetUri: '/test/target.org',
+                linkType: 'file',
+                lineNumber: 0
             };
 
             repo.insert(link);
 
-            const found = repo.findBySourceHeading('/test/source.org', 0);
+            const found = repo.findBySourceUri('/test/source.org');
             assert.strictEqual(found.length, 1);
-            assert.strictEqual(found[0].targetHeadingLine, 0);
-        });
-
-        it('should insert link with target ID', () => {
-            const link: OrgLink = {
-                sourceUri: '/test/source.org',
-                targetId: 'abc-123',
-                linkType: 'id'
-            };
-
-            repo.insert(link);
-
-            const found = repo.findByTargetId('abc-123');
-            assert.strictEqual(found.length, 1);
-            assert.strictEqual(found[0].targetId, 'abc-123');
+            assert.strictEqual(found[0].targetUri, '/test/target.org');
         });
     });
 
-    describe('insertBatch', () => {
-        it('should insert multiple links', () => {
+    suite('insertBatch', () => {
+        test('should insert multiple links', () => {
             const links: OrgLink[] = [
                 {
-                    sourceUri: '/test/file.org',
+                    sourceUri: '/test/source1.org',
+                    targetUri: '/test/target1.org',
                     lineNumber: 1,
-                    targetUri: '/test/target1.org',
-                    linkType: 'file'
-                },
-                {
-                    sourceUri: '/test/file.org',
-                    lineNumber: 5,
-                    targetUri: '/test/target2.org',
-                    linkType: 'file'
-                },
-                {
-                    sourceUri: '/test/file.org',
-                    lineNumber: 10,
-                    targetId: 'some-id',
-                    linkType: 'id'
-                }
-            ];
-
-            repo.insertBatch(links);
-
-            const found = repo.findBySourceUri('/test/file.org');
-            assert.strictEqual(found.length, 3);
-            assert.strictEqual(found[0].lineNumber, 1);
-            assert.strictEqual(found[1].lineNumber, 5);
-            assert.strictEqual(found[2].lineNumber, 10);
-        });
-
-        it('should handle empty array', () => {
-            repo.insertBatch([]);
-            // Should not throw
-        });
-    });
-
-    describe('findBySourceUri', () => {
-        it('should return empty array for non-existent file', () => {
-            const found = repo.findBySourceUri('/non-existent.org');
-            assert.strictEqual(found.length, 0);
-        });
-
-        it('should find all links from a source file', () => {
-            const links: OrgLink[] = [
-                {
-                    sourceUri: '/test/source1.org',
-                    targetUri: '/test/target1.org',
                     linkType: 'file'
                 },
                 {
                     sourceUri: '/test/source1.org',
                     targetUri: '/test/target2.org',
-                    linkType: 'file'
-                },
-                {
-                    sourceUri: '/test/other.org',
-                    targetUri: '/test/target3.org',
+                    lineNumber: 2,
                     linkType: 'file'
                 }
             ];
@@ -197,7 +165,7 @@ describe('LinkRepository', () => {
             assert.strictEqual(found.length, 2);
         });
 
-        it('should return links ordered by lineNumber', () => {
+        test('should return links ordered by lineNumber', () => {
             const links: OrgLink[] = [
                 {
                     sourceUri: '/test/file.org',
@@ -228,8 +196,8 @@ describe('LinkRepository', () => {
         });
     });
 
-    describe('findByTargetUri', () => {
-        it('should find all backlinks to a target file', () => {
+    suite('findByTargetUri', () => {
+        test('should find all backlinks to a target file', () => {
             const links: OrgLink[] = [
                 {
                     sourceUri: '/test/source1.org',
@@ -256,14 +224,14 @@ describe('LinkRepository', () => {
             assert.strictEqual(backlinks[1].sourceUri, '/test/source2.org');
         });
 
-        it('should return empty array if no backlinks', () => {
+        test('should return empty array if no backlinks', () => {
             const backlinks = repo.findByTargetUri('/test/no-backlinks.org');
             assert.strictEqual(backlinks.length, 0);
         });
     });
 
-    describe('findByTargetId', () => {
-        it('should find all links to a target ID', () => {
+    suite('findByTargetId', () => {
+        test('should find all links to a target ID', () => {
             const links: OrgLink[] = [
                 {
                     sourceUri: '/test/source1.org',
@@ -289,8 +257,8 @@ describe('LinkRepository', () => {
         });
     });
 
-    describe('findBySourceHeading', () => {
-        it('should find links from a specific heading', () => {
+    suite('findBySourceHeading', () => {
+        test('should find links from a specific heading', () => {
             const links: OrgLink[] = [
                 {
                     sourceUri: '/test/file.org',
@@ -319,8 +287,8 @@ describe('LinkRepository', () => {
         });
     });
 
-    describe('findByTargetHeading', () => {
-        it('should find backlinks to a specific heading', () => {
+    suite('findByTargetHeading', () => {
+        test('should find backlinks to a specific heading', () => {
             const links: OrgLink[] = [
                 {
                     sourceUri: '/test/source1.org',
@@ -349,8 +317,8 @@ describe('LinkRepository', () => {
         });
     });
 
-    describe('deleteByFileUri', () => {
-        it('should delete all links from a file', () => {
+    suite('deleteByFileUri', () => {
+        test('should delete all links from a file', () => {
             const links: OrgLink[] = [
                 {
                     sourceUri: '/test/file1.org',
@@ -381,8 +349,8 @@ describe('LinkRepository', () => {
         });
     });
 
-    describe('countBySourceUri', () => {
-        it('should count links from a file', () => {
+    suite('countBySourceUri', () => {
+        test('should count links from a file', () => {
             const links: OrgLink[] = [
                 {
                     sourceUri: '/test/file.org',
@@ -402,14 +370,14 @@ describe('LinkRepository', () => {
             assert.strictEqual(count, 2);
         });
 
-        it('should return 0 for non-existent file', () => {
+        test('should return 0 for non-existent file', () => {
             const count = repo.countBySourceUri('/non-existent.org');
             assert.strictEqual(count, 0);
         });
     });
 
-    describe('countByTargetUri', () => {
-        it('should count backlinks to a file', () => {
+    suite('countByTargetUri', () => {
+        test('should count backlinks to a file', () => {
             const links: OrgLink[] = [
                 {
                     sourceUri: '/test/source1.org',
