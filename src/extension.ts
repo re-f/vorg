@@ -20,6 +20,7 @@
 import * as vscode from 'vscode';
 import { OrgOutlineProvider } from './outline/orgOutlineProvider';
 import { OrgWorkspaceSymbolProvider } from './outline/orgWorkspaceSymbolProvider';
+import { OrgPerspectivesProvider, PerspectiveItem, parseLabelAndDescription } from './outline/orgPerspectivesProvider';
 import { OrgLinkProvider } from './links/orgLinkProvider';
 import { OrgFoldingProvider } from './folding/orgFoldingProvider';
 import { PreviewManager } from './preview/previewManager';
@@ -265,6 +266,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
     await DatabaseConnection.getInstance().initialize(dbPath);
     Logger.info(`Database initialized successfully at: ${dbPath}`);
+    // 设置数据库准备就绪上下文，显示透视视图
+    vscode.commands.executeCommand('setContext', 'vorg:databaseReady', true);
 
     const updateService = new IncrementalUpdateService();
     // 异步启动，不阻塞核心功能激活
@@ -295,6 +298,80 @@ export async function activate(context: vscode.ExtensionContext) {
   const workspaceSymbolProvider = new OrgWorkspaceSymbolProvider();
   context.subscriptions.push(
     vscode.languages.registerWorkspaceSymbolProvider(workspaceSymbolProvider)
+  );
+
+  // 注册透视视图提供者
+  const perspectivesProvider = new OrgPerspectivesProvider();
+  context.subscriptions.push(
+    vscode.window.registerTreeDataProvider('vorg-perspectives', perspectivesProvider)
+  );
+
+  // 注册透视视图命令 (目前为占位符)
+  context.subscriptions.push(
+    vscode.commands.registerCommand('vorg.perspectives.refresh', () => {
+      perspectivesProvider.refresh();
+      vscode.window.showInformationMessage('Perspectives refreshed.');
+    }),
+    vscode.commands.registerCommand('vorg.perspectives.search', () => {
+      vscode.window.showInputBox({
+        prompt: 'Search headings...',
+        placeHolder: 'Type keywords like "docs" or "fix"'
+      }).then(value => {
+        if (value !== undefined) {
+          perspectivesProvider.setFilter(value);
+        }
+      });
+    }),
+    vscode.commands.registerCommand('vorg.perspectives.save', () => {
+      vscode.window.showInputBox({ prompt: 'Enter a name for this perspective' }).then(name => {
+        if (name) {
+          vscode.window.showInformationMessage(`Perspective "${name}" saved (Placeholder).`);
+        }
+      });
+    }),
+    vscode.commands.registerCommand('vorg.perspectives.edit', async (item: PerspectiveItem) => {
+      // 第一步：修改查询 (S-Expression)
+      const newQuery = await vscode.window.showInputBox({
+        prompt: 'Step 1/2: Edit Query (S-Expression, e.g. (group-by file ...))',
+        value: item.query,
+        ignoreFocusOut: true
+      });
+
+      if (newQuery === undefined) return;
+
+      // 第二步：修改标题和说明（合并显示）
+      const currentLabelDesc = `${item.label} # ${item.description || ''}`;
+      const newLabelDesc = await vscode.window.showInputBox({
+        prompt: 'Step 2/2: Edit Title # Description',
+        value: currentLabelDesc,
+        ignoreFocusOut: true
+      });
+
+      if (newLabelDesc === undefined) return;
+
+      const { label, description } = parseLabelAndDescription(newLabelDesc);
+
+      // 更新内存中的 mock 数据并刷新 (演示用)
+      if (item instanceof PerspectiveItem) {
+        (item as any).query = newQuery;
+        (item as any).label = label;
+        (item as any).description = description;
+        (item as any).tooltip = `Query: ${newQuery}${description ? '\n' + description : ''}`;
+        perspectivesProvider.refresh();
+      }
+
+      vscode.window.showInformationMessage(`Perspective updated (Mock).`);
+    }),
+    vscode.commands.registerCommand('vorg.perspectives.delete', async (item: vscode.TreeItem) => {
+      const answer = await vscode.window.showWarningMessage(
+        `Are you sure you want to delete "${item.label}"?`,
+        'Yes', 'No'
+      );
+      if (answer === 'Yes') {
+        vscode.window.showInformationMessage(`Deleted "${item.label}" (Placeholder).`);
+        perspectivesProvider.refresh();
+      }
+    })
   );
 
   // 注册链接提供者

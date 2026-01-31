@@ -98,6 +98,25 @@
         "path": "./syntaxes/org.tmLanguage.json"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vorg-explorer",
+          "title": "VOrg",
+          "icon": "icon.png"
+        }
+      ]
+    },
+    "views": {
+      "vorg-explorer": [
+        {
+          "id": "vorg-perspectives",
+          "name": "Perspectives",
+          "when": "vorg:databaseReady",
+          "icon": "$(compass)"
+        }
+      ]
+    },
     "codeLensProviders": [
       {
         "language": "org",
@@ -223,6 +242,31 @@
         "title": "VOrg: Set Deadline",
         "icon": "$(calendar)",
         "enablement": "editorLangId == 'org'"
+      },
+      {
+        "command": "vorg.perspectives.refresh",
+        "title": "Refresh Perspectives",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "vorg.perspectives.search",
+        "title": "Search/Filter",
+        "icon": "$(search)"
+      },
+      {
+        "command": "vorg.perspectives.save",
+        "title": "Save Current View",
+        "icon": "$(save)"
+      },
+      {
+        "command": "vorg.perspectives.edit",
+        "title": "Edit Perspective",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "vorg.perspectives.delete",
+        "title": "Delete Perspective",
+        "icon": "$(trash)"
       }
     ],
     "menus": {
@@ -241,6 +285,35 @@
           "when": "editorLangId == 'org'",
           "command": "vorg.exportPreview",
           "group": "navigation"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "vorg.perspectives.search",
+          "when": "view == vorg-perspectives",
+          "group": "navigation@1"
+        },
+        {
+          "command": "vorg.perspectives.save",
+          "when": "view == vorg-perspectives",
+          "group": "navigation@2"
+        },
+        {
+          "command": "vorg.perspectives.refresh",
+          "when": "view == vorg-perspectives",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "vorg.perspectives.edit",
+          "when": "view == vorg-perspectives && viewItem == perspective",
+          "group": "inline"
+        },
+        {
+          "command": "vorg.perspectives.delete",
+          "when": "view == vorg-perspectives && viewItem == perspective",
+          "group": "1_modification"
         }
       ]
     },
