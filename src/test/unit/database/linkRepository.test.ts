@@ -21,6 +21,53 @@ describe('LinkRepository', () => {
         schemaManager.initialize();
 
         repo = new LinkRepository(db);
+
+        // 预先插入常用的测试文件 (满足外键约束)
+        const testFiles = [
+            '/test/source.org',
+            '/test/file.org',
+            '/test/file1.org',
+            '/test/file2.org',
+            '/test/source.org', // Added missing source.org
+            '/test/source1.org',
+            '/test/source2.org',
+            '/test/source3.org',
+            '/test/target.org',
+            '/test/target1.org',
+            '/test/target2.org',
+            '/test/target3.org',
+            '/test/other.org'
+        ];
+
+        const stmt = db.prepare(`
+            INSERT OR IGNORE INTO files (uri, hash, updated_at)
+            VALUES (?, ?, ?)
+        `);
+
+        for (const uri of testFiles) {
+            stmt.run(uri, 'test-hash', Math.floor(Date.now() / 1000));
+        }
+
+        // 预先插入常用的测试 headings (满足外键约束)
+        const headingStmt = db.prepare(`
+            INSERT OR IGNORE INTO headings (
+                id, file_uri, level, title, start_line, end_line, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        const testHeadings = [
+            ['source-heading-id', '/test/source.org', 1, 'Source Heading', 0, 10],
+            ['target-heading-id', '/test/target.org', 1, 'Target Heading', 0, 10],
+            ['heading-1', '/test/file.org', 1, 'Heading 1', 0, 10],
+            ['heading-2', '/test/file.org', 1, 'Heading 2', 11, 20],
+            ['other-heading', '/test/other.org', 1, 'Other Heading', 0, 10],
+            ['target-heading', '/test/target.org', 1, 'Target Heading', 0, 10]
+        ];
+
+        const now = Math.floor(Date.now() / 1000);
+        for (const [id, fileUri, level, title, startLine, endLine] of testHeadings) {
+            headingStmt.run(id, fileUri, level, title, startLine, endLine, now);
+        }
     });
 
     afterEach(() => {
@@ -30,6 +77,14 @@ describe('LinkRepository', () => {
             fs.unlinkSync(testDbPath);
         }
     });
+
+    // Helper: 插入测试用的 file 记录 (满足外键约束)
+    function insertTestFile(uri: string) {
+        db.prepare(`
+            INSERT OR IGNORE INTO files (uri, hash, updated_at)
+            VALUES (?, ?, ?)
+        `).run(uri, 'test-hash', Math.floor(Date.now() / 1000));
+    }
 
     describe('insert', () => {
         it('should insert a new link', () => {

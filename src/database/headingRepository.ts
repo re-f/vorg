@@ -16,13 +16,13 @@ export class HeadingRepository {
     insert(heading: OrgHeading): void {
         const stmt = this.db.prepare(`
       INSERT INTO headings (
-        file_uri, start_line, id, level, title,
+        file_uri, start_line, end_line, id, level, title,
         todo_state, todo_category, priority,
         scheduled, deadline, closed,
         parent_id, content,
         created_at, updated_at
       ) VALUES (
-        @fileUri, @startLine, @id, @level, @title,
+        @fileUri, @startLine, @endLine, @id, @level, @title,
         @todoState, @todoCategory, @priority,
         @scheduled, @deadline, @closed,
         @parentId, @content,
@@ -33,6 +33,7 @@ export class HeadingRepository {
         stmt.run({
             fileUri: heading.fileUri,
             startLine: heading.startLine,
+            endLine: heading.endLine,
             id: heading.id,
             level: heading.level,
             title: heading.title,
@@ -50,7 +51,10 @@ export class HeadingRepository {
 
         // 插入标签关联
         if (heading.tags && heading.tags.length > 0) {
-            this.insertTags(heading.fileUri, heading.startLine, heading.tags);
+            const tagStmt = this.db.prepare('INSERT INTO heading_tags (heading_id, tag) VALUES (?, ?)');
+            for (const tag of heading.tags) {
+                tagStmt.run(heading.id, tag);
+            }
         }
     }
 
@@ -64,13 +68,13 @@ export class HeadingRepository {
 
         const insertHeading = this.db.prepare(`
       INSERT INTO headings (
-        file_uri, start_line, id, level, title,
+        file_uri, start_line, end_line, id, level, title,
         todo_state, todo_category, priority,
         scheduled, deadline, closed,
         parent_id, content,
         created_at, updated_at
       ) VALUES (
-        @fileUri, @startLine, @id, @level, @title,
+        @fileUri, @startLine, @endLine, @id, @level, @title,
         @todoState, @todoCategory, @priority,
         @scheduled, @deadline, @closed,
         @parentId, @content,
@@ -79,8 +83,8 @@ export class HeadingRepository {
     `);
 
         const insertTag = this.db.prepare(`
-      INSERT INTO heading_tags (file_uri, start_line, tag)
-      VALUES (?, ?, ?)
+      INSERT INTO heading_tags (heading_id, tag)
+      VALUES (?, ?)
     `);
 
         // 使用事务批量插入
@@ -89,6 +93,7 @@ export class HeadingRepository {
                 insertHeading.run({
                     fileUri: heading.fileUri,
                     startLine: heading.startLine,
+                    endLine: heading.endLine,
                     id: heading.id,
                     level: heading.level,
                     title: heading.title,
@@ -107,7 +112,7 @@ export class HeadingRepository {
                 // 插入标签
                 if (heading.tags && heading.tags.length > 0) {
                     for (const tag of heading.tags) {
-                        insertTag.run(heading.fileUri, heading.startLine, tag);
+                        insertTag.run(heading.id, tag);
                     }
                 }
             }
@@ -163,7 +168,7 @@ export class HeadingRepository {
     findByTag(tag: string): OrgHeading[] {
         const rows = this.db.prepare(`
       SELECT h.* FROM headings h
-      INNER JOIN heading_tags ht ON h.file_uri = ht.file_uri AND h.start_line = ht.start_line
+      INNER JOIN heading_tags ht ON h.id = ht.heading_id
       WHERE ht.tag = ?
       ORDER BY h.file_uri, h.start_line
     `).all(tag);
@@ -209,7 +214,7 @@ export class HeadingRepository {
     deleteByFileUri(uri: string): void {
         // 先删除标签关联 (由于外键约束)
         this.db.prepare(`
-      DELETE FROM heading_tags WHERE file_uri = ?
+      DELETE FROM heading_tags WHERE heading_id IN (SELECT id FROM headings WHERE file_uri = ?)
     `).run(uri);
 
         // 删除 headings
@@ -230,28 +235,14 @@ export class HeadingRepository {
     }
 
     /**
-     * 私有: 插入标签关联
-     */
-    private insertTags(fileUri: string, startLine: number, tags: string[]): void {
-        const stmt = this.db.prepare(`
-      INSERT INTO heading_tags (file_uri, start_line, tag)
-      VALUES (?, ?, ?)
-    `);
-
-        for (const tag of tags) {
-            stmt.run(fileUri, startLine, tag);
-        }
-    }
-
-    /**
      * 私有: 查询 heading 的标签
      */
-    private getTags(fileUri: string, startLine: number): string[] {
+    private getTags(headingId: string): string[] {
         const rows = this.db.prepare(`
       SELECT tag FROM heading_tags 
-      WHERE file_uri = ? AND start_line = ?
+      WHERE heading_id = ?
       ORDER BY tag
-    `).all(fileUri, startLine) as Array<{ tag: string }>;
+    `).all(headingId) as Array<{ tag: string }>;
 
         return rows.map(row => row.tag);
     }
@@ -260,7 +251,7 @@ export class HeadingRepository {
      * 私有: 将数据库行转换为 OrgHeading
      */
     private rowToHeading(row: any): OrgHeading {
-        const tags = this.getTags(row.file_uri, row.start_line);
+        const tags = this.getTags(row.id);
 
         return {
             id: row.id,

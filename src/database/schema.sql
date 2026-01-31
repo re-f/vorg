@@ -113,6 +113,7 @@ CREATE TABLE IF NOT EXISTS links (
   -- Target information
   target_uri TEXT,                   -- Target file (for file links)
   target_heading_id TEXT,            -- Target heading (for id/heading links)
+  target_id TEXT,                    -- Target ID (for id: links)
   
   -- Link metadata
   link_type TEXT NOT NULL,           -- Type: file, id, heading, http, https
@@ -133,6 +134,7 @@ CREATE INDEX IF NOT EXISTS idx_links_source_uri ON links(source_uri);
 CREATE INDEX IF NOT EXISTS idx_links_source_heading_id ON links(source_heading_id);
 CREATE INDEX IF NOT EXISTS idx_links_target_uri ON links(target_uri);
 CREATE INDEX IF NOT EXISTS idx_links_target_heading_id ON links(target_heading_id);
+CREATE INDEX IF NOT EXISTS idx_links_target_id ON links(target_id);
 CREATE INDEX IF NOT EXISTS idx_links_link_type ON links(link_type);
 
 -- Composite index for backlink queries

@@ -92,22 +92,31 @@ pnpm run test
 
 ```
 src/test/
-├── unit/                          # 单元测试
+├── unit/                          # 单元测试（纯 Node.js 环境）
 │   ├── README.md                  # 单元测试说明
 │   ├── contextAnalyzer.test.ts    # ✅ 上下文识别测试
-│   ├── headingParser.test.ts      # ✅ 标题解析测试
+│   ├── headingParser.test.ts      # ⏳ 标题解析测试（依赖 TodoKeywordManager）
 │   ├── listParser.test.ts         # ✅ 列表解析测试
 │   ├── propertyParser.test.ts     # ✅ Property 解析测试
 │   ├── tableParser.test.ts        # ✅ 表格解析测试
 │   ├── linkParser.test.ts         # ✅ 链接解析测试
-│   ├── unitTestRunner.ts          # 测试运行器
-│   ├── vscode-mock.ts             # VS Code API Mock
+│   ├── listRenumber.test.ts       # ✅ 列表重新编号测试
+│   ├── listSplit.test.ts          # ✅ 列表分割测试
+│   ├── orgCompletionProvider.test.ts        # ⏳ 自动补全测试（依赖 vscode）
+│   ├── orgCompletionProviderContent.test.ts # ⏳ 自动补全内容测试（依赖 vscode）
+│   ├── orgHeadlineParser.test.ts  # ⏳ 标题解析测试（依赖 vscode）
 │   └── run-unit-tests.sh          # 测试运行脚本
-├── suite/                         # 集成测试套件
+├── suite/                         # 集成测试套件（VS Code 环境）
 │   ├── orgFoldingProvider.test.ts
 │   └── ...
 └── runTest.ts                     # 集成测试运行器
 ```
+
+**架构说明**：
+- **✅ 可运行的单元测试**：不依赖 VS Code API，可在纯 Node.js 环境下运行
+- **⏳ 待迁移的测试**：当前依赖 VS Code API 或 TodoKeywordManager，需要 VS Code 集成测试环境运行
+- **Parser 层重构**：`HeadingParser` 已重构为可接受可选参数，移除了对 TodoKeywordManager 的硬依赖
+- **无需 Mock**：解析器层现在完全独立于 VS Code API，单元测试不再需要 vscode-mock
 
 ## 编写新测试
 

@@ -21,6 +21,22 @@ describe('HeadingRepository', () => {
         schemaManager.initialize();
 
         repo = new HeadingRepository(db);
+
+        // 预先插入常用的测试文件 (满足外键约束)
+        const testFiles = [
+            '/test/file.org',
+            '/test/file1.org',
+            '/test/file2.org'
+        ];
+
+        const stmt = db.prepare(`
+            INSERT OR IGNORE INTO files (uri, hash, updated_at)
+            VALUES (?, ?, ?)
+        `);
+
+        for (const uri of testFiles) {
+            stmt.run(uri, 'test-hash', Math.floor(Date.now() / 1000));
+        }
     });
 
     afterEach(() => {
