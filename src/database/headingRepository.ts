@@ -62,7 +62,8 @@ export class HeadingRepository {
         // 插入标签关联
         if (heading.tags && heading.tags.length > 0) {
             const tagStmt = SqlJsHelper.prepare(this.db, 'INSERT INTO heading_tags (file_uri, heading_line, tag) VALUES (?, ?, ?)');
-            for (const tag of heading.tags) {
+            const uniqueTags = [...new Set(heading.tags)];
+            for (const tag of uniqueTags) {
                 tagStmt.run([heading.fileUri, heading.startLine, tag]);
             }
         }
@@ -131,7 +132,8 @@ export class HeadingRepository {
                 headingStmt.reset();
 
                 if (heading.tags && heading.tags.length > 0) {
-                    for (const tag of heading.tags) {
+                    const uniqueTags = [...new Set(heading.tags)];
+                    for (const tag of uniqueTags) {
                         tagStmt.bind([heading.fileUri, heading.startLine, tag]);
                         tagStmt.step();
                         tagStmt.reset();

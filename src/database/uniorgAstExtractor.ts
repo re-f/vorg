@@ -222,7 +222,7 @@ export class UniorgAstExtractor {
         const todoCategory = this.getTodoCategory(node.todoKeyword);
 
         // 计算拼音（用于拼音搜索）
-        const tags = node.tags || [];
+        const tags = [...new Set((node.tags as string[]) || [])];
         const todoKeyword = node.todoKeyword || undefined;
         const displayName = HeadingParser.buildDisplayName(title, todoKeyword, tags);
         const pinyinTitle = getPinyinString(title);
