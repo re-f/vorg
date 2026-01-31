@@ -60,11 +60,14 @@ export interface OrgLink {
     /** Target heading ID (for id/heading links) */
     targetHeadingId?: string;
 
+    /** Target ID (for id: links) */
+    targetId?: string;
+
     /** Type of link */
     linkType: LinkType;
 
     /** Link text/description */
-    linkText: string;
+    linkText?: string;
 
     /** Line number where link appears */
     lineNumber?: number;
