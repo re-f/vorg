@@ -142,7 +142,24 @@ suite('HeadingParser 标题解析测试', () => {
 
       assert.strictEqual(result.level, 1);
       assert.strictEqual(result.todoKeyword, 'TODO');
-      assert.strictEqual(result.title, '任务 :tag1:tag2:');
+      assert.strictEqual(result.tags?.length, 2);
+      assert.deepStrictEqual(result.tags, ['tag1', 'tag2']);
+    });
+
+    test('应该解析带中文 tags 的标题', () => {
+      const result = HeadingParser.parseHeading('* DONE 任务 :项目:记录:');
+
+      assert.strictEqual(result.level, 1);
+      assert.strictEqual(result.todoKeyword, 'DONE');
+      assert.strictEqual(result.tags?.length, 2);
+      assert.deepStrictEqual(result.tags, ['项目', '记录']);
+    });
+
+    test('应该解析带特殊字符 tags 的标题', () => {
+      const result = HeadingParser.parseHeading('* NEXT 任务 :#life:#work:');
+
+      assert.strictEqual(result.tags?.length, 2);
+      assert.deepStrictEqual(result.tags, ['#life', '#work']);
     });
   });
 

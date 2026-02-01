@@ -78,7 +78,8 @@ export class HeadingParser {
     let tags: string[] = [];
 
     // 提取标签（格式：:tag1:tag2:）
-    const tagMatch = pureTitle.match(/^(.+?)\s+(:[\w_@]+(?::[\w_@]+)*:)\s*$/);
+    // 使用更宽松的字符匹配以支持 Unicode (如中文标签)
+    const tagMatch = pureTitle.match(/^(.+?)\s+(:[^\s:]+(?::[^\s:]+)*:)\s*$/);
     if (tagMatch) {
       pureTitle = tagMatch[1].trim();
       const tagString = tagMatch[2];
