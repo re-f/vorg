@@ -16,7 +16,7 @@ export class LinkRepository {
    */
   insert(link: OrgLink): void {
     const stmt = SqlJsHelper.prepare(this.db, `
-      INSERT INTO links (
+      INSERT OR REPLACE INTO links (
         source_uri, line_number, source_heading_line, source_heading_id,
         target_uri, target_heading_line, target_id,
         link_type, link_text
@@ -49,7 +49,7 @@ export class LinkRepository {
     }
 
     const sql = `
-      INSERT INTO links (
+      INSERT OR REPLACE INTO links (
         source_uri, line_number, source_heading_line, source_heading_id,
         target_uri, target_heading_line, target_id,
         link_type, link_text

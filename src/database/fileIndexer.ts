@@ -1,12 +1,13 @@
-import { unified } from 'unified';
-import uniorgParse from 'uniorg-parse';
+// ESM imports moved to dynamic imports in indexFile to support CJS environments (unit tests)
+// import { unified } from 'unified';
+// import uniorgParse from 'uniorg-parse';
 import * as crypto from 'crypto';
 import { DatabaseConnection } from './connection';
 import { FileRepository } from './fileRepository';
 import { HeadingRepository } from './headingRepository';
 import { LinkRepository } from './linkRepository';
 import { UniorgAstExtractor } from './uniorgAstExtractor';
-import { OrgFile } from './types';
+import { OrgFile, OrgHeading } from './types';
 import { ConfigService } from '../services/configService';
 
 /**
@@ -49,6 +50,10 @@ export class FileIndexer {
         const allKeywords = this.configService.getAllKeywordStrings();
         const doneKeywords = this.configService.getDoneKeywords().map(k => k.keyword);
 
+        // Load ESM modules dynamically
+        const { unified } = await (eval('import("unified")') as Promise<any>);
+        const uniorgParse = (await (eval('import("uniorg-parse")') as Promise<any>)).default;
+
         const processor = unified().use(uniorgParse as any, {
             todoKeywords: allKeywords
         });
@@ -59,7 +64,10 @@ export class FileIndexer {
         const headings = this.extractor.extractHeadings(ast, uri, content, doneKeywords);
         const links = this.extractor.extractLinks(ast, uri, content);
 
-        // 4. Update database in transaction
+        // 4. Check for duplicate IDs (Warning only)
+        this.checkDuplicateIds(headings, uri);
+
+        // 5. Update database in transaction
         this.connection.transaction(() => {
             // Delete old data (cascade delete should handle headings if configured, 
             // but let's be explicit or rely on repositories)
@@ -113,6 +121,32 @@ export class FileIndexer {
                 this.linkRepo.insertBatch(links);
             }
         });
+    }
+
+    /**
+     * Check if any heading IDs in the current file are already used in other files.
+     * Logs a warning if duplicates are found.
+     */
+    private checkDuplicateIds(headings: OrgHeading[], currentUri: string): void {
+        const ids = headings
+            .map(h => h.properties?.ID)
+            .filter((id): id is string => !!id);
+
+        if (ids.length === 0) {
+            return;
+        }
+
+        for (const id of ids) {
+            const existing = this.headingRepo.findById(id);
+            if (existing && existing.fileUri !== currentUri) {
+                const vscode = require('vscode');
+                const Logger = require('../utils/logger').Logger;
+                const msg = `Duplicate ID found: "${id}". It is already used in ${existing.fileUri}. This entry will override the previous one.`;
+                Logger.warn(msg);
+                // Optionally show a non-blocking message to the user
+                // vscode.window.showWarningMessage(msg);
+            }
+        }
     }
 
     private calculateHash(content: string): string {

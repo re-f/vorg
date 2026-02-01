@@ -17,7 +17,7 @@ export class HeadingRepository {
      */
     insert(heading: OrgHeading): void {
         const stmt = SqlJsHelper.prepare(this.db, `
-      INSERT INTO headings (
+      INSERT OR REPLACE INTO headings (
         file_uri, start_line, end_line, id, level, title,
         pinyin_title, pinyin_display_name,
         todo_state, todo_category, priority,
@@ -62,7 +62,7 @@ export class HeadingRepository {
 
         // 插入标签关联
         if (heading.tags && heading.tags.length > 0) {
-            const tagStmt = SqlJsHelper.prepare(this.db, 'INSERT INTO heading_tags (file_uri, heading_line, tag) VALUES (?, ?, ?)');
+            const tagStmt = SqlJsHelper.prepare(this.db, 'INSERT OR REPLACE INTO heading_tags (file_uri, heading_line, tag) VALUES (?, ?, ?)');
             const uniqueTags = [...new Set(heading.tags)];
             for (const tag of uniqueTags) {
                 tagStmt.run([heading.fileUri, heading.startLine, tag]);
@@ -79,7 +79,7 @@ export class HeadingRepository {
         }
 
         const headingSql = `
-      INSERT INTO headings (
+      INSERT OR REPLACE INTO headings (
         file_uri, start_line, end_line, id, level, title,
         pinyin_title, pinyin_display_name,
         todo_state, todo_category, priority,
@@ -97,7 +97,7 @@ export class HeadingRepository {
     `;
 
         const tagSql = `
-      INSERT INTO heading_tags (file_uri, heading_line, tag)
+      INSERT OR REPLACE INTO heading_tags (file_uri, heading_line, tag)
       VALUES (?, ?, ?)
     `;
 
@@ -392,6 +392,10 @@ export class HeadingRepository {
      * 删除文件的所有 headings
      */
     deleteByFileUri(uri: string): void {
+        // Explicitly delete tags and timestamps to be safe (redundant if CASCADE works, but safer)
+        SqlJsHelper.prepare(this.db, 'DELETE FROM heading_tags WHERE file_uri = ?').run([uri]);
+        SqlJsHelper.prepare(this.db, 'DELETE FROM timestamps WHERE file_uri = ?').run([uri]);
+
         const stmt = SqlJsHelper.prepare(this.db, 'DELETE FROM headings WHERE file_uri = ?');
         stmt.run([uri]);
     }
