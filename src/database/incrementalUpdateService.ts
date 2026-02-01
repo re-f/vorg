@@ -78,6 +78,7 @@ export class IncrementalUpdateService implements vscode.Disposable {
 
         // Initial full indexing
         await this.runFullIndexing();
+        DatabaseConnection.getInstance().save();
     }
 
     /**
@@ -109,6 +110,7 @@ export class IncrementalUpdateService implements vscode.Disposable {
         try {
             Logger.info('Forcing full workspace index rebuild...');
             await this.workspaceIndexer.indexWorkspace(true);
+            DatabaseConnection.getInstance().save();
             Logger.info('Forced rebuild complete.');
         } catch (error) {
             Logger.error('Forced rebuild failed', error);
