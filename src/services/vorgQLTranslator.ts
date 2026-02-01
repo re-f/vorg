@@ -75,6 +75,10 @@ export class VOrgQLTranslator {
             case 'file':
                 return this.buildInClause('file_uri', node.args.map(a => a.type), params);
 
+            case 'category':
+            case 'done':
+                return this.buildInClause('todo_category', node.args.map(a => a.type), params);
+
             case 'tag':
                 return this.buildTagClause(node.args.map(a => a.type), params);
 
@@ -91,6 +95,12 @@ export class VOrgQLTranslator {
             params[p] = v;
             return p;
         });
+
+        // 如果包含空字符串，通常意味着我们要找 NULL 或者真的空字符串内容
+        if (values.includes('')) {
+            return `(${column} IN (${markers.join(', ')}) OR ${column} IS NULL)`;
+        }
+
         return `${column} IN (${markers.join(', ')})`;
     }
 
@@ -118,6 +128,8 @@ export class VOrgQLTranslator {
             'file': 'file_uri',
             'status': 'todo_state',
             'todo': 'todo_state',
+            'done': 'todo_category',
+            'category': 'todo_category',
             'priority': 'priority',
             'prio': 'priority',
             'tag': 'tag'

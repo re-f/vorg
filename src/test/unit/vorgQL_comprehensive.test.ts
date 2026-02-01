@@ -3,11 +3,11 @@ import * as assert from 'assert';
 import { VOrgQLParser } from '../../services/vorgQLParser';
 import { VOrgQLTranslator } from '../../services/vorgQLTranslator';
 
-describe('VOrg-QL Comprehensive Engine Tests (Parser & Translator)', () => {
+suite('VOrg-QL Comprehensive Engine Tests (Parser & Translator)', () => {
     const translator = new VOrgQLTranslator();
 
-    describe('1. 语法边界测试 (Parser Edge Cases)', () => {
-        it('应该处理基础 logic 和 原子结构', () => {
+    suite('1. 语法边界测试 (Parser Edge Cases)', () => {
+        test('应该处理基础 logic 和 原子结构', () => {
             const query = '(and (todo "TODO") (prio "A"))';
             const ast = VOrgQLParser.parse(query);
 
@@ -23,7 +23,7 @@ describe('VOrg-QL Comprehensive Engine Tests (Parser & Translator)', () => {
             assert.strictEqual(arg2.args[0].type, 'A');
         });
 
-        it('应该处理多参数谓词 (如多个标签)', () => {
+        test('应该处理多参数谓词 (如多个标签)', () => {
             const q = '(tag "work" "project" "urgent")';
             const ast = VOrgQLParser.parse(q);
             assert.strictEqual(ast.type, 'tag');
@@ -31,7 +31,7 @@ describe('VOrg-QL Comprehensive Engine Tests (Parser & Translator)', () => {
             assert.deepStrictEqual(ast.args.map(a => a.type), ['work', 'project', 'urgent']);
         });
 
-        it('应该处理深度嵌套逻辑', () => {
+        test('应该处理深度嵌套逻辑', () => {
             const q = '(and (or (todo "TODO") (todo "NEXT")) (not (priority "C")))';
             const ast = VOrgQLParser.parse(q);
             assert.strictEqual(ast.type, 'and');
@@ -39,7 +39,7 @@ describe('VOrg-QL Comprehensive Engine Tests (Parser & Translator)', () => {
             assert.strictEqual((ast.args[1] as any).type, 'not');
         });
 
-        it('应该处理带空格的引号字符串', () => {
+        test('应该处理带空格的引号字符串', () => {
             const q = '(and (todo "IN PROGRESS") "search term")';
             const ast = VOrgQLParser.parse(q);
             assert.strictEqual((ast.args[0] as any).args[0].type, 'IN PROGRESS');
@@ -47,8 +47,8 @@ describe('VOrg-QL Comprehensive Engine Tests (Parser & Translator)', () => {
         });
     });
 
-    describe('2. SQL 翻译质量测试 (Translator Output)', () => {
-        it('应该翻译多值 IN 子句', () => {
+    suite('2. SQL 翻译 quality 测试 (Translator Output)', () => {
+        test('应该翻译多值 IN 子句', () => {
             const q = '(todo "WAITING" "HOLD" "CANCELLED")';
             const ast = VOrgQLParser.parse(q);
             const { where, params } = translator.translate(ast);
@@ -58,14 +58,14 @@ describe('VOrg-QL Comprehensive Engine Tests (Parser & Translator)', () => {
             assert.strictEqual(params['$v2'], 'CANCELLED');
         });
 
-        it('应该正确翻译 NOT 逻辑', () => {
+        test('应该正确翻译 NOT 逻辑', () => {
             const q = '(not (tag "personal"))';
             const ast = VOrgQLParser.parse(q);
             const { where } = translator.translate(ast);
             assert.ok(where.startsWith('NOT (EXISTS'));
         });
 
-        it('应该翻译 group-by 元数据', () => {
+        test('应该翻译 group-by 元数据', () => {
             const q = '(group-by status (priority "A"))';
             const ast = VOrgQLParser.parse(q);
             const { where, groupBy } = translator.translate(ast);
@@ -74,7 +74,7 @@ describe('VOrg-QL Comprehensive Engine Tests (Parser & Translator)', () => {
             assert.ok(where.includes('priority IN ($v0)'));
         });
 
-        it('应该处理复杂的组合逻辑并生成正确的括号', () => {
+        test('应该处理复杂的组合逻辑并生成正确的括号', () => {
             const q = '(or (and (todo "DONE") (prio "A")) (and (todo "NEXT") (prio "B")))';
             const ast = VOrgQLParser.parse(q);
             const { where } = translator.translate(ast);
@@ -84,7 +84,7 @@ describe('VOrg-QL Comprehensive Engine Tests (Parser & Translator)', () => {
         });
     });
 
-    describe('3. 别名一致性测试 (Alias Mapping)', () => {
+    suite('3. 别名一致性测试 (Alias Mapping)', () => {
         const aliases = [
             ['st', 'todo'],
             ['prio', 'priority'],
@@ -94,7 +94,7 @@ describe('VOrg-QL Comprehensive Engine Tests (Parser & Translator)', () => {
         ];
 
         aliases.forEach(([alias, target]) => {
-            it(`别名 "${alias}" 应该映射到 "${target}"`, () => {
+            test(`别名 "${alias}" 应该映射到 "${target}"`, () => {
                 const ast = VOrgQLParser.parse(`(${alias} "val")`);
                 assert.strictEqual(ast.type, target);
             });

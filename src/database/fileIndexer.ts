@@ -7,6 +7,7 @@ import { HeadingRepository } from './headingRepository';
 import { LinkRepository } from './linkRepository';
 import { UniorgAstExtractor } from './uniorgAstExtractor';
 import { OrgFile } from './types';
+import { ConfigService } from '../services/configService';
 
 /**
  * FileIndexer
@@ -22,7 +23,8 @@ export class FileIndexer {
         private fileRepo: FileRepository,
         private headingRepo: HeadingRepository,
         private linkRepo: LinkRepository,
-        private extractor: UniorgAstExtractor
+        private extractor: UniorgAstExtractor,
+        private configService: ConfigService
     ) { }
 
     /**
@@ -43,13 +45,18 @@ export class FileIndexer {
             }
         }
 
-        // 2. Parse content into AST
-        const processor = unified().use(uniorgParse as any);
+        // 2. Parse content into AST with custom TODO keywords
+        const allKeywords = this.configService.getAllKeywordStrings();
+        const doneKeywords = this.configService.getDoneKeywords().map(k => k.keyword);
+
+        const processor = unified().use(uniorgParse as any, {
+            todoKeywords: allKeywords
+        });
         const ast = processor.parse(content);
 
         // 3. Extract data
         const metadata = this.extractor.extractFileMetadata(ast);
-        const headings = this.extractor.extractHeadings(ast, uri, content);
+        const headings = this.extractor.extractHeadings(ast, uri, content, doneKeywords);
         const links = this.extractor.extractLinks(ast, uri, content);
 
         // 4. Update database in transaction

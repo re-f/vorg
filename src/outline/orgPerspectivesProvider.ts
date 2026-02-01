@@ -85,6 +85,7 @@ export class OrgPerspectivesProvider implements vscode.TreeDataProvider<Perspect
     readonly onDidChangeTreeData: vscode.Event<PerspectiveItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
     private currentQuery: string = '';
+    private previewOverrides: Map<string, string> = new Map();
 
     refresh(): void {
         this._onDidChangeTreeData.fire();
@@ -95,6 +96,19 @@ export class OrgPerspectivesProvider implements vscode.TreeDataProvider<Perspect
         this.refresh();
     }
 
+    public getCurrentQuery(): string {
+        return this.currentQuery;
+    }
+
+    public setPreview(label: string, query: string | undefined) {
+        if (query === undefined) {
+            this.previewOverrides.delete(label);
+        } else {
+            this.previewOverrides.set(label, query);
+        }
+        this.refresh();
+    }
+
     getTreeItem(element: PerspectiveItem): vscode.TreeItem {
         return element;
     }
@@ -102,26 +116,31 @@ export class OrgPerspectivesProvider implements vscode.TreeDataProvider<Perspect
     async getChildren(element?: PerspectiveItem): Promise<PerspectiveItem[]> {
         // 1. 顶层
         if (!element) {
-            // 如果有临时搜索 Filter，将其作为一个虚拟的展开 Folder 处理
+            const items: PerspectiveItem[] = [];
+
+            // 如果有临时搜索 Filter，添加一个专门的搜索 Folder
             if (this.currentQuery) {
-                const tempFolder = new PerspectiveItem(
-                    'Search Results',
+                const searchItem = new PerspectiveItem(
+                    `🔍 Search: ${this.currentQuery}`,
                     PerspectiveItemType.Folder,
                     vscode.TreeItemCollapsibleState.Expanded,
                     this.currentQuery
                 );
-                return this.resolveFolderChildren(tempFolder);
+                searchItem.contextValue = 'searchContext';
+                items.push(searchItem);
             }
 
-            // 否则读取配置
+            // 读取配置
             const config = vscode.workspace.getConfiguration('vorg').get<PerspectiveConfig[]>('perspectives') || [];
-            return config.map(c => new PerspectiveItem(
+            items.push(...config.map(c => new PerspectiveItem(
                 c.label,
                 PerspectiveItemType.Folder,
                 vscode.TreeItemCollapsibleState.Collapsed,
-                c.query,
+                this.previewOverrides.get(c.label) ?? c.query,
                 c.description
-            ));
+            )));
+
+            return items;
         }
 
         // 2. Folder 层：执行查询并根据 group-by 决定返回 Group 还是 Heading
@@ -227,6 +246,11 @@ export class OrgPerspectivesProvider implements vscode.TreeDataProvider<Perspect
                 case 'status':
                 case 'todo':
                     addToGroup(h.todoState || '(No Status)', h);
+                    break;
+                case 'done':
+                case 'category':
+                    const catArr = h.todoCategory ? (h.todoCategory === 'done' ? 'Done' : 'Todo') : '(No Status)';
+                    addToGroup(catArr, h);
                     break;
                 case 'priority':
                 case 'prio':

@@ -9,6 +9,7 @@ import { Logger } from '../utils/logger';
 import { HeadingRepository } from './headingRepository';
 import { LinkRepository } from './linkRepository';
 import { UniorgAstExtractor } from './uniorgAstExtractor';
+import { ConfigService } from '../services/configService';
 
 /**
  * VSCode implementation of FileProvider
@@ -56,7 +57,8 @@ export class IncrementalUpdateService implements vscode.Disposable {
             this.fileRepo,
             this.headingRepo,
             this.linkRepo,
-            this.extractor
+            this.extractor,
+            ConfigService.fromVSCodeWorkspace()
         );
 
         const fileProvider = new VSCodeFileProvider();

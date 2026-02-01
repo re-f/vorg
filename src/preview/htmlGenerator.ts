@@ -4,6 +4,7 @@ import uniorgParse from 'uniorg-parse';
 import uniorgRehype from 'uniorg-rehype';
 import rehypeStringify from 'rehype-stringify';
 import { QueryService } from '../services/queryService';
+import { parseTodoKeywords } from '../utils/constants';
 import { OrgHeading } from '../database/types';
 import * as path from 'path';
 
@@ -37,7 +38,12 @@ export class HtmlGenerator {
       const documentTitle = this.extractTitle(text);
 
       // 首先解析 AST（只解析一次，后续重用）
-      const parser = unified().use(uniorgParse as any);
+      const todoConfig = vscode.workspace.getConfiguration('vorg').get<string>('todoKeywords', '');
+      const { allKeywords } = parseTodoKeywords(todoConfig);
+
+      const parser = unified().use(uniorgParse as any, {
+        todoKeywords: allKeywords.map(k => k.keyword)
+      });
       const ast = parser.parse(text);
 
       // 使用 AST 生成 HTML
@@ -676,7 +682,12 @@ export class HtmlGenerator {
       const documentTitle = this.extractTitle(text);
 
       // 首先解析 AST（只解析一次，后续重用）
-      const parser = unified().use(uniorgParse as any);
+      const todoConfig = vscode.workspace.getConfiguration('vorg').get<string>('todoKeywords', '');
+      const { allKeywords } = parseTodoKeywords(todoConfig);
+
+      const parser = unified().use(uniorgParse as any, {
+        todoKeywords: allKeywords.map(k => k.keyword)
+      });
       const ast = parser.parse(text);
 
       // 使用 AST 生成 HTML

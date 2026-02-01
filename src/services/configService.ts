@@ -1,5 +1,6 @@
-import * as vscode from 'vscode';
-import { parseTodoKeywords, DEFAULT_TODO_KEYWORDS, TodoKeywordConfig } from '../utils/constants';
+// 移除顶层 vscode 导入，改为在需要时动态加载，以支持单元测试
+// import * as vscode from 'vscode';
+import { parseTodoKeywords, DEFAULT_TODO_KEYWORDS, TodoKeywordConfig, DEFAULT_QUERY_LIMIT } from '../utils/constants';
 
 /**
  * 配置服务

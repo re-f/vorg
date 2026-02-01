@@ -29,16 +29,23 @@ pnpm run test:unit
 ./src/test/unit/run-unit-tests.sh
 ```
 
-### 2. 集成测试 (Integration Tests) ⏳
+### 3. VOrgQL 真实数据调试工具 (Real Data Debugger) ✅
 
-**测试内容**：完整的编辑功能流程
-
-这部分需要使用 VS Code Extension Test Runner，测试实际的用户操作场景。
+**测试内容**：直接针对真实的 Org 文件目录运行 VOrgQL 查询，分析索引和分组结果。
 
 **运行方式**：
 ```bash
-pnpm run test
+npx ts-node -T src/test/unit/debug_vorgql_real.ts \
+  --dir "/path/to/your/org/files" \
+  --file "query.vorgql" \
+  --todo "TODO NEXT | DONE CANCELLED"
 ```
+
+**功能亮点**：
+- **真实环境复现**：自动扫描指定目录下的所有 `.org` 文件。
+- **自定义关键字**：支持通过 `--todo` 参数传入与本地配置一致的 TODO 关键字。
+- **差异分析**：自动对比数据库索引全量标签与查询结果标签，定位丢失的数据。
+- **Unicode 支持验证**：可直接验证中文标签和特殊符号标签的索引情况。
 
 ## 当前测试状态
 

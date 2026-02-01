@@ -10,6 +10,7 @@ import { LinkRepository } from '../../../database/linkRepository';
 import { UniorgAstExtractor } from '../../../database/uniorgAstExtractor';
 import { FileIndexer } from '../../../database/fileIndexer';
 import { SchemaManager } from '../../../database/schemaManager';
+import { ConfigService } from '../../../services/configService';
 
 const wasmPath = path.join(__dirname, '../../../../node_modules/sql.js/dist/sql-wasm.wasm');
 
@@ -68,7 +69,8 @@ suite('FileIndexer Integration Tests', () => {
             fileRepo,
             headingRepo,
             linkRepo,
-            extractor
+            extractor,
+            ConfigService.default()
         );
     });
 

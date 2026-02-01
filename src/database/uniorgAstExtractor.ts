@@ -23,7 +23,7 @@ export class UniorgAstExtractor {
      * 注意: property drawer 在 AST 中是 headline 的兄弟节点,
      * 所以我们需要在遍历时收集它们
      */
-    extractHeadings(ast: any, fileUri: string, content: string): OrgHeading[] {
+    extractHeadings(ast: any, fileUri: string, content: string, doneKeywords?: string[]): OrgHeading[] {
         const headings: OrgHeading[] = [];
         const mapper = new OffsetMapper(content);
 
@@ -46,7 +46,8 @@ export class UniorgAstExtractor {
                         properties,
                         fileUri,
                         mapper,
-                        parentId
+                        parentId,
+                        doneKeywords
                     );
 
                     // 修正 endLine: 使用 section 的结束位置
@@ -198,7 +199,8 @@ export class UniorgAstExtractor {
         properties: Record<string, string>,
         fileUri: string,
         mapper: OffsetMapper,
-        parentId?: string
+        parentId?: string,
+        doneKeywords?: string[]
     ): OrgHeading {
         // Use AST position if available (1-based -> 0-based), fallback to offset mapper
         let startLine: number;
@@ -219,7 +221,7 @@ export class UniorgAstExtractor {
         const closed = this.extractTimestamp(properties.CLOSED);
 
         // 提取 TODO category
-        const todoCategory = this.getTodoCategory(node.todoKeyword);
+        const todoCategory = this.getTodoCategory(node.todoKeyword, doneKeywords);
 
         // 计算拼音（用于拼音搜索）
         const tags = [...new Set((node.tags as string[]) || [])];
@@ -365,13 +367,13 @@ export class UniorgAstExtractor {
     /**
      * 私有: 获取 TODO category
      */
-    private getTodoCategory(keyword?: string): 'todo' | 'done' | undefined {
+    private getTodoCategory(keyword?: string, customDoneKeywords?: string[]): 'todo' | 'done' | undefined {
         if (!keyword) {
             return undefined;
         }
 
-        const doneKeywords = ['DONE', 'CANCELED', 'CANCELLED'];
-        if (doneKeywords.includes(keyword.toUpperCase())) {
+        const doneKeywords = customDoneKeywords || ['DONE', 'CANCELED', 'CANCELLED'];
+        if (doneKeywords.map(k => k.toUpperCase()).includes(keyword.toUpperCase())) {
             return 'done';
         }
 

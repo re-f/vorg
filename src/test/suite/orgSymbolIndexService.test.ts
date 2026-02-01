@@ -11,6 +11,7 @@ import { FileRepository } from '../../database/fileRepository';
 import { HeadingRepository } from '../../database/headingRepository';
 import { LinkRepository } from '../../database/linkRepository';
 import { UniorgAstExtractor } from '../../database/uniorgAstExtractor';
+import { ConfigService } from '../../services/configService';
 
 suite('OrgSymbolIndexService Integration Tests', function () {
     this.timeout(10000);
@@ -33,7 +34,7 @@ suite('OrgSymbolIndexService Integration Tests', function () {
         const headingRepo = new HeadingRepository(db);
         const linkRepo = new LinkRepository(db);
         const extractor = new UniorgAstExtractor();
-        const fileIndexer = new FileIndexer(DatabaseConnection.getInstance(), fileRepo, headingRepo, linkRepo, extractor);
+        const fileIndexer = new FileIndexer(DatabaseConnection.getInstance(), fileRepo, headingRepo, linkRepo, extractor, ConfigService.default());
 
         await fileIndexer.indexFile(testFilePath, testFileContent);
 
@@ -62,7 +63,7 @@ suite('OrgSymbolIndexService Integration Tests', function () {
         const headingRepo = new HeadingRepository(db);
         const linkRepo = new LinkRepository(db);
         const extractor = new UniorgAstExtractor();
-        const fileIndexer = new FileIndexer(DatabaseConnection.getInstance(), fileRepo, headingRepo, linkRepo, extractor);
+        const fileIndexer = new FileIndexer(DatabaseConnection.getInstance(), fileRepo, headingRepo, linkRepo, extractor, ConfigService.default());
 
         await fileIndexer.indexFile(testFilePath, testFileContent);
 

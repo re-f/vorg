@@ -325,58 +325,139 @@ export async function activate(context: vscode.ExtensionContext) {
       vscode.window.showInformationMessage('Perspectives refreshed.');
     }),
     vscode.commands.registerCommand('vorg.perspectives.search', () => {
-      vscode.window.showInputBox({
-        prompt: 'Search headings...',
-        placeHolder: 'Type keywords like "docs" or "fix"'
-      }).then(value => {
-        if (value !== undefined) {
-          perspectivesProvider.setFilter(value);
-        }
+      const input = vscode.window.createInputBox();
+      input.title = 'Search Headings';
+      input.placeholder = 'Type keywords or S-Expression...';
+      input.ignoreFocusOut = true; // allow interaction with tree view
+
+      input.onDidChangeValue(value => {
+        perspectivesProvider.setFilter(value);
       });
+
+      input.onDidAccept(() => {
+        input.hide();
+      });
+
+      input.onDidHide(() => {
+        // Keep filter if accepted (implicit), or clear if user wants to clear?
+        // Actually standard VS Code UI: if I escape, I probably want to cancel search.
+        // But if I click away, maybe I want to keep it?
+        // Let's rely on manual clear or empty string for now.
+        // Wait, to behave like "Go to symbol", escaping should revert.
+        // But since we are modifying a persistent View state (filter),
+        // maybe we only revert if the input was empty?
+        // Let's clear filter if input is empty, otherwise keep it.
+        // User requested "live preview", usually implies ephemeral unless confirmed.
+        // But here the "confirmation" updates the view permanently (until cleared).
+        input.dispose();
+      });
+
+      input.show();
     }),
-    vscode.commands.registerCommand('vorg.perspectives.save', () => {
-      vscode.window.showInputBox({ prompt: 'Enter a name for this perspective' }).then(name => {
-        if (name) {
-          vscode.window.showInformationMessage(`Perspective "${name}" saved (Placeholder).`);
-        }
+    vscode.commands.registerCommand('vorg.perspectives.save', async (item?: PerspectiveItem) => {
+      // 1. 获取要保存的查询
+      let queryToSave = '';
+      if (item && item.query) {
+        queryToSave = item.query;
+      } else {
+        queryToSave = perspectivesProvider.getCurrentQuery();
+      }
+
+      if (!queryToSave) {
+        vscode.window.showInformationMessage('No active search to save. Please search first.');
+        return;
+      }
+
+      // 2. 获取名称和描述
+      const labelDesc = await vscode.window.showInputBox({
+        prompt: 'Enter Name # Description for this perspective',
+        placeHolder: `My Search Results # Query: ${queryToSave}`
       });
+
+      if (!labelDesc) return;
+
+      const { label, description } = parseLabelAndDescription(labelDesc);
+
+      // 3. 保存配置
+      const config = vscode.workspace.getConfiguration('vorg');
+      const perspectives = config.get<any[]>('perspectives') || [];
+
+      perspectives.push({
+        label,
+        query: queryToSave,
+        description
+      });
+
+      await config.update('perspectives', perspectives, vscode.ConfigurationTarget.Global);
+      vscode.window.showInformationMessage(`Perspective "${label}" saved.`);
+
+      // 刷新列表
+      perspectivesProvider.refresh();
     }),
     vscode.commands.registerCommand('vorg.perspectives.edit', async (item: PerspectiveItem) => {
       const oldLabel = item.label;
       const oldQuery = item.query;
       const oldDescription = item.description;
 
-      const newQuery = await vscode.window.showInputBox({
-        prompt: 'Step 1/2: Edit Query (S-Expression)',
-        value: oldQuery,
-        ignoreFocusOut: true
-      });
-
-      if (newQuery === undefined) return;
-
-      const currentLabelDesc = `${oldLabel} # ${oldDescription || ''}`;
-      const newLabelDesc = await vscode.window.showInputBox({
-        prompt: 'Step 2/2: Edit Title # Description',
-        value: currentLabelDesc,
-        ignoreFocusOut: true
-      });
-
-      if (newLabelDesc === undefined) return;
-
-      const { label, description } = parseLabelAndDescription(newLabelDesc);
-
-      const config = vscode.workspace.getConfiguration('vorg');
-      const perspectives = config.get<any[]>('perspectives') || [];
-
-      const index = perspectives.findIndex(p => p.label === oldLabel && p.query === oldQuery);
-      if (index !== -1) {
-        perspectives[index] = { label, query: newQuery, description };
-        await config.update('perspectives', perspectives, vscode.ConfigurationTarget.Global);
-        perspectivesProvider.refresh();
-        vscode.window.showInformationMessage(`Perspective "${label}" updated.`);
-      } else {
-        vscode.window.showErrorMessage(`Could not find perspective to update.`);
+      // Check if we are editing a valid Folder item
+      if (!oldQuery) {
+        vscode.window.showErrorMessage('Cannot edit this item.');
+        return;
       }
+
+      // Live Preview for Query Editing
+      const input = vscode.window.createInputBox();
+      input.title = `Edit Query for "${oldLabel}"`;
+      input.value = oldQuery;
+      input.ignoreFocusOut = true;
+
+      // Handle live preview
+      input.onDidChangeValue(value => {
+        perspectivesProvider.setPreview(oldLabel, value);
+      });
+
+      let acceptedQuery: string | undefined;
+
+      input.onDidAccept(() => {
+        acceptedQuery = input.value;
+        input.hide();
+      });
+
+      input.onDidHide(async () => {
+        // Clear preview
+        perspectivesProvider.setPreview(oldLabel, undefined);
+        input.dispose();
+
+        if (acceptedQuery !== undefined) {
+          // Proceed to Step 2
+
+          const currentLabelDesc = `${oldLabel} # ${oldDescription || ''}`;
+          const newLabelDesc = await vscode.window.showInputBox({
+            prompt: 'Step 2/2: Edit Title # Description',
+            value: currentLabelDesc,
+            ignoreFocusOut: true
+          });
+
+          if (newLabelDesc === undefined) return;
+
+          const { label, description } = parseLabelAndDescription(newLabelDesc);
+
+          const config = vscode.workspace.getConfiguration('vorg');
+          const perspectives = config.get<any[]>('perspectives') || [];
+
+          const index = perspectives.findIndex(p => p.label === oldLabel && p.query === oldQuery);
+          if (index !== -1) {
+            perspectives[index] = { label, query: acceptedQuery, description };
+            await config.update('perspectives', perspectives, vscode.ConfigurationTarget.Global);
+            perspectivesProvider.refresh();
+            vscode.window.showInformationMessage(`Perspective "${label}" updated.`);
+          } else {
+            vscode.window.showErrorMessage(`Could not find perspective to update.`);
+          }
+        }
+      });
+
+      input.show();
     }),
     vscode.commands.registerCommand('vorg.perspectives.delete', async (item: PerspectiveItem) => {
       const answer = await vscode.window.showWarningMessage(
