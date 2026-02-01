@@ -388,7 +388,8 @@ export async function activate(context: vscode.ExtensionContext) {
         description
       });
 
-      await config.update('perspectives', perspectives, vscode.ConfigurationTarget.Global);
+      const target = vscode.workspace.workspaceFolders ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+      await config.update('perspectives', perspectives, target);
       vscode.window.showInformationMessage(`Perspective "${label}" saved.`);
 
       // 刷新列表
@@ -448,7 +449,8 @@ export async function activate(context: vscode.ExtensionContext) {
           const index = perspectives.findIndex(p => p.label === oldLabel && p.query === oldQuery);
           if (index !== -1) {
             perspectives[index] = { label, query: acceptedQuery, description };
-            await config.update('perspectives', perspectives, vscode.ConfigurationTarget.Global);
+            const target = vscode.workspace.workspaceFolders ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+            await config.update('perspectives', perspectives, target);
             perspectivesProvider.refresh();
             vscode.window.showInformationMessage(`Perspective "${label}" updated.`);
           } else {
@@ -471,7 +473,8 @@ export async function activate(context: vscode.ExtensionContext) {
         const index = perspectives.findIndex(p => p.label === item.label && p.query === item.query);
         if (index !== -1) {
           perspectives.splice(index, 1);
-          await config.update('perspectives', perspectives, vscode.ConfigurationTarget.Global);
+          const target = vscode.workspace.workspaceFolders ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+          await config.update('perspectives', perspectives, target);
           perspectivesProvider.refresh();
           vscode.window.showInformationMessage(`Perspective "${item.label}" deleted.`);
         }
