@@ -64,11 +64,20 @@ export class VOrgQLParser {
      */
     private static normalizeOperator(op: string): string {
         const mapping: Record<string, string> = {
-            'st': 'todo',
+            'status': 'todo',
+            'state': 'todo',
+            'heading': 'heading',
+            'title': 'heading',
+            'h': 'heading',
+            'closed': 'closed',
             'prio': 'priority',
             'p': 'priority',
             '#': 'tag',
-            'src': 'file'
+            'src': 'file',
+            'dl': 'deadline',
+            'sc': 'scheduled',
+            'prop': 'property',
+            'up': 'parent'
         };
         const normalized = op.toLowerCase();
         return mapping[normalized] || normalized;

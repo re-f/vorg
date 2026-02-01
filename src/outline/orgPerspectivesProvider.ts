@@ -196,6 +196,7 @@ export class OrgPerspectivesProvider implements vscode.TreeDataProvider<Perspect
                     if (groupType === 'tag') groupItem.iconPath = new vscode.ThemeIcon('tag');
                     if (groupType === 'status' || groupType === 'todo') groupItem.iconPath = new vscode.ThemeIcon('checklist');
                     if (groupType === 'priority') groupItem.iconPath = new vscode.ThemeIcon('alert');
+                    if (groupType === 'level') groupItem.iconPath = new vscode.ThemeIcon('layers');
 
                     groupItems.push(groupItem);
                 }
@@ -248,9 +249,11 @@ export class OrgPerspectivesProvider implements vscode.TreeDataProvider<Perspect
                     addToGroup(h.todoState || '(No Status)', h);
                     break;
                 case 'done':
-                case 'category':
                     const catArr = h.todoCategory ? (h.todoCategory === 'done' ? 'Done' : 'Todo') : '(No Status)';
                     addToGroup(catArr, h);
+                    break;
+                case 'level':
+                    addToGroup(`Level ${h.level}`, h);
                     break;
                 case 'priority':
                 case 'prio':

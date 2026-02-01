@@ -86,7 +86,7 @@ suite('VOrg-QL Comprehensive Engine Tests (Parser & Translator)', () => {
 
     suite('3. 别名一致性测试 (Alias Mapping)', () => {
         const aliases = [
-            ['st', 'todo'],
+            ['status', 'todo'],
             ['prio', 'priority'],
             ['p', 'priority'],
             ['#', 'tag'],

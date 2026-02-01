@@ -147,6 +147,7 @@ VOrg 支持动态查询块，允许您直接在文档预览中聚合显示整个
 - `limit`: 显示结果的最大数量。
 - `sortBy`: 排序字段 (`priority`, `todo`, `deadline`, `mtime`, `level`)。
 - `order`: 排序顺序 (`asc` 或 `desc`)。
+- **完整查询语言**: 了解更多高级过滤（日期、属性、父节点等），请参考 [VOrg-QL 查询指南](docs/VORG_QL.md)。
 
 ## 🆚 与其他 Org 扩展的对比
 

@@ -146,6 +146,7 @@ Use `#+BEGIN_QUERY` followed by a JSON query object:
 - `limit`: Maximum number of results to display.
 - `sortBy`: Field to sort by (`priority`, `todo`, `deadline`, `mtime`, `level`).
 - `order`: Sort order (`asc` or `desc`).
+- **Full Query Language**: For advanced filtering (deadline, properties, parents, etc.), refer to the [VOrg-QL Documentation](docs/VORG_QL_EN.md).
 
 ## 🆚 Comparison with Other Org Extensions
 
