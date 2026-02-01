@@ -23,6 +23,7 @@ export class ConfigService {
     private doneKeywords: TodoKeywordConfig[] = [];
     private allKeywords: TodoKeywordConfig[] = [];
     private defaultTodoKeyword: string = 'TODO';
+    private queryLimit: number = DEFAULT_QUERY_LIMIT;
 
     /**
      * 获取全局配置服务实例
@@ -43,14 +44,14 @@ export class ConfigService {
      * @param todoKeywordsStr - TODO 关键字配置字符串
      * @param defaultKeyword - 默认 TODO 关键字
      */
-    constructor(todoKeywordsStr?: string, defaultKeyword?: string) {
-        this.loadConfiguration(todoKeywordsStr, defaultKeyword);
+    constructor(todoKeywordsStr?: string, defaultKeyword?: string, queryLimit?: number) {
+        this.loadConfiguration(todoKeywordsStr, defaultKeyword, queryLimit);
     }
 
     /**
      * 加载配置
      */
-    private loadConfiguration(todoKeywordsStr?: string, defaultKeyword?: string): void {
+    private loadConfiguration(todoKeywordsStr?: string, defaultKeyword?: string, queryLimit?: number): void {
         const keywordsStr = todoKeywordsStr || DEFAULT_TODO_KEYWORDS;
         const parsed = parseTodoKeywords(keywordsStr);
 
@@ -67,6 +68,8 @@ export class ConfigService {
         } else {
             this.defaultTodoKeyword = 'TODO';
         }
+
+        this.queryLimit = queryLimit || DEFAULT_QUERY_LIMIT;
     }
 
     // === Getters ===
@@ -97,6 +100,13 @@ export class ConfigService {
      */
     getDefaultTodoKeyword(): string {
         return this.defaultTodoKeyword;
+    }
+
+    /**
+     * 获取查询结果数量限制
+     */
+    getQueryLimit(): number {
+        return this.queryLimit;
     }
 
     /**
@@ -140,10 +150,12 @@ export class ConfigService {
      * 从 VS Code workspace 创建配置服务
      */
     static fromVSCodeWorkspace(): ConfigService {
+        const vscode = require('vscode');
         const config = vscode.workspace.getConfiguration('vorg');
-        const todoKeywordsStr = config.get<string>('todoKeywords', DEFAULT_TODO_KEYWORDS);
-        const defaultKeyword = config.get<string>('defaultTodoKeyword', 'TODO');
-        return new ConfigService(todoKeywordsStr, defaultKeyword);
+        const todoKeywordsStr = config.get('todoKeywords', DEFAULT_TODO_KEYWORDS);
+        const defaultKeyword = config.get('defaultTodoKeyword', 'TODO');
+        const queryLimit = config.get('queryLimit', DEFAULT_QUERY_LIMIT);
+        return new ConfigService(todoKeywordsStr, defaultKeyword, queryLimit);
     }
 
     /**
@@ -159,9 +171,12 @@ export class ConfigService {
      * @param callback - 配置变化时的回调函数
      * @returns Disposable 对象，用于取消监听
      */
-    static watchConfiguration(callback: (config: ConfigService) => void): vscode.Disposable {
-        return vscode.workspace.onDidChangeConfiguration((e) => {
-            if (e.affectsConfiguration('vorg.todoKeywords') || e.affectsConfiguration('vorg.defaultTodoKeyword')) {
+    static watchConfiguration(callback: (config: ConfigService) => void): any {
+        const vscode = require('vscode');
+        return vscode.workspace.onDidChangeConfiguration((e: any) => {
+            if (e.affectsConfiguration('vorg.todoKeywords') ||
+                e.affectsConfiguration('vorg.defaultTodoKeyword') ||
+                e.affectsConfiguration('vorg.queryLimit')) {
                 callback(ConfigService.fromVSCodeWorkspace());
             }
         });

@@ -1,6 +1,7 @@
 import { Database } from 'sql.js';
-import { OrgHeading } from './types';
+import { OrgHeading, SearchFilters, Priority } from './types';
 import { SqlJsHelper } from './sqlJsHelper';
+import { ConfigService } from '../services/configService';
 
 /**
  * HeadingRepository
@@ -346,7 +347,10 @@ export class HeadingRepository {
             params.$limit = query.limit;
             sql += ` LIMIT $limit`;
         } else {
-            sql += ` LIMIT 500`; // 默认限制，防止内存溢出
+            const config = ConfigService.getInstance();
+            const limit = config ? config.getQueryLimit() : 5000;
+            params.$limit = limit;
+            sql += ` LIMIT $limit`; // 默认限制，防止内存溢出
         }
 
         const rows = SqlJsHelper.prepare(this.db, sql).all(params);
@@ -356,7 +360,9 @@ export class HeadingRepository {
     /**
      * 根据 VOrg-QL 翻译出的 SQL 执行查询
      */
-    findByQL(where: string, params: Record<string, any>, limit: number = 500): OrgHeading[] {
+    findByQL(where: string, params: Record<string, any>, limit?: number): OrgHeading[] {
+        const config = ConfigService.getInstance();
+        const finalLimit = limit ?? (config ? config.getQueryLimit() : 5000);
         let sql = `SELECT * FROM headings`;
         if (where && where !== '1=1') {
             sql += ` WHERE ${where}`;
@@ -365,8 +371,8 @@ export class HeadingRepository {
         // 默认按文件和行号排序
         sql += ` ORDER BY file_uri ASC, start_line ASC`;
 
-        if (limit) {
-            params['$limit'] = limit;
+        if (finalLimit) {
+            params['$limit'] = finalLimit;
             sql += ` LIMIT $limit`;
         }
 

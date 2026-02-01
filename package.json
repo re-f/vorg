@@ -70,6 +70,11 @@
           "default": "TODO",
           "description": "默认插入的TODO关键字，必须是todoKeywords配置中定义的关键字之一"
         },
+        "vorg.queryLimit": {
+          "type": "integer",
+          "default": 5000,
+          "description": "VOrgQL 查询的最大结果数量限制。增加此值可以支持更大的库，但可能会增加内存占用。"
+        },
         "vorg.showCodeLens": {
           "type": "boolean",
           "default": true,
@@ -323,6 +328,23 @@
           "group": "navigation"
         }
       ],
+      "view/item/context": [
+        {
+          "command": "vorg.perspectives.edit",
+          "when": "view == vorg-perspectives && viewItem == perspective",
+          "group": "inline"
+        },
+        {
+          "command": "vorg.perspectives.delete",
+          "when": "view == vorg-perspectives && viewItem == perspective",
+          "group": "inline"
+        },
+        {
+          "command": "vorg.perspectives.save",
+          "when": "view == vorg-perspectives && viewItem == searchContext",
+          "group": "inline"
+        }
+      ],
       "view/title": [
         {
           "command": "vorg.perspectives.search",
@@ -338,18 +360,6 @@
           "command": "vorg.perspectives.refresh",
           "when": "view == vorg-perspectives",
           "group": "navigation@3"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "vorg.perspectives.edit",
-          "when": "view == vorg-perspectives && viewItem == perspective",
-          "group": "inline"
-        },
-        {
-          "command": "vorg.perspectives.delete",
-          "when": "view == vorg-perspectives && viewItem == perspective",
-          "group": "1_modification"
         }
       ]
     },
