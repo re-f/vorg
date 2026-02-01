@@ -1,7 +1,8 @@
 
 import * as assert from 'assert';
-import { unified } from 'unified';
-import uniorgParse from 'uniorg-parse';
+// ESM imports moved to dynamic imports in tests to support CJS environment
+// import { unified } from 'unified';
+// import uniorgParse from 'uniorg-parse';
 import { UniorgAstExtractor } from '../../../database/uniorgAstExtractor';
 import { ConfigService } from '../../../services/configService';
 
@@ -12,7 +13,9 @@ suite('Reproduction: Custom TODO Keywords Extraction', () => {
         extractor = new UniorgAstExtractor();
     });
 
-    test('should NOT recognize NEXT if not configured', () => {
+    test('should NOT recognize NEXT if not configured', async () => {
+        const { unified } = await (eval('import("unified")') as Promise<any>);
+        const uniorgParse = (await (eval('import("uniorg-parse")') as Promise<any>)).default;
         const content = '* NEXT Task';
         const processor = unified().use(uniorgParse as any);
         const ast = processor.parse(content);
@@ -22,7 +25,9 @@ suite('Reproduction: Custom TODO Keywords Extraction', () => {
         assert.strictEqual(headings[0].todoState, undefined);
     });
 
-    test('should recognize NEXT with correct todoKeywords config', () => {
+    test('should recognize NEXT with correct todoKeywords config', async () => {
+        const { unified } = await (eval('import("unified")') as Promise<any>);
+        const uniorgParse = (await (eval('import("uniorg-parse")') as Promise<any>)).default;
         const content = '* NEXT Task';
         const processor = unified().use(uniorgParse as any, {
             todoKeywords: ['TODO', 'NEXT', 'DONE']
@@ -37,7 +42,9 @@ suite('Reproduction: Custom TODO Keywords Extraction', () => {
         assert.strictEqual(headings[0].title, 'Task');
     });
 
-    test('should recognize custom DONE status', () => {
+    test('should recognize custom DONE status', async () => {
+        const { unified } = await (eval('import("unified")') as Promise<any>);
+        const uniorgParse = (await (eval('import("uniorg-parse")') as Promise<any>)).default;
         const content = '* FINISHED Task';
         const processor = unified().use(uniorgParse as any, {
             todoKeywords: ['TODO', 'FINISHED']
@@ -51,7 +58,9 @@ suite('Reproduction: Custom TODO Keywords Extraction', () => {
         assert.strictEqual(headings[0].todoCategory, 'done');
     });
 
-    test('should work with ConfigService', () => {
+    test('should work with ConfigService', async () => {
+        const { unified } = await (eval('import("unified")') as Promise<any>);
+        const uniorgParse = (await (eval('import("uniorg-parse")') as Promise<any>)).default;
         // Mock config: TODO NEXT | DONE FINISHED
         const config = new ConfigService('TODO NEXT | DONE FINISHED', 'TODO');
         const content = '* NEXT Task 1\n* FINISHED Task 2';

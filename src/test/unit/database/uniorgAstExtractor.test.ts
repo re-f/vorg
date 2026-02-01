@@ -1,14 +1,21 @@
 
 import * as assert from 'assert';
-import { unified } from 'unified';
-import uniorgParse from 'uniorg-parse';
+// ESM imports moved to dynamic imports in setup to support CJS environment
+// import { unified } from 'unified';
+// import uniorgParse from 'uniorg-parse';
 import { UniorgAstExtractor } from '../../../database/uniorgAstExtractor';
 
 suite('UniorgAstExtractor Tests', () => {
     let extractor: UniorgAstExtractor;
 
-    setup(() => {
+    let unified: any;
+    let uniorgParse: any;
+
+    setup(async () => {
         extractor = new UniorgAstExtractor();
+        const unifiedMod = await (eval('import("unified")') as Promise<any>);
+        unified = unifiedMod.unified;
+        uniorgParse = (await (eval('import("uniorg-parse")') as Promise<any>)).default;
     });
 
     suite('extractHeadings', () => {
