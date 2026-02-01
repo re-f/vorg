@@ -21,7 +21,11 @@ const config = {
     'sql.js': 'commonjs ./sql-wasm.js' // sql.js 不打包，运行时从同级目录加载
   },
   resolve: {
-    extensions: ['.ts', '.js'] // 支持的文件扩展名
+    extensions: ['.ts', '.js'], // 支持的文件扩展名
+    alias: {
+      // 在 Webpack 构建时（生产环境），将 CJS 版的 loader 替换为 Prod 版（静态 Import）
+      [path.resolve(__dirname, 'src/utils/esmLoader.ts')]: path.resolve(__dirname, 'src/utils/esmLoader.prod.ts')
+    }
   },
   module: {
     rules: [

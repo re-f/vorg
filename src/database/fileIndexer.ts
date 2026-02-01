@@ -1,7 +1,5 @@
-// ESM imports moved to dynamic imports in indexFile to support CJS environments (unit tests)
-// import { unified } from 'unified';
-// import uniorgParse from 'uniorg-parse';
 import * as crypto from 'crypto';
+import { loadUnified } from '../utils/esmLoader';
 import { DatabaseConnection } from './connection';
 import { FileRepository } from './fileRepository';
 import { HeadingRepository } from './headingRepository';
@@ -50,9 +48,7 @@ export class FileIndexer {
         const allKeywords = this.configService.getAllKeywordStrings();
         const doneKeywords = this.configService.getDoneKeywords().map(k => k.keyword);
 
-        // Load ESM modules dynamically
-        const { unified } = await (eval('import("unified")') as Promise<any>);
-        const uniorgParse = (await (eval('import("uniorg-parse")') as Promise<any>)).default;
+        const { unified, uniorgParse } = await loadUnified();
 
         const processor = unified().use(uniorgParse as any, {
             todoKeywords: allKeywords
