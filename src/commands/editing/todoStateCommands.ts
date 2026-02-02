@@ -132,10 +132,11 @@ export class TodoStateCommands {
       const timestamp = now.toISOString().slice(0, 19).replace('T', ' ');
 
       if (keywordConfig.isDone) {
-        logText += `   CLOSED: [${timestamp}]\n`;
+        logText += `   CLOSED: [${timestamp}]`;
       } else {
-        logText += `   STATE: [${timestamp}] ${oldState || '(无)'} -> ${newState}\n`;
+        logText += `   STATE: [${timestamp}] ${oldState || '(无)'} -> ${newState}`;
       }
+      logText += '\n';
     }
 
     // 添加备注
@@ -151,8 +152,18 @@ export class TodoStateCommands {
     }
 
     if (logText) {
+      // 重新获取行对象，因为之前的状态修改可能改变了行长度
+      const currentLine = editor.document.lineAt(lineNumber);
+
+      // 使用 insert 插入到行尾，确保另起一行
+      // logText 已经包含换行符，所以这里需要在开头加一个换行，并去掉结尾的一个换行（如果有）以避免空行
+      // 但为了确保格式整洁，我们采用这种策略：
+      // 在当前行末尾添加: \n + logText (去掉最后的\n)
+
+      const textToInsert = '\n' + logText.trimEnd();
+
       await editor.edit(editBuilder => {
-        editBuilder.insert(insertPosition, logText);
+        editBuilder.insert(currentLine.range.end, textToInsert);
       });
     }
   }

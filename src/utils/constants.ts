@@ -31,7 +31,7 @@ export const DEFAULT_PREVIEW_OPTIONS = {
 } as const;
 
 // TODO状态相关常量
-export const DEFAULT_TODO_KEYWORDS = 'TODO NEXT WAITING | DONE CANCELLED';
+export const DEFAULT_TODO_KEYWORDS = 'TODO NEXT WAITING | DONE(@) CANCELLED(@)';
 export const DEFAULT_QUERY_LIMIT = 5000;
 
 export interface TodoKeywordConfig {

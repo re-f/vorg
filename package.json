@@ -61,7 +61,7 @@
       "properties": {
         "vorg.todoKeywords": {
           "type": "string",
-          "default": "TODO(t) NEXT(n) WAITING(w) | DONE(d) CANCELLED(c)",
+          "default": "TODO(t) NEXT(n) WAITING(w) | DONE(d@) CANCELLED(c@)",
           "description": "TODO状态关键字配置，格式类似Org-mode。'|'前为未完成状态，'|'后为已完成状态。支持状态转换记录，如 TODO(@/!) 表示状态切换时记录时间戳和备注。",
           "markdownDescription": "TODO状态关键字配置，格式类似Org-mode。\n\n- `|` 前为未完成状态，`|` 后为已完成状态\n- 支持状态转换记录：`@` 表示记录时间戳，`!` 表示需要备注\n- 示例：`\"PreSale InDelivery HANGUP(@/!) End(@/!) | Terminated(@/!) DONE(@/!)\"`"
         },
