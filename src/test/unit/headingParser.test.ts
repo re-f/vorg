@@ -161,6 +161,26 @@ suite('HeadingParser 标题解析测试', () => {
       assert.strictEqual(result.tags?.length, 2);
       assert.deepStrictEqual(result.tags, ['#life', '#work']);
     });
+
+    suite('优先级解析测试', () => {
+      test('应该解析带优先级的标题 [#A]', () => {
+        const result = HeadingParser.parseHeading('* [#A] 优先级任务');
+        assert.strictEqual(result.priority, 'A');
+        assert.strictEqual(result.title, '优先级任务');
+      });
+
+      test('应该解析 TODO 后带优先级的标题', () => {
+        const result = HeadingParser.parseHeading('** TODO [#B] 重要任务');
+        assert.strictEqual(result.priority, 'B');
+        assert.strictEqual(result.todoKeyword, 'TODO');
+        assert.strictEqual(result.title, '重要任务');
+      });
+
+      test('解析不合法优先级时不应识别', () => {
+        const result = HeadingParser.parseHeading('* [#D] 不合法优先级');
+        assert.strictEqual(result.priority, null);
+      });
+    });
   });
 
   suite('findSubtreeEnd 测试', () => {

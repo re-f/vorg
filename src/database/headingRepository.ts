@@ -109,6 +109,12 @@ export class HeadingRepository {
             for (const heading of headings) {
                 const dbId = heading.properties?.ID || null;
 
+                let priority = heading.priority;
+                if (priority) {
+                    const match = priority.match(/[A-C]/);
+                    priority = (match ? match[0] : priority) as any;
+                }
+
                 headingStmt.bind({
                     $fileUri: heading.fileUri,
                     $startLine: heading.startLine,
@@ -120,7 +126,7 @@ export class HeadingRepository {
                     $pinyinDisplayName: heading.pinyinDisplayName || null,
                     $todoState: heading.todoState || null,
                     $todoCategory: heading.todoCategory || null,
-                    $priority: heading.priority || null,
+                    $priority: priority || null,
                     $scheduled: heading.scheduled ? Math.floor(heading.scheduled.getTime() / 1000) : null,
                     $deadline: heading.deadline ? Math.floor(heading.deadline.getTime() / 1000) : null,
                     $closed: heading.closed ? Math.floor(heading.closed.getTime() / 1000) : null,
@@ -287,15 +293,20 @@ export class HeadingRepository {
 
         // 2. 优先级过滤
         if (query.priority) {
+            const normalize = (p: string) => {
+                const match = p.toUpperCase().match(/[A-C]/);
+                return match ? match[0] : p;
+            };
+
             if (Array.isArray(query.priority)) {
                 const prioList = query.priority.map((p: string, i: number) => {
                     const key = `$prio${i}`;
-                    params[key] = p;
+                    params[key] = normalize(p);
                     return key;
                 });
                 whereClauses.push(`priority IN (${prioList.join(', ')})`);
             } else {
-                params.$priority = query.priority;
+                params.$priority = normalize(query.priority);
                 whereClauses.push(`priority = $priority`);
             }
         }

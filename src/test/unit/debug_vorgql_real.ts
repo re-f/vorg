@@ -182,7 +182,7 @@ function parseHeadings(fileUri: string, content: string, keywordCfg: any): OrgHe
                     title: info.title,
                     todoState: info.todoKeyword || undefined,
                     todoCategory: category,
-                    priority: info.priority ? (info.priority.replace(/[\[\]#]/g, '') as any) : undefined,
+                    priority: (info.priority || undefined) as any,
                     tags: info.tags || [],
                     properties: {},
                     timestamps: [],

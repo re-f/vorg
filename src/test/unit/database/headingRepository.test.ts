@@ -168,7 +168,7 @@ suite('HeadingRepository Integration Tests', () => {
         fileRepo.insert({ uri: fileUri, hash: 'h', title: 'T', properties: {}, tags: [], headings: [], updatedAt: new Date() });
 
         headingRepo.insert({
-            id: 'p1', fileUri, level: 1, title: '测试标题', pinyinTitle: 'ceshibiaoti csbt', pinyinDisplayName: 'TODO [#A] ceshibiaoti csbt work',
+            id: 'p1', fileUri, level: 1, title: '测试标题', pinyinTitle: 'ceshibiaoti csbt', pinyinDisplayName: 'TODO A ceshibiaoti csbt work',
             startLine: 1, endLine: 1, properties: {}, tags: ['work'], timestamps: [], childrenIds: [], createdAt: new Date(), updatedAt: new Date(),
             todoState: 'TODO', todoCategory: 'todo', priority: 'A', content: ''
         });

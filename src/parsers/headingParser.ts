@@ -50,7 +50,7 @@ export class HeadingParser {
       level: headingMatch[1].length,
       stars: headingMatch[1],
       todoKeyword: headingMatch[2] || null,
-      priority: headingMatch[3] ? `[#${headingMatch[3]}]` : null,
+      priority: headingMatch[3] || null,
       title: titleText
     };
 
@@ -224,7 +224,8 @@ export class HeadingParser {
       line += ` ${todoState}`;
     }
     if (priority) {
-      line += ` ${priority}`;
+      const formattedPriority = priority.startsWith('[#') ? priority : `[#${priority}]`;
+      line += ` ${formattedPriority}`;
     }
     line += ` ${pureTitle}`;
     if (tags && tags.length > 0) {

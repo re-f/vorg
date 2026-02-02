@@ -1,0 +1,24 @@
+{
+    "vorg.perspectives": [
+        {
+            "label": "📌 High Priority",
+            "query": "(priority \"A\")",
+            "description": "Urgent tasks"
+        },
+        {
+            "label": "📂 By File",
+            "query": "(group-by file (todo \"TODO\"))",
+            "description": "Active tasks grouped by file"
+        },
+        {
+            "label": "我也母鸡",
+            "query": "(tag \"项目\")",
+            "description": "就是测试一下而已"
+        },
+        {
+            "label": "所有 todo",
+            "query": "(group-by tag (category \"todo\" \"\"))",
+            "description": "按照 tag 分类"
+        }
+    ]
+}

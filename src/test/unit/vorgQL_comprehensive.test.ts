@@ -68,10 +68,18 @@ suite('VOrg-QL Comprehensive Engine Tests (Parser & Translator)', () => {
         test('应该翻译 group-by 元数据', () => {
             const q = '(group-by status (priority "A"))';
             const ast = VOrgQLParser.parse(q);
-            const { where, groupBy } = translator.translate(ast);
+            const { where, params, groupBy } = translator.translate(ast);
 
             assert.strictEqual(groupBy, 'todo_state');
             assert.ok(where.includes('priority IN ($v0)'));
+            assert.strictEqual(params['$v0'], 'A');
+        });
+
+        test('应该处理带 [# ] 括号的优先级查询并归一化', () => {
+            const q = '(priority "[#A]")';
+            const ast = VOrgQLParser.parse(q);
+            const { params } = translator.translate(ast);
+            assert.strictEqual(params['$v0'], 'A');
         });
 
         test('应该处理复杂的组合逻辑并生成正确的括号', () => {

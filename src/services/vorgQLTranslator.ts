@@ -32,6 +32,7 @@ export class VOrgQLTranslator {
         }
 
         const where = this.translateNode(root, params);
+        console.log(`[VOrgQL] Translated: "${where}" with params: ${JSON.stringify(params)}`);
         return { where, params, groupBy: groupByField };
     }
 
@@ -69,8 +70,8 @@ export class VOrgQLTranslator {
 
             case 'priority':
                 return this.buildInOrCompareClause('priority', node.args, params, (val) => {
-                    const p = val.toUpperCase();
-                    return /^[A-C]$/.test(p) ? `[#${p}]` : val;
+                    const match = val.toUpperCase().match(/[A-C]/);
+                    return match ? match[0] : val;
                 });
 
             case 'file':

@@ -20,7 +20,7 @@ suite('VOrgQL Comprehensive Engine Integration', () => {
     test('should translate comparison: (priority < B)', () => {
         const result = translator.translate(VOrgQLParser.parse('(p < B)'));
         assert.strictEqual(result.where, 'priority < $v0');
-        assert.strictEqual(result.params['$v0'], '[#B]');
+        assert.strictEqual(result.params['$v0'], 'B');
     });
 
     // --- Advanced Date Ranges ---
