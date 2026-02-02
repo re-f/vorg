@@ -512,7 +512,7 @@ export async function activate(context: vscode.ExtensionContext) {
   // 内部逻辑会判断是否是 id: 链接，只对 id: 链接提供补全
   const completionProvider = new OrgCompletionProvider();
   context.subscriptions.push(
-    vscode.languages.registerCompletionItemProvider('org', completionProvider, '[')
+    vscode.languages.registerCompletionItemProvider('org', completionProvider, '[', ':')
   );
 
   // 注册 ID 生成并插入命令（在用户选择补全项时调用）

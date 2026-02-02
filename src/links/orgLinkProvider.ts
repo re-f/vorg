@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { LinkUtils } from '../utils/linkUtils';
 import { Logger } from '../utils/logger';
+import { HeadingParser } from '../parsers/headingParser';
+import { getConfigService } from '../services/configService';
 
 /**
  * 链接提供器
@@ -133,7 +135,42 @@ export class OrgLinkProvider implements vscode.DocumentLinkProvider, vscode.Defi
     // 处理文件链接
     this.addFileLinks(document, text, links);
 
+    // 处理标题标签链接
+    this.addTagLinks(document, links);
+
     return links;
+  }
+
+  /**
+   * 添加标题标签链接
+   */
+  private addTagLinks(document: vscode.TextDocument, links: vscode.DocumentLink[]) {
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+
+    for (let i = 0; i < document.lineCount; i++) {
+      const line = document.lineAt(i);
+      const lineText = line.text;
+
+      if (HeadingParser.isHeadingLine(lineText, todoKeywords)) {
+        // 使用正则提取标签部分，因为我们需要在行中的确切位置
+        const tagMatch = lineText.match(/:[^\s:]+(?::[^\s:]+)*:\s*$/);
+        if (tagMatch) {
+          const startCol = tagMatch.index!;
+          const endCol = startCol + tagMatch[0].trim().length;
+          const range = new vscode.Range(
+            new vscode.Position(i, startCol),
+            new vscode.Position(i, endCol)
+          );
+
+          // 创建指向 vorg.setTags 命令的链接
+          const uri = vscode.Uri.parse(`command:vorg.setTags`);
+          const link = new vscode.DocumentLink(range, uri);
+          link.tooltip = 'Click to edit tags';
+          links.push(link);
+        }
+      }
+    }
   }
 
   /**

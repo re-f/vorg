@@ -504,14 +504,16 @@
   },
   "scripts": {
     "vscode:prepublish": "webpack --mode production --devtool hidden-source-map && node copy-resources.js",
-    "compile": "webpack --mode development",
+    "compile": "webpack --mode development && node copy-resources.js",
+    "build": "pnpm run compile",
     "watch": "webpack --mode development --watch",
     "compile-tests": "tsc -p ./",
+    "clean": "rm -rf out",
     "pretest": "pnpm run compile-tests && pnpm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "test:integration": "node ./out/test/runTest.js",
-    "test:unit": "npm run compile-tests && mocha --ui tdd --exclude \"out/test/unit/orgCompletionProviderContent.test.js\" \"out/test/unit/*.test.js\" \"out/test/unit/database/*.test.js\"",
+    "test:integration": "node copy-resources.js && pnpm run compile-tests && node ./out/test/runTest.js",
+    "test:unit": "pnpm run compile-tests && pnpm exec mocha --ui tdd --exclude \"out/test/unit/orgCompletionProviderContent.test.js\" \"out/test/unit/*.test.js\" \"out/test/unit/database/*.test.js\"",
     "package": "vsce package --no-dependencies",
     "docs": "typedoc src --out docs/api",
     "docs:serve": "pnpm run docs && open docs/api/index.html"
@@ -529,13 +531,15 @@
     "@vscode/vsce": "^3.6.2",
     "eslint": "^7.27.0",
     "glob": "^7.1.7",
+    "interpret": "3.1.1",
     "mocha": "^8.4.0",
     "ovsx": "^0.10.6",
+    "resolve-cwd": "^3.0.0",
     "ts-loader": "^9.5.4",
     "typedoc": "^0.25.0",
     "typescript": "^4.3.2",
     "webpack": "^5.102.1",
-    "webpack-cli": "^6.0.1"
+    "webpack-cli": "^5.1.4"
   },
   "dependencies": {
     "pinyin-pro": "^3.27.0",

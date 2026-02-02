@@ -63,6 +63,8 @@
 import * as vscode from 'vscode';
 import { OrgSymbolIndexService, IndexedHeadingSymbol } from '../services/orgSymbolIndexService';
 import { PropertyParser } from '../parsers/propertyParser';
+import { HeadingParser } from '../parsers/headingParser';
+import { getConfigService } from '../services/configService';
 import { Logger } from '../utils/logger';
 
 /**
@@ -74,7 +76,9 @@ enum LinkInputState {
   /** 用户输入了 [[id:，准备输入 ID */
   ID_PREFIX = 'id_prefix',
   /** 用户输入了 [[ 后跟其他非 id: 开头的文本（如 [[file: 或 [[haasdf） */
-  OTHER_CONTENT = 'other_content'
+  OTHER_CONTENT = 'other_content',
+  /** 用户在标题行输入了 :，准备输入标签 */
+  TAG = 'tag'
 }
 
 /**
@@ -113,7 +117,28 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
    * @param textBeforeCursor - 光标前的文本
    * @returns 链接输入信息，如果不匹配则返回 undefined
    */
-  private parseLinkInput(textBeforeCursor: string): LinkInputInfo | undefined {
+  private parseLinkInput(textBeforeCursor: string, document: vscode.TextDocument, position: vscode.Position): LinkInputInfo | undefined {
+    // 首先检查标签补全：如果在标题行且以 : 结尾
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
+    const lineText = document.lineAt(position.line).text;
+
+    if (HeadingParser.isHeadingLine(lineText, todoKeywords)) {
+      // 检查光标前是否以 : 结尾，且属于标题行的标签部分
+      // 这里的正则支持：
+      // 1. " : " (第一个标签开始)
+      // 2. ":tag1:" (后续标签开始)
+      const tagMatch = textBeforeCursor.match(/(?:\s+|:|[\w@#%])(:)([^\s:]*)$/);
+      if (tagMatch) {
+        return {
+          state: LinkInputState.TAG,
+          linkContent: tagMatch[2],
+          query: tagMatch[2].toLowerCase(),
+          bracketIndex: textBeforeCursor.lastIndexOf(tagMatch[1]) + tagMatch[1].length
+        };
+      }
+    }
+
     // 匹配 [[ 模式
     const bracketMatch = textBeforeCursor.match(/\[\[([^\]]*)$/);
     if (!bracketMatch) {
@@ -172,12 +197,12 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
     return symbols.filter(symbol => {
       const symbolText = symbol.text.toLowerCase();
       const symbolDisplayName = symbol.displayName.toLowerCase();
-      
+
       // 字符串匹配（原有功能）
       if (symbolText.includes(queryLower) || symbolDisplayName.includes(queryLower)) {
         return true;
       }
-      
+
       // 拼音匹配（使用缓存的拼音字段）
       // 安全检查：确保拼音字段存在且不为空
       const pinyinText = symbol.pinyinText || '';
@@ -189,7 +214,7 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
           return true;
         }
       }
-      
+
       return false;
     });
   }
@@ -220,17 +245,21 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
     context: vscode.CompletionContext
   ): Promise<vscode.CompletionItem[] | undefined> {
     const textBeforeCursor = document.lineAt(position.line).text.substring(0, position.character);
-    
+
     // 解析输入状态
-    const inputInfo = this.parseLinkInput(textBeforeCursor);
+    const inputInfo = this.parseLinkInput(textBeforeCursor, document, position);
     if (!inputInfo) {
       return undefined;
+    }
+
+    if (inputInfo.state === LinkInputState.TAG) {
+      return this.provideTagCompletions(inputInfo, position);
     }
 
 
     // 获取所有 headline
     const allSymbols = await this.indexService.getAllSymbols();
-    
+
     if (token.isCancellationRequested) {
       return undefined;
     }
@@ -315,7 +344,7 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
 
     // 检查是否真的包含 [[id:
     const hasIdPrefix = textBeforeCursor.includes('[[id:');
-    
+
     if (inputInfo.state === LinkInputState.ID_PREFIX && hasIdPrefix) {
       // 用户真正输入了 [[id:xxx，从 ':' 之后开始替换
       const idColonIndex = textBeforeCursor.lastIndexOf('[[id:') + 5; // '[[id:' 的长度是 5
@@ -382,18 +411,18 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
       filterText = `${cleanText} ${pinyinInfo}`.trim();
     }
     completionItem.filterText = filterText;
-    
+
     // 设置 sortText：控制排序（按标题字母顺序）
     completionItem.sortText = symbol.text.toLowerCase();
-    
+
     // 设置 label：显示在补全列表中的文本
     completionItem.label = {
       label: symbol.displayName,
       description: `${symbol.relativePath}`
     };
-    
+
     completionItem.detail = `${symbol.relativePath} (Level ${symbol.level})`;
-    
+
     // 设置文档说明
     const idDisplay = id === 'PLACEHOLDER_ID' ? '将在选择时生成' : id;
     completionItem.documentation = new vscode.MarkdownString(
@@ -424,6 +453,37 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
     }
 
     return completionItem;
+  }
+
+  /**
+   * 提供标签补全
+   */
+  private provideTagCompletions(
+    inputInfo: LinkInputInfo,
+    position: vscode.Position
+  ): vscode.CompletionItem[] {
+    const allTagsMap = this.indexService.getAllTags();
+    const query = inputInfo.query;
+
+    const completionItems: vscode.CompletionItem[] = [];
+
+    for (const [tag, count] of allTagsMap.entries()) {
+      if (query && !tag.toLowerCase().includes(query)) {
+        continue;
+      }
+
+      const item = new vscode.CompletionItem(tag, vscode.CompletionItemKind.Keyword);
+      item.detail = `${count} uses`;
+      item.insertText = tag + ':';
+
+      // 设置范围以正确替换正在输入的查询部分
+      const startPos = new vscode.Position(position.line, inputInfo.bracketIndex);
+      item.range = new vscode.Range(startPos, position);
+
+      completionItems.push(item);
+    }
+
+    return completionItems;
   }
 }
 
