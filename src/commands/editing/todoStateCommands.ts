@@ -3,6 +3,7 @@ import { HeadingInfo } from '../types/editingTypes';
 import { HeadingCommands } from './headingCommands';
 import { HeadingParser } from '../../parsers/headingParser';
 import { getConfigService } from '../../services/configService';
+import { formatOrgTimestamp } from '../../utils/dateUtils';
 
 /**
  * TODO 状态管理命令类
@@ -129,12 +130,12 @@ export class TodoStateCommands {
     // 添加时间戳
     if (needsTimestamp) {
       const now = new Date();
-      const timestamp = now.toISOString().slice(0, 19).replace('T', ' ');
+      const timestamp = formatOrgTimestamp(now, false); // Inactive timestamp [YYYY-MM-DD Day HH:MM]
 
       if (keywordConfig.isDone) {
-        logText += `   CLOSED: [${timestamp}]`;
+        logText += `  CLOSED: ${timestamp}`;
       } else {
-        logText += `   STATE: [${timestamp}] ${oldState || '(无)'} -> ${newState}`;
+        logText += `  STATE: ${timestamp} ${oldState || '(无)'} -> ${newState}`;
       }
       logText += '\n';
     }

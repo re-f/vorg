@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { HeadingCommands } from './headingCommands';
 import { getConfigService } from '../../services/configService';
+import { formatOrgTimestamp } from '../../utils/dateUtils';
 import { Logger } from '../../utils/logger';
 
 /**
@@ -72,21 +73,8 @@ export class DateCommands {
                 return;
             }
 
-            // 安全获取星期名称，避免 RangeError
-            let dayName = '';
-            try {
-                const dateObj = new Date(dateStr);
-                if (!isNaN(dateObj.getTime())) {
-                    dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-                } else {
-                    dayName = '???';
-                }
-            } catch (e) {
-                dayName = '???';
-                Logger.warn('Failed to parse day name', e);
-            }
-
-            const orgTimestamp = `<${dateStr}${dayName ? ' ' + dayName : ''}>`;
+            const dateObj = new Date(dateStr);
+            const orgTimestamp = formatOrgTimestamp(dateObj, true, false); // Active timestamp <YYYY-MM-DD Day>
 
             // 查找现有的规划行 (通常在标题后第一行)
             let planningLineNumber = headingLineNumber + 1;
