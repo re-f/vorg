@@ -1,1 +1,1 @@
-(priority "A")
+(and (file "2025.org") (todo "TODO"))

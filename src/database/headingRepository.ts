@@ -334,9 +334,10 @@ export class HeadingRepository {
         }
 
         // 5. 范围限制
-        if (query.fileUri) {
-            params.$fileUri = query.fileUri;
-            whereClauses.push(`file_uri = $fileUri`);
+        const fileFilter = query.fileUri || query.file;
+        if (fileFilter) {
+            params.$fileUri = `%${fileFilter}`;
+            whereClauses.push(`file_uri LIKE $fileUri`);
         }
 
         // 构建 SQL

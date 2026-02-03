@@ -105,6 +105,12 @@ suite('HeadingRepository.findByQL Tests', () => {
         assert.strictEqual(results[0].title, 'Document system');
     });
 
+    test('should handle file search (suffix/filename)', () => {
+        // Now implementation supports suffix match
+        const results = executeQL('(file "ql.org")');
+        assert.strictEqual(results.length, 3);
+    });
+
     suite('Priority Specific Tests', () => {
         test('should match priority using "A"', () => {
             const results = executeQL('(priority "A")');
