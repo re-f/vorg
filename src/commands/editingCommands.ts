@@ -222,15 +222,15 @@ export class EditingCommands {
     if (context.type === 'heading') {
       // 在子树末尾插入新标题
       const subtreeEnd = HeadingParser.findSubtreeEnd(document, position, todoKeywords);
-      const newPosition = new vscode.Position(subtreeEnd.line + 1, 0);
+      const line = document.lineAt(subtreeEnd.line);
+      const stars = '*'.repeat(context.level || 1);
 
       await editor.edit(editBuilder => {
-        const stars = '*'.repeat(context.level || 1);
-        editBuilder.insert(newPosition, `${stars} \n`);
+        editBuilder.insert(line.range.end, `\n${stars} `);
       });
 
       // 移动光标到新标题位置
-      const newCursorPos = new vscode.Position(subtreeEnd.line + 1, (context.level || 1) + 1);
+      const newCursorPos = new vscode.Position(subtreeEnd.line + 1, stars.length + 1);
       editor.selection = new vscode.Selection(newCursorPos, newCursorPos);
     } else {
       // 对于非标题元素，执行常规 meta-return
@@ -435,7 +435,7 @@ export class EditingCommands {
 
     // 在当前行末尾插入新标题
     const line = document.lineAt(position.line);
-    editBuilder.insert(line.range.end, `\n${stars} \n`);
+    editBuilder.insert(line.range.end, `\n${stars} `);
 
     // 移动光标到新标题的标题文本位置（插入换行后，新标题在当前行的下一行）
     const newCursorPosition = new vscode.Position(position.line + 1, stars.length + 1);
