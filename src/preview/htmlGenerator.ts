@@ -67,6 +67,9 @@ export class HtmlGenerator {
       // 后处理：修复示例块的换行
       html = this.processExampleBlocks(html);
 
+      // 后处理：处理 Mermaid 图表
+      html = this.processMermaidBlocks(html, ast);
+
       // 获取当前 VS Code 主题信息
       const isDarkTheme = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
 
@@ -393,6 +396,70 @@ export class HtmlGenerator {
     return processedHtml;
   }
 
+  /**
+   * 处理 Mermaid 代码块
+   * 将 mermaid 语言的代码块转换为可渲染的 div
+   */
+  private static processMermaidBlocks(html: string, ast: any): string {
+    const mermaidBlocks: Array<{ code: string }> = [];
+
+    // 从 AST 中提取 mermaid 代码块
+    const extractMermaid = (node: any): void => {
+      if (node.type === 'src-block' && node.language && node.language.toLowerCase() === 'mermaid') {
+        mermaidBlocks.push({ code: node.value || '' });
+      }
+      if (node.children) {
+        node.children.forEach(extractMermaid);
+      }
+    };
+
+    extractMermaid(ast);
+
+    // 如果没有 mermaid 块,直接返回
+    if (mermaidBlocks.length === 0) {
+      return html;
+    }
+
+    // 替换 HTML 中的 mermaid 代码块
+    let processedHtml = html;
+    let blockIndex = 0;
+
+    // 匹配 pre 标签中包含 mermaid 代码的内容
+    processedHtml = processedHtml.replace(
+      /<pre([^>]*)><code([^>]*)>([\s\S]*?)<\/code><\/pre>/g,
+      (match, preAttrs, codeAttrs, content) => {
+        // 检查是否是 mermaid 代码块
+        if (blockIndex < mermaidBlocks.length) {
+          const block = mermaidBlocks[blockIndex];
+          const decodedContent = content
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&')
+            .trim();
+
+          // 检查内容是否匹配(去除空白符后比较)
+          const normalizedBlock = block.code.replace(/\s+/g, ' ').trim();
+          const normalizedContent = decodedContent.replace(/\s+/g, ' ').trim();
+
+          if (normalizedContent.includes('graph') ||
+            normalizedContent.includes('sequenceDiagram') ||
+            normalizedContent.includes('classDiagram') ||
+            normalizedContent.includes('stateDiagram') ||
+            normalizedContent.includes('erDiagram') ||
+            normalizedContent.includes('gantt') ||
+            normalizedContent.includes('pie') ||
+            normalizedContent.includes('flowchart')) {
+            blockIndex++;
+            return `<div class="mermaid">${decodedContent}</div>`;
+          }
+        }
+        return match;
+      }
+    );
+
+    return processedHtml;
+  }
+
   private static processExampleBlocks(html: string): string {
     // 修复示例块中的换行问题
     // uniorg-rehype 可能会将示例块转换为没有正确保持换行的格式
@@ -549,7 +616,10 @@ export class HtmlGenerator {
           <style>
             ${this.getStyles(isDarkTheme)}
             ${this.getExportButtonStyles()}
+            ${this.getMermaidStyles()}
           </style>
+          <!-- Mermaid 库 -->
+          <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
         </head>
         <body>
           ${exportButtonHtml}
@@ -558,6 +628,7 @@ export class HtmlGenerator {
           ${content}
           
           <script>
+            ${this.getMermaidInitScript(isDarkTheme)}
             ${this.getScript(webview)}
           </script>
         </body>
@@ -704,6 +775,9 @@ export class HtmlGenerator {
       // 后处理：修复示例块的换行
       html = this.processExampleBlocks(html);
 
+      // 后处理：处理 Mermaid 图表
+      html = this.processMermaidBlocks(html, ast);
+
       // 获取当前 VS Code 主题信息
       const isDarkTheme = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
 
@@ -738,15 +812,21 @@ export class HtmlGenerator {
           <title>${this.escapeHtml(pageTitle)}</title>
           <style>
             ${this.getStyles(isDarkTheme)}
+            ${this.getMermaidStyles()}
             /* 隐藏滚动指示器（如果存在） */
             .scroll-indicator {
               display: none !important;
             }
           </style>
+          <!-- Mermaid 库 -->
+          <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
         </head>
         <body>
           ${titleHtml}
           ${contentWithoutScrollIndicator}
+          <script>
+            ${this.getMermaidInitScript(isDarkTheme)}
+          </script>
         </body>
       </html>
     `;
@@ -1008,6 +1088,47 @@ export class HtmlGenerator {
         color: #888;
         padding: 1em;
         font-style: italic;
+      }
+    `;
+  }
+
+  /**
+   * 获取 Mermaid 样式
+   */
+  private static getMermaidStyles(): string {
+    return `
+      /* Mermaid 图表样式 */
+      .mermaid {
+        margin: 1.5em 0;
+        padding: 1em;
+        background-color: var(--code-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        text-align: center;
+        overflow-x: auto;
+      }
+
+      .mermaid svg {
+        max-width: 100%;
+        height: auto;
+      }
+    `;
+  }
+
+  /**
+   * 获取 Mermaid 初始化脚本
+   */
+  private static getMermaidInitScript(isDarkTheme: boolean): string {
+    const theme = isDarkTheme ? 'dark' : 'default';
+    return `
+      // 初始化 Mermaid
+      if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: '${theme}',
+          securityLevel: 'loose',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif'
+        });
       }
     `;
   }

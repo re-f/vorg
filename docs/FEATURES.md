@@ -43,9 +43,65 @@
 
 ### 高级功能
 - **代码块**：支持语法高亮的代码块
+- **Mermaid 图表**：支持 Mermaid 图表渲染（流程图、时序图、类图等）
 - **表格渲染**：完整的表格支持
 - **引用块**：美观的引用块渲染
 - **元数据支持**：文档属性、关键字、标签系统
+
+## 📊 Mermaid 图表支持 ⭐
+
+### 核心特性
+- **多种图表类型**：支持流程图、时序图、类图、状态图、甘特图、饼图、ER图等
+- **主题自适应**：自动适配 VS Code 当前主题（亮色/暗色）
+- **即时渲染**：在预览窗口中实时渲染图表
+- **导出支持**：导出 HTML 时保留图表渲染
+
+### 使用方法
+在 org 文件中使用 `#+BEGIN_SRC mermaid` 代码块：
+
+```org
+#+BEGIN_SRC mermaid
+graph TD
+    A[开始] --> B{判断}
+    B -->|是| C[执行]
+    B -->|否| D[跳过]
+#+END_SRC
+```
+
+### 支持的图表类型
+- **流程图** (Flowchart/Graph)：展示流程和决策路径
+- **时序图** (Sequence Diagram)：展示对象间的交互序列
+- **类图** (Class Diagram)：展示类的结构和关系
+- **状态图** (State Diagram)：展示状态转换
+- **甘特图** (Gantt)：展示项目时间线
+- **饼图** (Pie Chart)：展示数据占比
+- **ER图** (Entity Relationship Diagram)：展示实体关系
+
+### 示例
+
+#### 流程图
+```org
+#+BEGIN_SRC mermaid
+flowchart LR
+    A[方形] --> B(圆角)
+    B --> C{菱形}
+    C -->|a| D[结果1]
+    C -->|b| E[结果2]
+#+END_SRC
+```
+
+#### 时序图
+```org
+#+BEGIN_SRC mermaid
+sequenceDiagram
+    participant Alice
+    participant Bob
+    Alice->>Bob: 你好
+    Bob-->>Alice: 你好
+#+END_SRC
+```
+
+详细文档请参考：[Mermaid 支持文档](./MERMAID_SUPPORT.md)
 
 ## 📋 文档大纲导航 ⭐
 

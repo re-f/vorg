@@ -1,0 +1,43 @@
+#+TITLE: preview Test
+
+* Test Mermaid Diagram
+
+This is a test for Mermaid diagram rendering.
+
+#+BEGIN_SRC mermaid
+graph TD
+    A[VS Code Editor] -->|File Change| B(Workspace Watcher)
+    B -->|Debounced Event| C{Change Detection}
+    C -->|Hash Mismatch| D[File Indexer]
+    C -->|Hash Match| E[Skip]
+    
+    subgraph "Core Engine"
+    D -->|Parse| F[Uniorg Parser]
+    F -->|AST| G[AST Extractor]
+    G -->|Headings/Links| H[SQLite Database]
+    end
+    
+    I[Query Service] -->|SQL| H
+    J[Preview Webview] <--Data--> I
+```
+#+END_SRC
+
+#+BEGIN_SRC mermaid
+gantt
+    title 项目计划
+    dateFormat  YYYY-MM-DD
+    section 阶段1
+    任务1           :a1, 2024-01-01, 30d
+    任务2           :after a1, 20d
+    section 阶段2
+    任务3           :2024-02-01, 12d
+    任务4           :24d
+#+END_SRC
+
+#+BEGIN_SRC mermaid
+sequenceDiagram
+    participant Alice
+    participant Bob
+    Alice->>Bob: Hello Bob, how are you?
+    Bob-->>Alice: Great!
+#+END_SRC
