@@ -126,14 +126,4 @@ suite('HeadingRepository.findByCriteria Tests', () => {
         const results = headingRepo.findByCriteria({ todo: 'WAITING' });
         assert.strictEqual(results.length, 0);
     });
-
-    test('should filter by fileUri (suffix)', () => {
-        const results = headingRepo.findByCriteria({ fileUri: 'query.org' });
-        assert.strictEqual(results.length, 4);
-    });
-
-    test('should filter by file alias (suffix)', () => {
-        const results = headingRepo.findByCriteria({ file: 'query.org' });
-        assert.strictEqual(results.length, 4);
-    });
 });

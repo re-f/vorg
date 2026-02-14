@@ -1,3 +1,30 @@
+/**
+ * VOrgQL Real-world Debugger
+ * 
+ * 一个独立运行的工具，用于在真实的 Org 文件目录下测试 VOrgQL 查询。
+ * 它会在内存中创建一个临时数据库，扫描并索引指定目录下的所有 .org 文件，然后执行查询并展示结果。
+ * 
+ * 使用方法:
+ * npx ts-node src/test/unit/debug_vorgql_real.ts --dir <org-dir> [选项]
+ * 
+ * 必填参数:
+ *   --dir <path>          待扫描的 Org 文件目录逻辑路径
+ * 
+ * 选项:
+ *   --query <string>      要执行的 VOrgQL 查询字符串 (例如: "(todo)")
+ *   --file <path>         包含 VOrgQL 查询的文件路径 (如果未提供 --query)
+ *   --todo <config>       自定义 TODO 关键词配置 (默认为 "TODO|DONE")
+ * 
+ * 示例:
+ *   1. 查询所有待办事项:
+ *      npx ts-node src/test/unit/debug_vorgql_real.ts --dir ~/notes --query "(todo)"
+ * 
+ *   2. 查询特定标签并分组:
+ *      npx ts-node src/test/unit/debug_vorgql_real.ts --dir . --query "(group-by tag (tag 'work'))"
+ * 
+ *   3. 从文件读取复杂查询:
+ *      npx ts-node src/test/unit/debug_vorgql_real.ts --dir . --file ./my_query.vql
+ */
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -11,6 +38,9 @@ import { HeadingParser } from '../../parsers/headingParser';
 import { OrgHeading } from '../../database/types';
 import { parseTodoKeywords, DEFAULT_TODO_KEYWORDS } from '../../utils/constants';
 
+/**
+ * 程序主入口
+ */
 async function main() {
     const args = process.argv.slice(2);
     const dirIdx = args.indexOf('--dir');
@@ -142,6 +172,11 @@ async function main() {
     }
 }
 
+/**
+ * 递归获取目录下所有的 .org 文件路径
+ * @param dir 目标目录
+ * @returns 文件路径数组
+ */
 function getAllOrgFiles(dir: string): string[] {
     let results: string[] = [];
     const list = fs.readdirSync(dir);
@@ -157,6 +192,13 @@ function getAllOrgFiles(dir: string): string[] {
     return results;
 }
 
+/**
+ * 简单的标题解析器，用于调试工具快速索引
+ * @param fileUri 文件路径
+ * @param content 文件内容
+ * @param keywordCfg TODO 关键词配置
+ * @returns 解析得到的标题对象数组
+ */
 function parseHeadings(fileUri: string, content: string, keywordCfg: any): OrgHeading[] {
     const lines = content.split('\n');
     const headings: OrgHeading[] = [];
@@ -182,7 +224,7 @@ function parseHeadings(fileUri: string, content: string, keywordCfg: any): OrgHe
                     title: info.title,
                     todoState: info.todoKeyword || undefined,
                     todoCategory: category,
-                    priority: (info.priority || undefined) as any,
+                    priority: info.priority ? (info.priority.replace(/[\[\]#]/g, '') as any) : undefined,
                     tags: info.tags || [],
                     properties: {},
                     timestamps: [],
@@ -198,6 +240,12 @@ function parseHeadings(fileUri: string, content: string, keywordCfg: any): OrgHe
     return headings;
 }
 
+/**
+ * 对查询结果进行分组处理
+ * @param headings 标题数组
+ * @param type 分组类型 (file_uri, tag, todo_state, priority)
+ * @returns 分组后的 Map
+ */
 function groupResults(headings: OrgHeading[], type: string): Map<string, OrgHeading[]> {
     const groups = new Map<string, OrgHeading[]>();
 
