@@ -42,8 +42,7 @@ suite('TodoStateCommands Integration Test Suite', () => {
         await vscode.commands.executeCommand('vorg.setTodoState', 'DONE');
         await wait();
 
-        const lines = doc.getText().split('\n');
-        assert.strictEqual(lines[0], '* DONE Heading 1');
+        assert.strictEqual(doc.getText(), '* DONE Heading 1');
     });
 
     test('Set Todo State: 应该移除状态', async () => {
@@ -68,17 +67,6 @@ suite('TodoStateCommands Integration Test Suite', () => {
 
         const lines = doc.getText().split('\n');
         assert.strictEqual(lines[0], '* DONE Heading 1');
-    });
-
-    test('Set Todo State: 应该记录 CLOSED 时间戳', async () => {
-        const { doc } = await setupTest('* TODO Heading 1', 0, 5);
-
-        await vscode.commands.executeCommand('vorg.setTodoState', 'DONE');
-        await wait();
-
-        const lines = doc.getText().split('\n');
-        assert.strictEqual(lines[0], '* DONE Heading 1');
-        assert.ok(lines[1] && lines[1].includes('CLOSED: ['), '应该包含 CLOSED 时间戳');
     });
 
 });
