@@ -188,8 +188,10 @@ export class EditingCommands {
           EditingCommands.insertDefaultNewline(editBuilder, editor, position, isAtBeginning);
           break;
         default:
-          if (isAtBeginning || isAtEnd) {
-            EditingCommands.insertHeadingInText(editBuilder, editor, position);
+          if (isAtBeginning) {
+            newCursorPosition = EditingCommands.insertHeadingBeforeLine(editBuilder, editor, position);
+          } else if (isAtEnd) {
+            newCursorPosition = EditingCommands.insertHeadingAfterLine(editBuilder, editor, position);
           } else {
             newCursorPosition = EditingCommands.splitTextIntoHeading(editBuilder, editor, position);
           }
@@ -282,7 +284,7 @@ export class EditingCommands {
           TableCommands.insertTableRow(editBuilder, editor, context);
           break;
         default:
-          EditingCommands.insertHeadingInText(editBuilder, editor, position);
+          newCursorPosition = EditingCommands.insertHeadingAfterLine(editBuilder, editor, position);
           break;
       }
     });
@@ -416,15 +418,41 @@ export class EditingCommands {
   }
 
   /**
-   * 在普通文本中插入新标题
+   * 在普通文本行之前插入新标题
+   * 返回光标应该移动到的位置
    */
-  private static insertHeadingInText(
+  private static insertHeadingBeforeLine(
     editBuilder: vscode.TextEditorEdit,
     editor: vscode.TextEditor,
     position: vscode.Position
-  ) {
+  ): vscode.Position {
     const document = editor.document;
+    const config = getConfigService();
+    const todoKeywords = config.getAllKeywordStrings();
 
+    // 查找所属标题以确定级别
+    const currentHeading = HeadingCommands.findCurrentHeading(document, position, todoKeywords);
+    const level = currentHeading ? currentHeading.headingInfo.level : 1;
+    const stars = '*'.repeat(level);
+
+    // 在当前行起始位置插入新标题和换行
+    const line = document.lineAt(position.line);
+    editBuilder.insert(line.range.start, `${stars} \n`);
+
+    // 移动光标到新标题的标题文本位置（即当前行的起始位置）
+    return new vscode.Position(position.line, stars.length + 1);
+  }
+
+  /**
+   * 在普通文本行之后插入新标题
+   * 返回光标应该移动到的位置
+   */
+  private static insertHeadingAfterLine(
+    editBuilder: vscode.TextEditorEdit,
+    editor: vscode.TextEditor,
+    position: vscode.Position
+  ): vscode.Position {
+    const document = editor.document;
     const config = getConfigService();
     const todoKeywords = config.getAllKeywordStrings();
 
@@ -438,8 +466,7 @@ export class EditingCommands {
     editBuilder.insert(line.range.end, `\n${stars} `);
 
     // 移动光标到新标题的标题文本位置（插入换行后，新标题在当前行的下一行）
-    const newCursorPosition = new vscode.Position(position.line + 1, stars.length + 1);
-    editor.selection = new vscode.Selection(newCursorPosition, newCursorPosition);
+    return new vscode.Position(position.line + 1, stars.length + 1);
   }
 
   /**
