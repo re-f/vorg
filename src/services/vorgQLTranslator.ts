@@ -32,7 +32,6 @@ export class VOrgQLTranslator {
         }
 
         const where = this.translateNode(root, params);
-        console.log(`[VOrgQL] Translated: "${where}" with params: ${JSON.stringify(params)}`);
         return { where, params, groupBy: groupByField };
     }
 
@@ -70,12 +69,12 @@ export class VOrgQLTranslator {
 
             case 'priority':
                 return this.buildInOrCompareClause('priority', node.args, params, (val) => {
-                    const match = val.toUpperCase().match(/[A-C]/);
-                    return match ? match[0] : val;
+                    const p = val.toUpperCase();
+                    return /^[A-C]$/.test(p) ? `[#${p}]` : val;
                 });
 
             case 'file':
-                return this.buildFileClause(node.args.map(a => a.type), params);
+                return this.buildInClause('file_uri', node.args.map(a => a.type), params);
 
             case 'done':
                 if (node.args.length === 0) {
@@ -113,17 +112,6 @@ export class VOrgQLTranslator {
                 // 如果是一个复合列表但操作符未知，视为一个 AND 组合（暂定）
                 return `(${node.args.map(arg => this.translateNode(arg, params)).join(' AND ')})`;
         }
-    }
-
-    private buildFileClause(values: string[], params: Record<string, any>): string {
-        if (values.length === 0) return '1=1';
-        const clauses = values.map(val => {
-            const p = this.nextParam();
-            // 默认支持后缀匹配 (suffix match)
-            params[p] = `%${val}`;
-            return `file_uri LIKE ${p}`;
-        });
-        return clauses.length === 1 ? clauses[0] : `(${clauses.join(' OR ')})`;
     }
 
     private buildInClause(column: string, values: string[], params: Record<string, any>): string {

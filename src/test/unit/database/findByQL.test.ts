@@ -104,36 +104,4 @@ suite('HeadingRepository.findByQL Tests', () => {
         assert.strictEqual(results.length, 1);
         assert.strictEqual(results[0].title, 'Document system');
     });
-
-    test('should handle file search (suffix/filename)', () => {
-        // Now implementation supports suffix match
-        const results = executeQL('(file "ql.org")');
-        assert.strictEqual(results.length, 3);
-    });
-
-    suite('Priority Specific Tests', () => {
-        test('should match priority using "A"', () => {
-            const results = executeQL('(priority "A")');
-            assert.strictEqual(results.length, 2); // h1 and h3
-            assert.ok(results.every(r => r.priority === 'A'));
-        });
-
-        test('should match priority using "[#A]"', () => {
-            const results = executeQL('(priority "[#A]")');
-            assert.strictEqual(results.length, 2);
-        });
-
-        test('should match priority using alias "prio"', () => {
-            const results = executeQL('(prio "A")');
-            assert.strictEqual(results.length, 2);
-        });
-
-        test('should handle priority comparison', () => {
-            // [#A] < [#B] in string comparison, but we want to check if logic works
-            // Actually SQLite string comparison: "[#A]" < "[#B]" is true.
-            const results = executeQL('(priority ">=" "B")');
-            assert.strictEqual(results.length, 1);
-            assert.strictEqual(results[0].priority, 'B');
-        });
-    });
 });

@@ -109,12 +109,6 @@ export class HeadingRepository {
             for (const heading of headings) {
                 const dbId = heading.properties?.ID || null;
 
-                let priority = heading.priority;
-                if (priority) {
-                    const match = priority.match(/[A-C]/);
-                    priority = (match ? match[0] : priority) as any;
-                }
-
                 headingStmt.bind({
                     $fileUri: heading.fileUri,
                     $startLine: heading.startLine,
@@ -126,7 +120,7 @@ export class HeadingRepository {
                     $pinyinDisplayName: heading.pinyinDisplayName || null,
                     $todoState: heading.todoState || null,
                     $todoCategory: heading.todoCategory || null,
-                    $priority: priority || null,
+                    $priority: heading.priority || null,
                     $scheduled: heading.scheduled ? Math.floor(heading.scheduled.getTime() / 1000) : null,
                     $deadline: heading.deadline ? Math.floor(heading.deadline.getTime() / 1000) : null,
                     $closed: heading.closed ? Math.floor(heading.closed.getTime() / 1000) : null,
@@ -293,20 +287,15 @@ export class HeadingRepository {
 
         // 2. 优先级过滤
         if (query.priority) {
-            const normalize = (p: string) => {
-                const match = p.toUpperCase().match(/[A-C]/);
-                return match ? match[0] : p;
-            };
-
             if (Array.isArray(query.priority)) {
                 const prioList = query.priority.map((p: string, i: number) => {
                     const key = `$prio${i}`;
-                    params[key] = normalize(p);
+                    params[key] = p;
                     return key;
                 });
                 whereClauses.push(`priority IN (${prioList.join(', ')})`);
             } else {
-                params.$priority = normalize(query.priority);
+                params.$priority = query.priority;
                 whereClauses.push(`priority = $priority`);
             }
         }
@@ -334,10 +323,9 @@ export class HeadingRepository {
         }
 
         // 5. 范围限制
-        const fileFilter = query.fileUri || query.file;
-        if (fileFilter) {
-            params.$fileUri = `%${fileFilter}`;
-            whereClauses.push(`file_uri LIKE $fileUri`);
+        if (query.fileUri) {
+            params.$fileUri = query.fileUri;
+            whereClauses.push(`file_uri = $fileUri`);
         }
 
         // 构建 SQL
