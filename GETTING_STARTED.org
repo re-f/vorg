@@ -1,0 +1,67 @@
+#+TITLE: 🚀 VOrg 交互式入门教程
+#+AUTHOR: VOrg Team
+
+* 💡 说明
+本文档是一个可执行的 **Live Tutorial**。请在 VS Code 中直接操作本文档，体验 VOrg 的核心功能。
+
+**👉 准备工作：按 `Ctrl+C Ctrl+E` (或点击右上角图标) 打开并排预览。**
+
+* 1. 结构化浏览 (Folding & Structure)
+Org-mode 通过折叠机制管理复杂文档。
+
+**练习：**
+1. 将光标移动到下方的“示例子树”标题上。
+2. 按 `Tab` 键循环切换：折叠 -> 展开。
+3. 按 `Shift+Tab` 循环切换整个文档的可见性状态。
+4. 尝试按 `Ctrl+C Ctrl+Shift+.` (Mac: `Cmd+Shift+.`) 降级标题，或用 `,` 升级。
+
+**** 示例子树：尝试折叠我
+这里包含一些隐藏的子内容。
+
+* 2. 智能编辑 (Smart Edit)
+VOrg 提供上下文感知的编辑辅助，无需手动调整格式。
+
+**练习：**
+1. 将光标放在下方的列表项末尾。
+2. 按 `Alt+Enter` (Mac: `Opt+Enter`)。
+3. 系统会自动插入一个新的同级复选框项。
+
+- [ ] 现有任务
+- [ ] (在此处按 Alt+Enter 测试)
+
+* 3. 任务状态管理 (GTD)
+通过快捷键快速流转任务状态，无需手动修改文本。
+
+**练习：**
+1. 在下方标题上按 `Ctrl+C Ctrl+T`，观察 TODO 关键词在 TODO/DONE 间切换。
+2. 按 `Shift+Up/Down` 修改优先级 ([#A], [#B], [#C])。
+
+** TODO [#A] 演示任务：修改我的状态 :tag:
+
+* 4. 链接与引用 (Links)
+支持文件路径跳转与基于 ID 的全局模糊搜索。
+
+**练习：**
+1. 自定义链接：按住 `Ctrl/Cmd` 点击：[[https://github.com/re-f/vorg][VOrg GitHub 仓库]]
+2. ID 链接补全：
+   - 在下方输入 `[[id:`
+   - 观察弹出的自动补全列表（涵盖工作区所有标题）
+
+* 5. 动态视图 (Dynamic Views)
+通过嵌入式查询块，自动聚合分散在工作区中的任务。
+
+**说明：**
+下方的代码块定义了一个查询：搜寻所有优先级为 A 的 TODO 任务。
+该结果会在预览窗口中**动态渲染**。
+
+#+begin_src vorg-ql
+(and 
+  (todo "TODO") 
+  (priority "A")
+)
+#+end_src
+
+---
+**下一步**
+- 查阅 [快捷键手册](docs/ref/KEYBINDINGS.md) 获取完整列表。
+- 阅读 [动态视图指南](docs/guide/QUERY.md) 学习更多查询语法。
