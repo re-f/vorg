@@ -1,0 +1,11 @@
+{
+
+    "permissions": {
+        "allow": [
+            "Bash(uuidgen)",
+            "Bash(git diff*)",
+            "Bash(git log --oneline -*)",
+            "Bash(git add --oneline)"
+        ]
+    }
+}

@@ -68,9 +68,11 @@ export class VOrgQLTranslator {
                 return this.buildInOrCompareClause('todo_state', node.args, params);
 
             case 'priority':
+            case 'prio':
+                // DB stores single-letter priority (see schema); do not use [#A] here
                 return this.buildInOrCompareClause('priority', node.args, params, (val) => {
                     const p = val.toUpperCase();
-                    return /^[A-C]$/.test(p) ? `[#${p}]` : val;
+                    return /^[A-C]$/.test(p) ? p : val;
                 });
 
             case 'file':

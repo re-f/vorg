@@ -7,3 +7,14 @@ out/*
 # 生成的文档
 docs/api/
 .vorg.db
+
+# MD Review
+*.reviews.json
+
+# python
+__pycache__/
+
+
+orgmode-docs/**
+
+.agent/

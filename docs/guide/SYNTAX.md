@@ -69,22 +69,7 @@ function helloVOrg() {
 
 ---
 
-## 5. LaTeX 公式 (LaTeX Formulas)
-
-VOrg 集成了 KaTeX，支持行内和块状数学公式的实时预览。
-
-**行内公式**：$E = mc^2$
-
-**块状公式**：
-```org
-\[
-f(x) = \int_{-\infty}^{\infty} \hat{f}(\xi) e^{2 \pi i \xi x} d\xi
-\]
-```
-
----
-
-## 6. 属性抽屉 (Property Drawers)
+## 5. 属性抽屉 (Property Drawers)
 
 用于存储结构的元数据，常用于 ID 链接和高级查询（VOrgQL）。
 
@@ -101,7 +86,7 @@ f(x) = \int_{-\infty}^{\infty} \hat{f}(\xi) e^{2 \pi i \xi x} d\xi
 
 ---
 
-## 7. 时间戳 (Timestamps)
+## 6. 时间戳 (Timestamps)
 
 用于任务管理、日程安排和截止时间。
 
@@ -116,7 +101,7 @@ f(x) = \int_{-\infty}^{\infty} \hat{f}(\xi) e^{2 \pi i \xi x} d\xi
 
 ---
 
-## 8. 引用与说明 (Quotes & Examples)
+## 7. 引用与说明 (Quotes & Examples)
 
 ```org
 #+BEGIN_QUOTE

@@ -1,204 +1,92 @@
-# VOrg - Org-mode Preview for VS Code
+# VOrg - 在现代 IDE 中使用 Org-mode
 
 [![Version](https://img.shields.io/vscode-marketplace/v/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
 [![Downloads](https://img.shields.io/vscode-marketplace/d/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
 [![Rating](https://img.shields.io/vscode-marketplace/r/vorg.vorg)](https://marketplace.visualstudio.com/items?itemName=vorg.vorg)
 
-**Language / 语言**: [中文](README-CN.md) | [English](README.md)
+**Language / 语言**: [English](README.md) | [中文](README-CN.md)
 
-VOrg 是一个简单的 VS Code 扩展，为在 VS Code 中实现基本可用的 Org-mode 功能而开发，并不考虑完全迁移 Emacs 上的 Org-mode 使用体验，因此很多功能并不会在组件中实现。相比于 Emacs 的 Org-mode 能称得上优势的功能就是预览体验。 
-
-## ✨ 核心特性
-
-### 🔄 实时预览
-- **实时预览**：在编辑的同时实时查看渲染效果
-- **滚动同步**：编辑器和预览窗口自动同步滚动
-
-### 🎨 语法高亮
-VOrg 提供完整的 Org-mode 语法高亮支持，包括标题、TODO 状态、文本格式、列表、代码块、表格、链接、数学公式、时间戳等。详细的语法高亮说明请参考 [语法高亮文档](docs/SYNTAX_HIGHLIGHTING.md)。
-
-### 📋 智能导航
-- **文档大纲**：自动解析文档结构，提供完整的大纲导航
-- **快速跳转**：使用 `Ctrl+Shift+O` (Windows/Linux) 或 `Cmd+Shift+O` (Mac) 快速跳转到标题
-
-### 🔗 链接跳转
-支持多种链接类型的智能跳转：
-- `[[link][description]]` - 带描述的链接
-- `[[link]]` - 简单链接  
-- `file:path/to/file` - 文件链接
-- `http://example.com` - 网页链接
-- `[[*heading]]` - 内部链接到同文件的标题
-- `[[id:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX][description]]` - 全局ID跳转（支持跨文件）
-
-### 🔗 自动补全
-- **ID 链接补全**：输入 `[[` 或 `[[id:` 触发自动补全，显示工作区中所有 org 文件的标题，支持模糊搜索过滤
-
-### ⚡ org-like 编辑功能
-**高度还原 Emacs Org-mode 的上下文感知编辑 (Alt+Enter & Ctrl+Enter)：**
-- 自动识别当前上下文（标题、列表、表格、Property 抽屉等）
-- `Alt+Enter` (Meta Return)：在当前行下方插入同级项，支持 checkbox 智能切换，支持非标题行快速转标题
-- `Ctrl+Enter` (Ctrl Return)：在当前子树/列表末尾插入新项，或智能分割行并插入标题
-- 保持正确的层级、缩进和格式
-
-**TAB 智能折叠（类似 Emacs org-mode TAB 行为）：**
-- 在标题上：切换折叠/展开状态
-- 在列表项上：切换折叠状态或增加缩进
-- 在代码块标题上：切换代码块的折叠/展开状态
-- 在 Property 抽屉上：切换 Property 抽屉的折叠/展开状态
-- 在表格中：移动到下一个单元格
-- 在代码块内：正常代码缩进
-
-**Property 管理：**
-- 智能设置/更新标题属性
-- 自动创建 Property 抽屉（含唯一 ID）
-- Property 抽屉折叠支持
-
-## 🚀 快速开始
-
-### 基本使用
-
-| 功能 | 快捷键 | 命令面板 | 说明 |
-|------|--------|----------|------|
-| **打开预览** | `Ctrl+C Ctrl+E` | `VOrg: Open Preview` | 类似 Emacs `C-c C-e`，点击编辑器右上角预览图标 |
-| **并排预览** | `Ctrl+C Ctrl+K` | `VOrg: Open Preview to the Side` | 在侧边打开预览窗口 |
-| **TODO 状态切换** | `Ctrl+C Ctrl+T` | `VOrg: Set TODO State` | 类似 Emacs `C-c C-t` |
-| **插入TODO标题** | `Shift+Alt+Enter` | `VOrg: Insert TODO Heading` | 快速插入新的TODO标题 |
-| **设置属性** | `Ctrl+C Ctrl+X P` | `VOrg: Set Property` | 类似 Emacs `C-c C-x p`，设置/更新标题属性 |
-| **跟随链接** | `Ctrl+C Ctrl+O` | `VOrg: Follow Link` | 类似 Emacs `C-c C-o`，或使用 `Ctrl+Click` (Windows/Linux) / `Cmd+Click` (Mac) |
-| **插入链接** | `Ctrl+C Ctrl+L` | `VOrg: Insert Link` | 类似 Emacs `C-c C-l` |
-| **智能插入新项** | `Alt+Enter` | `VOrg: Insert New Item` | 对应 Emacs `M-RET`，智能插入标题、列表项或 checkbox |
-| **末尾插入或分割** | `Ctrl+Enter` | `VOrg: Ctrl Return (Split)` | 对应 Emacs `C-RET`，在子树末尾插入或智能分割标题 |
-| **子树末尾插入** | `Ctrl+Alt+Enter` | `VOrg: Insert New Item at End` | 对应 Emacs `C-M-RET` |
-| **智能TAB折叠** | `Tab`/`Shift+Tab` | - | 主要用于可见性控制（折叠/展开切换） |
-| **折叠标题** | `Ctrl+C Ctrl+Tab` | `Editor: Fold` | 折叠当前标题 |
-| **展开标题** | `Ctrl+C Ctrl+Shift+Tab` | `Editor: Unfold` | 展开当前标题 |
-| **切换侧边栏** | `Ctrl+C Ctrl+X Ctrl+B` | `Toggle Sidebar` | 切换侧边栏显示 |
-| **添加注释** | `Ctrl+C Ctrl+;` | `Add Line Comment` | 添加行注释 |
-| **升级子树** | `Ctrl+C Ctrl+Shift+,` | `VOrg: Promote Subtree` | 类似 Emacs `C-c C-<`，减少标题级别 |
-| **降级子树** | `Ctrl+C Ctrl+Shift+.` | `VOrg: Demote Subtree` | 类似 Emacs `C-c C->`，增加标题级别 |
-| **文档大纲跳转** | `Ctrl+Shift+O` (Windows/Linux)<br>`Cmd+Shift+O` (Mac) | `Go to Symbol in Workspace` | 快速跳转到标题，查看侧边栏 "Outline" 面板 |
-| **更多快捷键** | - | - | 详见 [快捷键文档](docs/KEYBINDINGS.md) 和 [编辑特性](docs/EDITING_FEATURES.md) |
-
-
-## 🛠️ 配置选项
-
-### TODO 关键字自定义
-
-您可以在 VS Code 设置中自定义 TODO 关键字：
-
-```json
-{
-  "vorg.todoKeywords": "TODO(t) NEXT(n) WAITING(w) | DONE(d) CANCELLED(c)",
-  "vorg.defaultTodoKeyword": "TODO"
-}
-```
-
-- `|` 前为未完成状态，`|` 后为已完成状态
-- 示例：`"PreSale InDelivery HANGUP(@/!) End(@/!) | Terminated(@/!) DONE(@/!)"`
-
-### CodeLens 操作按钮
-
-控制是否在编辑器中显示操作按钮（如标题行的 Promote、Demote 等）：
-
-```json
-{
-  "vorg.showCodeLens": true
-}
-```
-
-- `true`（默认）：显示操作按钮
-- `false`：隐藏操作按钮
-
-当启用时，每个标题行上方会显示操作按钮，点击即可快速执行相应操作。
-
-## 📁 支持的文件类型
-- `.org` 和 `.org_archive` - Org-mode 文档文件
-
-## 🔍 工作区索引
-为了提供高性能的工作区符号搜索 (`Cmd+T`) 和标签检索，VOrg 会在工作区根目录创建一个名为 `.vorg.db` 的 SQLite 数据库文件。
-- **用途**: 存储标题索引、标签和元数据，以实现极速搜索。
-- **维护**: 如需重置索引，只需删除此文件并重新加载窗口。
-- **Git**: 建议将 `.vorg.db` 添加到 `.gitignore` 文件中，以避免将本地索引提交到代码仓库。
-
-## 📊 嵌入式查询块 (Embedded Query Blocks)
-VOrg 支持动态查询块，允许您直接在文档预览中聚合显示整个工作区的标题。
-
-### 语法
-使用 `#+BEGIN_QUERY` 块并填入 JSON 格式的查询对象：
-
-```org
-#+BEGIN_QUERY
-{
-  "todo": ["NEXT", "TODO"],
-  "priority": "A",
-  "tags": ["work"],
-  "limit": 5,
-  "sortBy": "mtime",
-  "order": "desc"
-}
-#+END_QUERY
-```
-
-### 查询参数
-- `todo`: 按 TODO 状态过滤（字符串或数组）。
-- `priority`: 按优先级过滤（如 "A", "B"）。
-- `tags`: 按标签过滤（字符串或数组，匹配任意一个）。
-- `searchTerm`: 在标题中搜索（支持 Pinyin 拼音首字母）。
-- `limit`: 显示结果的最大数量。
-- `sortBy`: 排序字段 (`priority`, `todo`, `deadline`, `mtime`, `level`)。
-- `order`: 排序顺序 (`asc` 或 `desc`)。
-- **完整查询语言**: 了解更多高级过滤（日期、属性、父节点等），请参考 [VOrg-QL 查询指南](docs/VORG_QL.md)。
-
-## 🆚 与其他 Org 扩展的对比
-
-| 功能 | VOrg | 其他 Org 扩展 |
-|------|------|---------------|
-| 实时预览 | ✅ | ❌ |
-| 滚动同步 | ✅ | ❌ |
-| 文档大纲 | ✅ | ❌ |
-| 链接跳转 | ✅ | ⚠️ |
-| org-like 编辑 | ✅ | ❌ |
-| TODO 管理 | ✅ | ✅ |
-
-## 🐛 问题反馈
-
-如果您在使用过程中遇到问题或有改进建议：
-
-- 🐛 **问题反馈**：[创建 GitHub Issue](https://github.com/re-f/vorg/issues)
-- 💡 **功能建议**：[参与 GitHub Discussions](https://github.com/re-f/vorg/discussions)
-
-
-## 📝 更新日志
-
-### v0.0.3 (最新)
-- ✨ **新增 Property 属性管理**：完整的 `org-set-property` 功能实现
-
-### v0.0.2
-- ✨ 基础 Org-mode 功能实现
-- 🔄 实时预览和滚动同步
-- 📋 文档大纲和智能导航
-- ⚡ 智能编辑和折叠功能
-
-## 🔮 路线图
-
-- [ ] 添加 headline 跳转功能
-- [ ] 添加图表支持（Mermaid）
-- [ ] 支持 refile 功能
-- [ ] 支持 headline 的树操作
-  - [X]  org-pro/demote-subtree
-  - [ ]  cut-subtree
-  - [ ]  org-metadown/up
-- [ ] todo 相关展示
-- [ ] 支持插件或自定义代码
-- [X] 提示： 比如 headline 上，提示 promote或者 demote
-- [X] 实现 Ctrl-c Ctrl-c 的功能
-- [ ] 支持 sql 查询
-- [X] bug:vorg 预览时 checkbox 的 list 前没有一个点,导致样式对不上
-- [ ] 结构拆分： vorg-core 负责org 格式解析 vorg-publish 
+VOrg 是一个为 VS Code 生态打造的 Org-mode 实现。VOrg 并非试图完全复刻 Emacs Org-mode，而是在现代 IDE 环境下做出务实取舍：牺牲冗余的扩展性，换取 IDE 原生的补全体验、更低的学习曲线以及与 AI 编程助手的集成。
 
 ---
 
-**VOrg - 让 Org-mode 编辑更加现代化和高效！** 🚀
+## ❓ 常见疑惑 (FAQ)
+
+**Q1: 为什么在 VS Code 生态中需要 VOrg？**
+Cursor、VS Code 等现代 IDE 的普及提升了编码效率。VOrg 的初衷是让 Org-mode 的老用户在不离开这些现代工具链的前提下，依然能用熟悉的纯文本哲学来记录任务、组织逻辑。
+
+**Q2: VOrg 的支持程度与边界在哪里？**
+VOrg 专注于满足 95% 场景的日常编辑与管理需求，而不是完全复刻 Emacs 的所有模块。
+- **核心语法**：深度支持标题、列表、表格、Property Drawers、时间戳等。
+- **编辑命令**：实现了 `M-RET`、`TAB` 循环等核心交互习惯。
+- **非目标**：暂不支持代码块执行（Babel）及 Elisp 扩展。
+
+**Q3: 文件能在 Emacs 间自由流转吗？**
+**可以。** VOrg 严格遵守 Org-mode 标准语法规范。VOrg 创建或编辑的文件在 Emacs 中依然是标准的 Org 文档，反之亦然。
+
+**Q4: 相比传统 Org-mode，VOrg 带来了哪些现代化增强？**
+在 VS Code-like 环境中，VOrg 提供了几项更符合 IDE 习惯的补全与搜索功能：
+1. **智能搜索聚合**：内置全局搜索看板，支持拼音首字母过滤标题。
+2. **高性能实时预览**：实时同步渲染，支持代码高亮。
+3. **直接插入图片 (实现中)**：支持拖拽或粘贴图片到编辑区，自动管理本地资源链接。
+
+---
+
+## ⚡ 三大核心能力
+
+### 1. 深度兼容与即时反馈
+VOrg 确保 `.org` 文档结构在编辑器和预览器中都得到完整保留：
+- **解析引擎**：基于 `uniorg`，尊重 Org-mode 缩进、Property Drawers 及复杂的表格对齐规则。
+- **预览体验**：提供比传统方式更轻量、更加现代化的渲染呈现。
+
+### 2. 补全与检索的现代化增强
+VOrg 引入了更符合现代开发者的交互方式：
+- **跨文件 ID 补全**：输入 `[[id:` 即可快速检索全工作区的标题 ID 并自动插入，便捷构建跨文件链接。
+- **VOrgQL 定制视图**：受 `org-ql` 启发的声明式查询块，允许用户在文档内动态汇聚跨文件的待办任务。
+
+### 3. 在当前流行 IDE 中使用 Org-mode
+在 Cursor 或 VS Code 中，AI 工具可以理解由 VOrg 组织的结构化文档：
+- **结构化对话**：让 AI 基于 Org 文档层级辅助重构大纲，或者生成结构化的子任务。
+- **IDE 原生整合**：深度适配侧边栏大纲、文件系统、拼音首字母搜索及 VS Code 集成的快捷键体系。
+
+---
+
+## ✨ 核心特性
+
+- **完整的语法支持**：标题、列表、表格、代码块、Property Drawers、时间戳等。[查看语法支持详情](docs/guide/SYNTAX.md)
+- **上下文感知操作 (`M-RET` / `C-RET`)**：智能插入同级标题、分割列表、处理复选框或表格新行。
+- **TAB 循环折叠 (`org-cycle`)**：完整实现 `FOLDED` -> `CHILDREN` -> `SUBTREE` 的可见性切换。
+- **任务状态追踪**：TODO 状态切换时自动记录时间戳和备注（支持 `@` 和 `!` 标记）。
+
+---
+
+## ⌨️ 快捷键速览
+
+| 功能 | 快捷键 | 对应 Emacs 命令 |
+|------|--------|----------------|
+| **打开预览** | `Ctrl+C Ctrl+E` | `org-export-dispatch` (预览) |
+| **智能插入新项** | `Alt+Enter` | `org-meta-return` |
+| **末尾插入/分割** | `Ctrl+Enter` | `org-ctrl-return` |
+| **TODO 状态切换** | `Ctrl+C Ctrl+T` | `org-todo` |
+| **设置属性** | `Ctrl+C Ctrl+X P` | `org-set-property` |
+| **升级/降级子树** | `Ctrl+C Ctrl+Shift+,/.` | `org-promote/demote-subtree` |
+| **跟随链接** | `Ctrl+C Ctrl+O` | `org-open-at-point` |
+| **设置标签** | `Ctrl+C Ctrl+Q` | `org-set-tags-command` |
+| **设置计划/截止** | `Ctrl+C Ctrl+S/D` | `org-scheduled / org-deadline` |
+| **智能 TAB 折叠** | `Tab` / `Shift+Tab` | `org-cycle / org-shifttab` |
+
+> 完整快捷键列表请参考 [快捷键文档](docs/ref/KEYBINDINGS.md)  
+> **遇到问题？** 查看 [调试指南](docs/dev/DEBUG.md)
 
 
-*如果这个扩展对您有帮助，请给我们一个⭐️评分！* 
+## 📁 存储与隐私
+VOrg 在工作区根目录生成 `.vorg.db` 文件用于高性能索引。该文件仅存储标题、标签及元数据，不会上传任何数据，建议将其加入 `.gitignore`。
+
+## 🤝 参与贡献
+如有任何建议或问题，欢迎访问：
+- 🐛 [GitHub Issues](https://github.com/re-f/vorg/issues) 
+- 💡 [GitHub Discussions](https://github.com/re-f/vorg/discussions)
+
+---
+
+**VOrg - 在现代开发环境中延续 Org-mode 的生产力！** 🚀
