@@ -266,8 +266,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     await DatabaseConnection.getInstance().initialize(dbPath);
     Logger.info(`Database initialized successfully at: ${dbPath}`);
-    // 设置数据库准备就绪上下文，显示透视视图
-    vscode.commands.executeCommand('setContext', 'vorg:databaseReady', true);
 
     const updateService = new IncrementalUpdateService();
     // 异步启动，不阻塞核心功能激活
