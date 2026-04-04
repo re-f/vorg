@@ -183,4 +183,45 @@ suite('FileIndexer Integration Tests', () => {
         assert.ok(updatedFile!.updatedAt.getTime() > past.getTime() + 1000,
             `Timestamp should updated. Got ${updatedFile!.updatedAt.getTime()}, Past was ${past.getTime()}`);
     });
+
+    test('removeStaleIndexedFiles deletes DB rows for URIs not in keep list', async () => {
+        const keep = '/test/stale-keep.org';
+        const drop = '/test/stale-drop.org';
+        const content = '* One\n';
+
+        await indexer.indexFile(keep, content);
+        await indexer.indexFile(drop, content);
+
+        assert.strictEqual(fileRepo.findAll().length, 2);
+        assert.ok(headingRepo.findByFileUri(drop).length > 0);
+
+        indexer.removeStaleIndexedFiles([keep]);
+
+        assert.strictEqual(fileRepo.findAll().length, 1);
+        assert.ok(fileRepo.findByUri(keep));
+        assert.strictEqual(fileRepo.findByUri(drop), null);
+        assert.strictEqual(headingRepo.findByFileUri(drop).length, 0);
+    });
+
+    test('removeStaleIndexedFiles keeps all files when keep list matches indexed URIs', async () => {
+        const uri = '/test/stale-noop.org';
+        await indexer.indexFile(uri, '* X\n');
+
+        indexer.removeStaleIndexedFiles([uri]);
+
+        assert.strictEqual(fileRepo.findAll().length, 1);
+        assert.strictEqual(headingRepo.findByFileUri(uri).length, 1);
+    });
+
+    test('removeStaleIndexedFiles with empty keep list clears all indexed files', async () => {
+        await indexer.indexFile('/test/stale-clear-a.org', '* A\n');
+        await indexer.indexFile('/test/stale-clear-b.org', '* B\n');
+
+        assert.strictEqual(fileRepo.count(), 2);
+
+        indexer.removeStaleIndexedFiles([]);
+
+        assert.strictEqual(fileRepo.count(), 0);
+        assert.strictEqual(fileRepo.findAll().length, 0);
+    });
 });

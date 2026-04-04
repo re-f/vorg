@@ -41,6 +41,9 @@ export class WorkspaceIndexer {
 
         console.log(`Found ${uris.length} files to index.`);
 
+        // 与当前扫描结果同步：删除已不存在于工作区中的文件记录（删文件/改名/移出目录时 watcher 可能未覆盖）
+        this.fileIndexer.removeStaleIndexedFiles(uris);
+
         let indexedCount = 0;
         let errorCount = 0;
 

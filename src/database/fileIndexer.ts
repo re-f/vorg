@@ -120,6 +120,23 @@ export class FileIndexer {
     }
 
     /**
+     * Remove DB rows for files that are no longer part of the workspace scan
+     * (deleted, renamed, or moved). Full workspace indexing only touches files that still
+     * exist; without this pass, stale headings/links remain for old URIs.
+     */
+    public removeStaleIndexedFiles(keepUris: string[]): void {
+        const keep = new Set(keepUris);
+        this.connection.transaction(() => {
+            const all = this.fileRepo.findAll();
+            for (const f of all) {
+                if (!keep.has(f.uri)) {
+                    this.fileRepo.delete(f.uri);
+                }
+            }
+        });
+    }
+
+    /**
      * Check if any heading IDs in the current file are already used in other files.
      * Logs a warning if duplicates are found.
      */

@@ -247,7 +247,8 @@ export async function activate(context: vscode.ExtensionContext) {
   previewCommands.registerEventListeners(context);
 
 
-  // 初始化数据库增量更新服务
+  // 初始化数据库增量更新服务（服务引用供后续注册「重建索引」命令并刷新透视视图）
+  let incrementalUpdateService: import('./database/incrementalUpdateService').IncrementalUpdateService | undefined;
   try {
     // 动态导入数据库相关模块，防止 native module 加载失败导致整个扩展无法激活
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -267,24 +268,12 @@ export async function activate(context: vscode.ExtensionContext) {
     await DatabaseConnection.getInstance().initialize(dbPath);
     Logger.info(`Database initialized successfully at: ${dbPath}`);
 
-    const updateService = new IncrementalUpdateService();
+    incrementalUpdateService = new IncrementalUpdateService();
     // 异步启动，不阻塞核心功能激活
-    updateService.start().catch(err => {
+    incrementalUpdateService.start().catch(err => {
       Logger.error('Failed to start IncrementalUpdateService', err);
     });
-    context.subscriptions.push(updateService);
-
-    // 注册强制重构索引命令
-    context.subscriptions.push(
-      vscode.commands.registerCommand('vorg.rebuildIndex', async () => {
-        try {
-          await updateService.rebuildIndex();
-          vscode.window.showInformationMessage('VOrg: 索引重建完成');
-        } catch (err) {
-          vscode.window.showErrorMessage(`VOrg: 索引重建失败: ${err}`);
-        }
-      })
-    );
+    context.subscriptions.push(incrementalUpdateService);
   } catch (error) {
     // 即使数据库初始化失败，也要记录日志，但不能抛出错误，否则会阻止后续命令注册
     Logger.error('Failed to initialize Database/IncrementalUpdateService (Native module error suspected)', error);
@@ -315,6 +304,20 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider('vorg-perspectives', perspectivesProvider)
   );
+
+  if (incrementalUpdateService) {
+    context.subscriptions.push(
+      vscode.commands.registerCommand('vorg.rebuildIndex', async () => {
+        try {
+          await incrementalUpdateService!.rebuildIndex();
+          perspectivesProvider.refresh();
+          vscode.window.showInformationMessage('VOrg: 索引重建完成');
+        } catch (err) {
+          vscode.window.showErrorMessage(`VOrg: 索引重建失败: ${err}`);
+        }
+      })
+    );
+  }
 
   // 注册透视视图命令 (目前为占位符)
   context.subscriptions.push(
