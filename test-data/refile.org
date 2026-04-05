@@ -1,0 +1,18 @@
+* TARGET: Projects
+** TODO VOrg Extension
+** DONE Write User Manual
+
+* SOURCE: Tasks
+具体内容
+** TODO Review PR #42
+** NEXT Implement refile command
+** WAITING Setup CI pipeline
+
+* TARGET: Notes
+** Ideas for future features
+*** TODO Mobile companion app
+*** TODO Export to PDF
+** Meeting notes 2024-03-15
+
+* TARGET: Archive
+** DONE Old project from 2023

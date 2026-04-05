@@ -39,6 +39,7 @@ import { PropertyService } from './services/propertyService';
 import { PriorityCommands } from './commands/editing/priorityCommands';
 import { TagCommands } from './commands/editing/tagCommands';
 import { DateCommands } from './commands/editing/dateCommands';
+import { registerRefileCommands } from './commands/editing/refileCommands';
 // import { DatabaseConnection } from './database/connection'; // 已移除顶级导入
 import * as path from 'path';
 
@@ -239,6 +240,7 @@ export async function activate(context: vscode.ExtensionContext) {
   PriorityCommands.registerCommands(context);
   TagCommands.registerCommands(context);
   DateCommands.registerCommands(context);
+  registerRefileCommands(context);
 
   // 初始化预览管理器和预览命令
   const previewManager = new PreviewManager(context);

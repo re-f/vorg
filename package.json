@@ -52,6 +52,7 @@
     "onCommand:vorg.promoteSubtree",
     "onCommand:vorg.demoteSubtree",
     "onCommand:vorg.ctrlCtrl",
+    "onCommand:vorg.refile",
     "onCommand:vorg.debug.refreshHighlighting"
   ],
   "main": "./out/extension.js",
@@ -281,6 +282,12 @@
         "command": "vorg.setDeadline",
         "title": "VOrg: Set Deadline",
         "icon": "$(calendar)",
+        "enablement": "editorLangId == 'org'"
+      },
+      {
+        "command": "vorg.refile",
+        "title": "VOrg: Refile (org-refile)",
+        "icon": "$(fold)",
         "enablement": "editorLangId == 'org'"
       },
       {
