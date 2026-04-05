@@ -505,6 +505,12 @@
         "key": "ctrl+c ctrl+d",
         "mac": "ctrl+c ctrl+d",
         "when": "editorTextFocus && editorLangId == 'org' && !editorReadonly"
+      },
+      {
+        "command": "vorg.refile",
+        "key": "ctrl+c ctrl+w",
+        "mac": "ctrl+c ctrl+w",
+        "when": "editorLangId == 'org'"
       }
     ]
   },
