@@ -148,6 +148,29 @@ function buildDisplayInfo(target: RefileTarget): RefileTargetDisplayInfo {
 }
 
 // =============================================================================
+// Workspace-level Indexed Heading (from OrgSymbolIndexService / HeadingRepository)
+// =============================================================================
+
+/**
+ * An indexed heading from the workspace database.
+ * Used for cross-file target resolution.
+ */
+export interface IndexedHeading {
+  /** File URI */
+  uri: string;
+  /** Heading line number (0-indexed) */
+  line: number;
+  /** Heading level (1-6) */
+  level: number;
+  /** Clean heading title text (without stars, TODO, tags) */
+  title: string;
+  /** Display name (with TODO state and tags) */
+  displayName: string;
+  /** Relative file path for display */
+  relativePath: string;
+}
+
+// =============================================================================
 // Target Resolution
 // =============================================================================
 
@@ -224,4 +247,132 @@ export function resolveRefileTargets(
   }
 
   return { ok: true, targets: targetsWithDisplay };
+}
+
+// =============================================================================
+// Workspace-level Target Resolution
+// =============================================================================
+
+/**
+ * Input for workspace-level target resolution.
+ * Uses indexed headings from the database instead of scanning a single document.
+ */
+export interface WorkspaceRefileTargetInput {
+  /** The source subtree being refiled */
+  source: RefileSource;
+  /** The source document (used for same-file outline path building) */
+  sourceDocument: core.TextDocument;
+  /** All indexed headings from the workspace */
+  indexedHeadings: IndexedHeading[];
+}
+
+/**
+ * Resolve all valid refile targets across the workspace.
+ *
+ * Given a source subtree and workspace index:
+ * 1. Uses indexed headings instead of scanning a single document
+ * 2. For same-file targets: builds outline paths using sourceDocument
+ * 3. For cross-file targets: builds outline paths using target file's own headings
+ * 4. Filters out source itself and source descendants (same-file only)
+ * 5. Returns targets with display info including file paths for cross-file
+ */
+export function resolveWorkspaceRefileTargets(
+  input: WorkspaceRefileTargetInput
+): RefileTargetResolverResult {
+  const { source, sourceDocument, indexedHeadings } = input;
+
+  if (indexedHeadings.length === 0) {
+    return { ok: false, error: RefileError.NoValidTargets };
+  }
+
+  const targetsWithDisplay: RefileTargetWithDisplay[] = [];
+
+  for (const heading of indexedHeadings) {
+    // Filter 1: source itself - same URI and same line
+    if (heading.uri === source.uri && heading.line === source.startLine) {
+      continue;
+    }
+
+    // Filter 2: source descendants - same file and line inside source subtree
+    if (heading.uri === source.uri && isInsideSourceSubtree(heading.line, source)) {
+      continue;
+    }
+
+    // Build outline path
+    const outlinePath = buildOutlinePathForIndexedHeading(heading, indexedHeadings, source.uri);
+
+    // Build business target object
+    const target: RefileTarget = {
+      uri: heading.uri,
+      line: heading.line,
+      level: heading.level,
+      outlinePath,
+      headingText: heading.title,
+    };
+
+    // Build display info - includes file path for cross-file targets
+    const displayInfo = buildWorkspaceDisplayInfo(target, heading.relativePath, source.uri);
+
+    targetsWithDisplay.push({ target, displayInfo });
+  }
+
+  if (targetsWithDisplay.length === 0) {
+    return { ok: false, error: RefileError.NoValidTargets };
+  }
+
+  return { ok: true, targets: targetsWithDisplay };
+}
+
+/**
+ * Build outline path for an indexed heading.
+ * For cross-file targets, we look for ancestor headings in the SAME file.
+ */
+function buildOutlinePathForIndexedHeading(
+  targetHeading: IndexedHeading,
+  allHeadings: IndexedHeading[],
+  sourceUri: string
+): string[] {
+  // Find all headings in the same file as the target, before the target line
+  const sameFileHeadings = allHeadings
+    .filter(h => h.uri === targetHeading.uri && h.line < targetHeading.line)
+    .sort((a, b) => a.line - b.line);
+
+  const path: string[] = [];
+  let currentLevel = targetHeading.level;
+
+  for (let i = sameFileHeadings.length - 1; i >= 0; i--) {
+    const h = sameFileHeadings[i];
+    if (h.level < currentLevel) {
+      path.unshift(h.title);
+      currentLevel = h.level;
+      if (h.level === 1) break;
+    }
+  }
+
+  return path;
+}
+
+/**
+ * Build display info for a workspace target.
+ * Includes file path for cross-file targets.
+ */
+function buildWorkspaceDisplayInfo(
+  target: RefileTarget,
+  relativePath: string,
+  sourceUri: string
+): RefileTargetDisplayInfo {
+  const outlinePathString = target.outlinePath.join(' > ');
+  const label = outlinePathString
+    ? `${outlinePathString} > ${target.headingText}`
+    : target.headingText;
+
+  // For cross-file targets, prepend file path to description
+  const isCrossFile = target.uri !== sourceUri;
+  const filePathPrefix = isCrossFile ? `[${relativePath}] ` : '';
+
+  return {
+    label,
+    outlinePathString: filePathPrefix + outlinePathString,
+    levelIndicator: `L${target.level}`,
+  };
 }

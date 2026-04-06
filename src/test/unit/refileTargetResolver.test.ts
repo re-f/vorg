@@ -16,6 +16,9 @@ import {
   resolveRefileTargets,
   RefileTargetResolverInput,
   RefileTargetWithDisplay,
+  resolveWorkspaceRefileTargets,
+  WorkspaceRefileTargetInput,
+  IndexedHeading,
 } from '../../services/refileTargetResolver';
 
 /**
@@ -522,6 +525,374 @@ suite('Refile Target Resolver Tests', () => {
       assert.strictEqual(childLabel, 'Same > Same');
     });
 
+  });
+
+});
+
+// =============================================================================
+// Workspace-level Target Resolution Tests
+// =============================================================================
+
+suite('resolveWorkspaceRefileTargets', () => {
+
+  /**
+   * Helper to create an indexed heading
+   */
+  function createIndexedHeading(params: {
+    uri?: string;
+    line?: number;
+    level?: number;
+    title?: string;
+    relativePath?: string;
+  }): IndexedHeading {
+    return {
+      uri: params.uri || 'file:///test.org',
+      line: params.line ?? 0,
+      level: params.level ?? 1,
+      title: params.title || `H${params.line || 0}`,
+      displayName: params.title || `H${params.line || 0}`,
+      relativePath: params.relativePath || 'test.org',
+    };
+  }
+
+  /**
+   * Helper to create a RefileSource for testing
+   */
+  function createSource(uri: string, startLine: number, endLine: number, rootLevel: number = 1): RefileSource {
+    return {
+      uri,
+      startLine,
+      endLine,
+      rawText: '',
+      rootLevel,
+    };
+  }
+
+  // ============ Basic Workspace Target Resolution ============
+
+  test('should return valid targets from workspace index', () => {
+    // Create a workspace with two files
+    const fileA = 'file:///project/a.org';
+    const fileB = 'file:///project/b.org';
+
+    const indexedHeadings: IndexedHeading[] = [
+      createIndexedHeading({ uri: fileA, line: 0, level: 1, title: 'H1', relativePath: 'a.org' }),
+      createIndexedHeading({ uri: fileA, line: 1, level: 2, title: 'H2', relativePath: 'a.org' }),
+      createIndexedHeading({ uri: fileB, line: 0, level: 1, title: 'H3', relativePath: 'b.org' }),
+      createIndexedHeading({ uri: fileB, line: 1, level: 1, title: 'H4', relativePath: 'b.org' }),
+    ];
+
+    // Source is H2 at line 1 in file A
+    const source = createSource(fileA, 1, 1, 2);
+
+    // Create a minimal mock document for source file
+    const sourceDoc = createMockDocument('* H1\n** H2\n* H3\n* H4');
+
+    const input: WorkspaceRefileTargetInput = {
+      source,
+      sourceDocument: sourceDoc,
+      indexedHeadings,
+    };
+
+    const result = resolveWorkspaceRefileTargets(input);
+
+    assert.ok(result.ok, 'should return ok');
+    const targets = (result as any).targets;
+
+    // Should have 3 valid targets: H1 (line 0), H3 (line 0, file B), H4 (line 1, file B)
+    assert.strictEqual(targets.length, 3, 'should have 3 valid targets');
+
+    // Verify cross-file targets have proper URIs
+    const fileBTargets = targets.filter((t: RefileTargetWithDisplay) => t.target.uri === fileB);
+    assert.strictEqual(fileBTargets.length, 2, 'should have 2 targets from file B');
+  });
+
+  test('should filter source itself from workspace candidates', () => {
+    const fileA = 'file:///project/a.org';
+
+    const indexedHeadings: IndexedHeading[] = [
+      createIndexedHeading({ uri: fileA, line: 0, level: 1, title: 'H1', relativePath: 'a.org' }),
+      createIndexedHeading({ uri: fileA, line: 1, level: 2, title: 'H2', relativePath: 'a.org' }), // source
+      createIndexedHeading({ uri: fileA, line: 2, level: 3, title: 'H3', relativePath: 'a.org' }),
+    ];
+
+    // Source is H2 (line 1) in file A
+    const source = createSource(fileA, 1, 2, 2);
+    const sourceDoc = createMockDocument('* H1\n** H2\n*** H3');
+
+    const input: WorkspaceRefileTargetInput = {
+      source,
+      sourceDocument: sourceDoc,
+      indexedHeadings,
+    };
+
+    const result = resolveWorkspaceRefileTargets(input);
+
+    assert.ok(result.ok, 'should return ok');
+    const targets = (result as any).targets;
+    const targetUris = targets.map((t: RefileTargetWithDisplay) => t.target.uri);
+    const targetLines = targets.map((t: RefileTargetWithDisplay) => t.target.line);
+
+    // Source itself should NOT be in the list
+    assert.ok(!targetLines.includes(1), 'source itself (line 1) should not be a target');
+  });
+
+  test('should filter source descendants from workspace candidates', () => {
+    const fileA = 'file:///project/a.org';
+
+    const indexedHeadings: IndexedHeading[] = [
+      createIndexedHeading({ uri: fileA, line: 0, level: 1, title: 'H1', relativePath: 'a.org' }),
+      createIndexedHeading({ uri: fileA, line: 1, level: 2, title: 'H2', relativePath: 'a.org' }), // source
+      createIndexedHeading({ uri: fileA, line: 2, level: 3, title: 'H3', relativePath: 'a.org' }), // descendant
+      createIndexedHeading({ uri: fileA, line: 3, level: 4, title: 'H4', relativePath: 'a.org' }), // descendant
+    ];
+
+    // Source is H2 (lines 1-3) in file A
+    const source = createSource(fileA, 1, 3, 2);
+    const sourceDoc = createMockDocument('* H1\n** H2\n*** H3\n**** H4');
+
+    const input: WorkspaceRefileTargetInput = {
+      source,
+      sourceDocument: sourceDoc,
+      indexedHeadings,
+    };
+
+    const result = resolveWorkspaceRefileTargets(input);
+
+    assert.ok(result.ok, 'should return ok');
+    const targets = (result as any).targets;
+    const targetLines = targets.map((t: RefileTargetWithDisplay) => t.target.line);
+
+    // H3 (line 2) and H4 (line 3) are inside source subtree - should be filtered
+    assert.ok(!targetLines.includes(2), 'H3 (descendant) should not be a target');
+    assert.ok(!targetLines.includes(3), 'H4 (descendant) should not be a target');
+
+    // H1 (line 0) should still be a target
+    assert.ok(targetLines.includes(0), 'H1 (ancestor) should be a target');
+  });
+
+  test('should return NoValidTargets when no valid targets available', () => {
+    const fileA = 'file:///project/a.org';
+
+    const indexedHeadings: IndexedHeading[] = [
+      createIndexedHeading({ uri: fileA, line: 0, level: 1, title: 'H1', relativePath: 'a.org' }), // source
+    ];
+
+    // Source is H1 (line 0) - it's the only heading
+    const source = createSource(fileA, 0, 0, 1);
+    const sourceDoc = createMockDocument('* H1');
+
+    const input: WorkspaceRefileTargetInput = {
+      source,
+      sourceDocument: sourceDoc,
+      indexedHeadings,
+    };
+
+    const result = resolveWorkspaceRefileTargets(input);
+
+    assert.ok(!result.ok, 'should return error');
+    assert.strictEqual((result as any).error, RefileError.NoValidTargets);
+  });
+
+  test('should return empty list when indexedHeadings is empty', () => {
+    const source = createSource('file:///test.org', 0, 0, 1);
+    const sourceDoc = createMockDocument('* H1');
+
+    const input: WorkspaceRefileTargetInput = {
+      source,
+      sourceDocument: sourceDoc,
+      indexedHeadings: [],
+    };
+
+    const result = resolveWorkspaceRefileTargets(input);
+
+    assert.ok(!result.ok, 'should return error');
+    assert.strictEqual((result as any).error, RefileError.NoValidTargets);
+  });
+
+  // ============ Cross-file Display Info ============
+
+  test('should include file path in display info for cross-file targets', () => {
+    const fileA = 'file:///project/a.org';
+    const fileB = 'file:///project/b.org';
+
+    const indexedHeadings: IndexedHeading[] = [
+      createIndexedHeading({ uri: fileA, line: 0, level: 1, title: 'H1', relativePath: 'a.org' }),
+      createIndexedHeading({ uri: fileA, line: 1, level: 2, title: 'H2', relativePath: 'a.org' }), // source
+      createIndexedHeading({ uri: fileB, line: 0, level: 1, title: 'H3', relativePath: 'b.org' }),
+    ];
+
+    const source = createSource(fileA, 1, 1, 2);
+    const sourceDoc = createMockDocument('* H1\n** H2\n* H3');
+
+    const input: WorkspaceRefileTargetInput = {
+      source,
+      sourceDocument: sourceDoc,
+      indexedHeadings,
+    };
+
+    const result = resolveWorkspaceRefileTargets(input);
+
+    assert.ok(result.ok, 'should return ok');
+    const targets = (result as any).targets;
+
+    // Find the cross-file target (file B)
+    const fileBTarget = targets.find((t: RefileTargetWithDisplay) => t.target.uri === fileB);
+    assert.ok(fileBTarget, 'should have a target from file B');
+
+    // Cross-file display info should include file path
+    assert.ok(fileBTarget.displayInfo.outlinePathString.startsWith('[b.org]'),
+      'cross-file target should have file path prefix');
+  });
+
+  test('should not include file path for same-file targets', () => {
+    const fileA = 'file:///project/a.org';
+
+    const indexedHeadings: IndexedHeading[] = [
+      createIndexedHeading({ uri: fileA, line: 0, level: 1, title: 'H1', relativePath: 'a.org' }),
+      createIndexedHeading({ uri: fileA, line: 1, level: 2, title: 'H2', relativePath: 'a.org' }), // source
+      createIndexedHeading({ uri: fileA, line: 2, level: 1, title: 'H3', relativePath: 'a.org' }),
+    ];
+
+    const source = createSource(fileA, 1, 1, 2);
+    const sourceDoc = createMockDocument('* H1\n** H2\n* H3');
+
+    const input: WorkspaceRefileTargetInput = {
+      source,
+      sourceDocument: sourceDoc,
+      indexedHeadings,
+    };
+
+    const result = resolveWorkspaceRefileTargets(input);
+
+    assert.ok(result.ok, 'should return ok');
+    const targets = (result as any).targets;
+
+    // Find the same-file target (H1 at line 0)
+    const sameFileTarget = targets.find((t: RefileTargetWithDisplay) => t.target.line === 0);
+    assert.ok(sameFileTarget, 'should have H1 as target');
+
+    // Same-file display info should NOT have file path prefix
+    assert.ok(!sameFileTarget.displayInfo.outlinePathString.startsWith('['),
+      'same-file target should not have file path prefix');
+  });
+
+  test('should build correct outline path for cross-file target', () => {
+    const fileA = 'file:///project/a.org';
+    const fileB = 'file:///project/b.org';
+
+    const indexedHeadings: IndexedHeading[] = [
+      // Source file
+      createIndexedHeading({ uri: fileA, line: 0, level: 1, title: 'H1', relativePath: 'a.org' }),
+      createIndexedHeading({ uri: fileA, line: 1, level: 2, title: 'H2', relativePath: 'a.org' }), // source
+      // Target file with nested structure
+      createIndexedHeading({ uri: fileB, line: 0, level: 1, title: 'Parent', relativePath: 'b.org' }),
+      createIndexedHeading({ uri: fileB, line: 1, level: 2, title: 'Child', relativePath: 'b.org' }),
+      createIndexedHeading({ uri: fileB, line: 2, level: 3, title: 'Grandchild', relativePath: 'b.org' }),
+    ];
+
+    const source = createSource(fileA, 1, 1, 2);
+    const sourceDoc = createMockDocument('* H1\n** H2');
+
+    const input: WorkspaceRefileTargetInput = {
+      source,
+      sourceDocument: sourceDoc,
+      indexedHeadings,
+    };
+
+    const result = resolveWorkspaceRefileTargets(input);
+
+    assert.ok(result.ok, 'should return ok');
+    const targets = (result as any).targets;
+
+    // Find the Grandchild target (line 2, file B)
+    const grandchildTarget = targets.find(
+      (t: RefileTargetWithDisplay) => t.target.uri === fileB && t.target.line === 2
+    );
+    assert.ok(grandchildTarget, 'should have Grandchild as a target');
+
+    // Outline path should be ["Parent", "Child"]
+    assert.deepStrictEqual(grandchildTarget.target.outlinePath, ['Parent', 'Child'],
+      'outline path should be built from same-file ancestors');
+
+    // Label should include the path
+    assert.strictEqual(grandchildTarget.displayInfo.label, 'Parent > Child > Grandchild',
+      'label should include full outline path');
+  });
+
+  test('should distinguish cross-file targets with same heading text', () => {
+    const fileA = 'file:///project/a.org';
+    const fileB = 'file:///project/b.org';
+    const fileC = 'file:///project/c.org';
+
+    const indexedHeadings: IndexedHeading[] = [
+      // Source file
+      createIndexedHeading({ uri: fileA, line: 0, level: 1, title: 'H1', relativePath: 'a.org' }),
+      createIndexedHeading({ uri: fileA, line: 1, level: 2, title: 'H2', relativePath: 'a.org' }), // source
+      // Multiple files with same heading text "Todo"
+      createIndexedHeading({ uri: fileB, line: 0, level: 1, title: 'Todo', relativePath: 'b.org' }),
+      createIndexedHeading({ uri: fileC, line: 0, level: 1, title: 'Todo', relativePath: 'c.org' }),
+    ];
+
+    const source = createSource(fileA, 1, 1, 2);
+    const sourceDoc = createMockDocument('* H1\n** H2');
+
+    const input: WorkspaceRefileTargetInput = {
+      source,
+      sourceDocument: sourceDoc,
+      indexedHeadings,
+    };
+
+    const result = resolveWorkspaceRefileTargets(input);
+
+    assert.ok(result.ok, 'should return ok');
+    const targets = (result as any).targets;
+
+    // Filter targets with headingText "Todo"
+    const todoTargets = targets.filter((t: RefileTargetWithDisplay) => t.target.headingText === 'Todo');
+    assert.strictEqual(todoTargets.length, 2, 'should have 2 Todo targets from different files');
+
+    // Their outlinePathStrings should be different due to file path prefix
+    const pathStrings = todoTargets.map((t: RefileTargetWithDisplay) => t.displayInfo.outlinePathString);
+    const uniquePaths = new Set(pathStrings);
+    assert.strictEqual(uniquePaths.size, 2, 'cross-file targets with same text should be distinguishable by file path');
+  });
+
+  // ============ Backward Compatibility with Same-file Behavior ============
+
+  test('should maintain same-file behavior when source and target are in same file', () => {
+    const fileA = 'file:///project/a.org';
+
+    const indexedHeadings: IndexedHeading[] = [
+      createIndexedHeading({ uri: fileA, line: 0, level: 1, title: 'H1', relativePath: 'a.org' }),
+      createIndexedHeading({ uri: fileA, line: 1, level: 2, title: 'H2', relativePath: 'a.org' }), // source
+      createIndexedHeading({ uri: fileA, line: 2, level: 3, title: 'H3', relativePath: 'a.org' }), // descendant
+      createIndexedHeading({ uri: fileA, line: 3, level: 1, title: 'H4', relativePath: 'a.org' }),
+    ];
+
+    const source = createSource(fileA, 1, 2, 2);
+    const sourceDoc = createMockDocument('* H1\n** H2\n*** H3\n* H4');
+
+    const input: WorkspaceRefileTargetInput = {
+      source,
+      sourceDocument: sourceDoc,
+      indexedHeadings,
+    };
+
+    const result = resolveWorkspaceRefileTargets(input);
+
+    assert.ok(result.ok, 'should return ok');
+    const targets = (result as any).targets;
+
+    // H1 (line 0) and H4 (line 3) should be targets
+    assert.strictEqual(targets.length, 2, 'should have 2 valid targets');
+    const targetLines = targets.map((t: RefileTargetWithDisplay) => t.target.line);
+    assert.ok(targetLines.includes(0), 'H1 should be a target');
+    assert.ok(targetLines.includes(3), 'H4 should be a target');
+
+    // H2 (source itself) and H3 (descendant) should be filtered
+    assert.ok(!targetLines.includes(1), 'source should be filtered');
+    assert.ok(!targetLines.includes(2), 'descendant should be filtered');
   });
 
 });
