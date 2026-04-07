@@ -74,10 +74,13 @@ export interface RefileTarget {
 export type EditType = 'delete' | 'insert';
 
 /**
- * A single edit operation in a refile plan
+ * A single edit operation in a refile plan.
+ * For cross-file refile, each edit carries the document URI it applies to.
  */
 export interface RefileEdit {
   type: EditType;
+  /** The document URI this edit applies to */
+  documentUri: string;
   /** The text to insert (for insert type) or undefined for delete */
   text?: string;
   /** Target position for insert */
@@ -88,13 +91,20 @@ export interface RefileEdit {
 
 /**
  * RefilePlan describes the complete set of edits needed to perform a refile.
+ * Supports both single-file and cross-file refile:
+ * - For single-file: sourceUri === targetUri
+ * - For cross-file: sourceUri !== targetUri
  */
 export interface RefilePlan {
   /** The source subtree being moved */
   source: RefileSource;
   /** The target location */
   target: RefileTarget;
-  /** Edits to perform (delete source + insert at target) */
+  /** URI of the source document (where the subtree will be deleted from) */
+  sourceDocumentUri: string;
+  /** URI of the target document (where the subtree will be inserted into) */
+  targetDocumentUri: string;
+  /** Edits to perform: first delete source from source document, then insert at target document */
   edits: RefileEdit[];
   /** The new root level for the source after refile */
   newSourceRootLevel: number;
@@ -252,12 +262,14 @@ export const RefileTarget = {
 export const RefilePlan = {
 
   /**
-   * Build a complete refile plan given source, target, and document.
+   * Build a complete refile plan given source, target, and documents.
+   * Supports both single-file and cross-file refile.
    */
   buildRefilePlan(
     source: RefileSource,
     target: RefileTarget,
-    document: core.TextDocument
+    sourceDocument: core.TextDocument,
+    targetDocument?: core.TextDocument
   ): Result<RefilePlan> {
     // Validate target first
     const targetValid = RefileTarget.isValidTarget(source, target);
@@ -265,15 +277,19 @@ export const RefilePlan = {
       return { ok: false, error: targetValid.error };
     }
 
+    // For single-file, targetDocument is the same as sourceDocument
+    const tgtDoc = targetDocument || sourceDocument;
+
     // Calculate new source level
     const newSourceRootLevel = RefileSource.deriveNewSourceLevel(source, target);
 
     // Build the delete edit (remove source from original location)
     const deleteEdit: RefileEdit = {
       type: 'delete',
+      documentUri: source.uri,
       range: {
         start: { line: source.startLine, character: 0 },
-        end: { line: source.endLine, character: document.lineAt(source.endLine).text.length }
+        end: { line: source.endLine, character: sourceDocument.lineAt(source.endLine).text.length }
       }
     };
 
@@ -282,8 +298,9 @@ export const RefilePlan = {
     // For simplicity, we insert after the target line
     const insertEdit: RefileEdit = {
       type: 'insert',
+      documentUri: target.uri,
       text: source.rawText,
-      position: { line: source.endLine, character: document.lineAt(source.endLine).text.length }
+      position: { line: source.endLine, character: sourceDocument.lineAt(source.endLine).text.length }
     };
 
     return {
@@ -291,6 +308,8 @@ export const RefilePlan = {
       plan: {
         source,
         target,
+        sourceDocumentUri: source.uri,
+        targetDocumentUri: target.uri,
         edits: [deleteEdit, insertEdit],
         newSourceRootLevel,
       }

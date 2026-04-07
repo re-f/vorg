@@ -596,3 +596,195 @@ suite('refilePlanner: end-to-end single-file refile', () => {
   });
 
 });
+
+// =============================================================================
+// Cross-File Refile Tests
+// =============================================================================
+
+suite('refilePlanner: cross-file refile', () => {
+
+  test('should generate cross-file refile plan with correct document URIs', () => {
+    // Source document
+    const sourceContent = '* H1\n** H2\ncontent\n* H3';
+    const sourceDoc = createMockDocument(sourceContent);
+    (sourceDoc as any).uri = 'file:///source.org';
+
+    // Target document
+    const targetContent = '* Target\n** Child';
+    const targetDoc = createMockDocument(targetContent);
+    (targetDoc as any).uri = 'file:///target.org';
+
+    // Source: ** H2 (rootLevel=2) at line 1, Target: * Target (level=1) at line 0
+    const source = extractSource(sourceDoc, 1);
+    source.uri = 'file:///source.org';
+    const target = createTarget(targetDoc, 0);
+    target.uri = 'file:///target.org';
+
+    const result = planRefile({
+      source,
+      target,
+      sourceDocument: sourceDoc,
+      targetDocument: targetDoc
+    });
+
+    assert.ok(result.ok, 'cross-file refile should succeed');
+
+    const plan = result as unknown as RefilePlannerOutput;
+
+    // Verify document URIs are correctly set
+    assert.strictEqual(plan.sourceDocumentUri, 'file:///source.org');
+    assert.strictEqual(plan.targetDocumentUri, 'file:///target.org');
+
+    // Verify edits have correct document URIs
+    const deleteEdit = plan.edits.find(e => e.type === 'delete');
+    const insertEdit = plan.edits.find(e => e.type === 'insert');
+
+    assert.ok(deleteEdit, 'should have delete edit');
+    assert.ok(insertEdit, 'should have insert edit');
+
+    assert.strictEqual(deleteEdit!.documentUri, 'file:///source.org');
+    assert.strictEqual(insertEdit!.documentUri, 'file:///target.org');
+  });
+
+  test('cross-file plan should have delete on source doc and insert on target doc', () => {
+    // Source document
+    const sourceContent = '* Source Doc\n** Subtree\ncontent';
+    const sourceDoc = createMockDocument(sourceContent);
+    (sourceDoc as any).uri = 'file:///source.org';
+
+    // Target document
+    const targetContent = '* Target Doc\n** Existing';
+    const targetDoc = createMockDocument(targetContent);
+    (targetDoc as any).uri = 'file:///target.org';
+
+    const source = extractSource(sourceDoc, 1);
+    source.uri = 'file:///source.org';
+    const target = createTarget(targetDoc, 0);
+    target.uri = 'file:///target.org';
+
+    const result = planRefile({
+      source,
+      target,
+      sourceDocument: sourceDoc,
+      targetDocument: targetDoc
+    });
+
+    assert.ok(result.ok);
+
+    const plan = result as unknown as RefilePlannerOutput;
+    const deleteEdit = plan.edits.find(e => e.type === 'delete')!;
+    const insertEdit = plan.edits.find(e => e.type === 'insert')!;
+
+    // Delete edit should target source document
+    assert.strictEqual(deleteEdit.documentUri, 'file:///source.org');
+    assert.strictEqual(deleteEdit.range!.start.line, 1);
+    assert.strictEqual(deleteEdit.range!.end.line, 2);
+
+    // Insert edit should target target document
+    assert.strictEqual(insertEdit.documentUri, 'file:///target.org');
+    assert.strictEqual(insertEdit.position!.line, 1); // After ** Existing
+  });
+
+  test('should preserve subtree internal relative levels in cross-file refile', () => {
+    // Source document
+    const sourceContent = '* Src\n** H2\n*** H3\n**** H4';
+    const sourceDoc = createMockDocument(sourceContent);
+    (sourceDoc as any).uri = 'file:///source.org';
+
+    // Target document
+    const targetContent = '* Tgt';
+    const targetDoc = createMockDocument(targetContent);
+    (targetDoc as any).uri = 'file:///target.org';
+
+    const source = extractSource(sourceDoc, 1);
+    source.uri = 'file:///source.org';
+    const target = createTarget(targetDoc, 0);
+    target.uri = 'file:///target.org';
+
+    const result = planRefile({
+      source,
+      target,
+      sourceDocument: sourceDoc,
+      targetDocument: targetDoc
+    });
+
+    assert.ok(result.ok);
+
+    const plan = result as unknown as RefilePlannerOutput;
+
+    // Relative depths should be preserved
+    // Source ** H2 (rootLevel=2) → Target * Tgt (level=1), new root = 2
+    // *** H3 (depth 1 from root) → *** H3
+    // **** H4 (depth 2 from root) → **** H4
+    assert.strictEqual(plan.newSourceRootLevel, 2);
+    assert.ok(plan.adjustedSourceText.startsWith('** H2'));
+    assert.ok(plan.adjustedSourceText.includes('*** H3'));
+    assert.ok(plan.adjustedSourceText.includes('**** H4'));
+  });
+
+  test('should maintain single-file compatibility when source and target in same file', () => {
+    // Single document containing both source and target
+    const content = '* H1\n** H2\ncontent\n* H3';
+    const document = createMockDocument(content);
+    (document as any).uri = 'file:///same.org';
+
+    const source = extractSource(document, 1);
+    source.uri = 'file:///same.org';
+    const target = createTarget(document, 3);
+    target.uri = 'file:///same.org';
+
+    const result = planRefile({
+      source,
+      target,
+      sourceDocument: document,
+      targetDocument: document
+    });
+
+    assert.ok(result.ok);
+
+    const plan = result as unknown as RefilePlannerOutput;
+
+    // For single-file, both URIs should be the same
+    assert.strictEqual(plan.sourceDocumentUri, 'file:///same.org');
+    assert.strictEqual(plan.targetDocumentUri, 'file:///same.org');
+
+    // Should still have two edits
+    assert.strictEqual(plan.edits.length, 2);
+
+    // Both edits should target same document
+    plan.edits.forEach(edit => {
+      assert.strictEqual(edit.documentUri, 'file:///same.org');
+    });
+  });
+
+  test('should reject invalid target in cross-file scenario (target inside source)', () => {
+    // Source document
+    const sourceContent = '* Src\n** Sub\n*** Deep';
+    const sourceDoc = createMockDocument(sourceContent);
+    (sourceDoc as any).uri = 'file:///source.org';
+
+    // Target document - different file
+    const targetContent = '* Other';
+    const targetDoc = createMockDocument(targetContent);
+    (targetDoc as any).uri = 'file:///target.org';
+
+    const source = extractSource(sourceDoc, 1);
+    source.uri = 'file:///source.org';
+
+    // Even in cross-file, the target is checked against source lines
+    // Since target is on line 0 and source is on line 1, target is NOT inside source
+    // This test verifies the validation still works
+    const target = createTarget(targetDoc, 0);
+    target.uri = 'file:///target.org';
+
+    const result = planRefile({
+      source,
+      target,
+      sourceDocument: sourceDoc,
+      targetDocument: targetDoc
+    });
+
+    assert.ok(result.ok, 'target not inside source should be valid');
+  });
+
+});

@@ -28,7 +28,7 @@ import * as vscode from 'vscode';
 import { RefileSource, RefileTarget, RefileError } from './refileDomain';
 import { resolveRefileTargets, RefileTargetWithDisplay, RefileTargetResolverInput } from '../../services/refileTargetResolver';
 import { buildRefilePlan } from '../../services/refilePlanner';
-import { applyRefilePlanWithResult } from '../../services/refileApplier';
+import { applyRefilePlan } from '../../services/refileApplier';
 import { getConfigService } from '../../services/configService';
 
 /**
@@ -150,8 +150,8 @@ export async function executeRefileCommand(): Promise<void> {
 
   const plan = planResult.plan;
 
-  // Step 7: Apply the plan
-  const applyResult = applyRefilePlanWithResult(plan, document);
+  // Step 7: Apply the plan (async - opens docs, validates, applies)
+  const applyResult = await applyRefilePlan(plan);
 
   if (!applyResult.ok) {
     vscode.window.showErrorMessage(`VOrg: Failed to apply refile: ${applyResult.error}`);

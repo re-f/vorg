@@ -48,6 +48,7 @@ suite('Refile Applier Tests', () => {
     test('delete edit should have correct range format', () => {
       const deleteEdit: RefileEdit = {
         type: 'delete',
+        documentUri: 'file:///test.org',
         range: {
           start: { line: 1, character: 0 },
           end: { line: 2, character: 15 }
@@ -63,6 +64,7 @@ suite('Refile Applier Tests', () => {
     test('insert edit should have correct position and text format', () => {
       const insertEdit: RefileEdit = {
         type: 'insert',
+        documentUri: 'file:///test.org',
         text: '** New Heading\ncontent',
         position: { line: 3, character: 14 }
       };
@@ -94,9 +96,11 @@ suite('Refile Applier Tests', () => {
       const plan: RefilePlan = {
         source,
         target,
+        sourceDocumentUri: 'file:///test.org',
+        targetDocumentUri: 'file:///test.org',
         edits: [
-          { type: 'delete', range: { start: { line: 1, character: 0 }, end: { line: 2, character: 15 } } },
-          { type: 'insert', text: '** H2\ncontent', position: { line: 3, character: 14 } },
+          { type: 'delete', documentUri: 'file:///test.org', range: { start: { line: 1, character: 0 }, end: { line: 2, character: 15 } } },
+          { type: 'insert', documentUri: 'file:///test.org', text: '** H2\ncontent', position: { line: 3, character: 14 } },
         ],
         newSourceRootLevel: 2,
       };

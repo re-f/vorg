@@ -96,16 +96,39 @@ function findTargetSubtreeEnd(
 // Refile Planner
 // =============================================================================
 
-export interface RefilePlannerInput {
+/**
+ * Input for single-file refile (backward compatible).
+ * @deprecated Use RefilePlannerInputCrossFile for cross-file support
+ */
+export interface RefilePlannerInputSingleFile {
   source: RefileSource;
   target: RefileTarget;
+  /** Document for both source and target (single-file refile) */
   document: core.TextDocument;
 }
+
+/**
+ * Input for cross-file refile.
+ */
+export interface RefilePlannerInputCrossFile {
+  source: RefileSource;
+  target: RefileTarget;
+  /** Document containing the source subtree (used for source deletion) */
+  sourceDocument: core.TextDocument;
+  /** Document containing the target heading (used for target insertion) */
+  targetDocument: core.TextDocument;
+}
+
+export type RefilePlannerInput = RefilePlannerInputSingleFile | RefilePlannerInputCrossFile;
 
 export interface RefilePlannerOutput {
   source: RefileSource;
   target: RefileTarget;
-  /** Edits: first delete source, then insert adjusted source at target subtree end */
+  /** URI of the source document */
+  sourceDocumentUri: string;
+  /** URI of the target document */
+  targetDocumentUri: string;
+  /** Edits: first delete source from source document, then insert adjusted source at target document */
   edits: RefileEdit[];
   /** The new root level for the source after refile */
   newSourceRootLevel: number;
@@ -116,14 +139,26 @@ export interface RefilePlannerOutput {
 /**
  * Plan a refile operation.
  *
- * Given a source subtree, a target location, and the document:
+ * Given a source subtree, a target location, and the documents:
  * 1. Validates the target is not the source or inside the source subtree
  * 2. Finds the end of the target's subtree (insertion point)
  * 3. Rewrites all heading levels in the source for the new parent
- * 4. Returns a complete edit plan
+ * 4. Returns a complete edit plan with proper document URIs for each edit
+ *
+ * Supports both single-file and cross-file refile:
+ * - For single-file: sourceDocumentUri === targetDocumentUri
+ * - For cross-file: sourceDocumentUri !== targetDocumentUri
  */
 export function planRefile(input: RefilePlannerInput): RefilePlanResult {
-  const { source, target, document } = input;
+  // Handle both single-file (backward compatible) and cross-file inputs
+  const sourceDocument = 'sourceDocument' in input
+    ? input.sourceDocument
+    : input.document;
+  const targetDocument = 'targetDocument' in input
+    ? input.targetDocument
+    : input.document;
+  const source = input.source;
+  const target = input.target;
 
   // Validate target
   if (target.line === source.startLine) {
@@ -145,27 +180,29 @@ export function planRefile(input: RefilePlannerInput): RefilePlanResult {
 
   // Find target subtree end - this is the insertion point
   // We insert AFTER the target's subtree (as the last child of target)
-  const targetSubtreeEndLine = findTargetSubtreeEnd(document, target.line, target.level);
+  const targetSubtreeEndLine = findTargetSubtreeEnd(targetDocument, target.line, target.level);
 
   // Find the insert position: end of target subtree line
   const insertLine = targetSubtreeEndLine;
-  const insertChar = document.lineAt(targetSubtreeEndLine).text.length;
+  const insertChar = targetDocument.lineAt(targetSubtreeEndLine).text.length;
 
-  // Build delete edit: remove source from original location
+  // Build delete edit: remove source from original location (on source document)
   const deleteEdit: RefileEdit = {
     type: 'delete',
+    documentUri: source.uri,
     range: {
       start: { line: source.startLine, character: 0 },
       end: {
         line: source.endLine,
-        character: document.lineAt(source.endLine).text.length
+        character: sourceDocument.lineAt(source.endLine).text.length
       }
     }
   };
 
-  // Build insert edit: insert adjusted source at end of target subtree
+  // Build insert edit: insert adjusted source at end of target subtree (on target document)
   const insertEdit: RefileEdit = {
     type: 'insert',
+    documentUri: target.uri,
     text: adjustedText,
     position: { line: insertLine, character: insertChar }
   };
@@ -174,6 +211,8 @@ export function planRefile(input: RefilePlannerInput): RefilePlanResult {
     ok: true,
     source,
     target,
+    sourceDocumentUri: source.uri,
+    targetDocumentUri: target.uri,
     edits: [deleteEdit, insertEdit],
     newSourceRootLevel: newRootLevel,
     adjustedSourceText: adjustedText
@@ -186,6 +225,8 @@ interface RefilePlanSuccess {
   ok: true;
   source: RefileSource;
   target: RefileTarget;
+  sourceDocumentUri: string;
+  targetDocumentUri: string;
   edits: RefileEdit[];
   newSourceRootLevel: number;
   adjustedSourceText: string;
@@ -199,13 +240,23 @@ interface RefilePlanFailure {
 /**
  * Convenience function that returns a RefilePlan compatible with the existing domain types.
  * Returns { ok: true, plan: RefilePlan } on success, { ok: false, error: RefileError } on failure.
+ *
+ * Supports both single-file and cross-file refile:
+ * - Single-file: pass same document for source and target (or use the 3-arg form)
+ * - Cross-file: pass both sourceDocument and targetDocument
  */
 export function buildRefilePlan(
   source: RefileSource,
   target: RefileTarget,
-  document: core.TextDocument
+  sourceDocument: core.TextDocument,
+  targetDocument?: core.TextDocument
 ): { ok: true; plan: RefilePlan } | { ok: false; error: RefileError } {
-  const planResult = planRefile({ source, target, document });
+  const planResult = planRefile({
+    source,
+    target,
+    sourceDocument,
+    targetDocument: targetDocument || sourceDocument
+  });
 
   if (!planResult.ok) {
     return { ok: false, error: planResult.error };
@@ -216,6 +267,8 @@ export function buildRefilePlan(
     plan: {
       source,
       target,
+      sourceDocumentUri: planResult.sourceDocumentUri,
+      targetDocumentUri: planResult.targetDocumentUri,
       edits: planResult.edits,
       newSourceRootLevel: planResult.newSourceRootLevel
     }
