@@ -526,7 +526,7 @@
     "test": "node ./out/test/runTest.js",
     "test:integration": "node copy-resources.js && pnpm run compile-tests && node ./out/test/runTest.js",
     "test:unit": "pnpm run compile-tests && pnpm exec mocha --ui tdd --exclude \"out/test/unit/orgCompletionProviderContent.test.js\" --exclude \"out/test/unit/orgTagCompletion.test.js\" \"out/test/unit/*.test.js\" \"out/test/unit/database/*.test.js\"",
-    "package": "vsce package --no-dependencies",
+    "package": "webpack --mode production --devtool hidden-source-map && node copy-resources.js && vsce package --no-dependencies",
     "docs": "typedoc src --out docs/api",
     "docs:serve": "pnpm run docs && open docs/api/index.html"
   },

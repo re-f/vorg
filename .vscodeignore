@@ -9,4 +9,7 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 node_modules/**
-webpack.config.js 
+webpack.config.js
+orgmode-docs/**
+test-data/**
+docs/**
