@@ -22,14 +22,28 @@
  * - User cancels Quick Pick → abort silently
  * - Planner returns invalid → show error, abort
  * - Applier fails → show error
+ *
+ * Cross-file support:
+ * - For untitled/in-memory documents: only document-level targets
+ * - For saved documents: shows both same-file and cross-file targets from workspace index
+ * - User can select any target from the merged list
+ * - Cross-file targets show file path in Quick Pick description
  */
 
 import * as vscode from 'vscode';
 import { RefileSource, RefileTarget, RefileError } from './refileDomain';
-import { resolveRefileTargets, RefileTargetWithDisplay, RefileTargetResolverInput } from '../../services/refileTargetResolver';
+import {
+  resolveRefileTargets,
+  RefileTargetWithDisplay,
+  RefileTargetResolverInput,
+  resolveWorkspaceRefileTargets,
+  WorkspaceRefileTargetInput,
+  IndexedHeading,
+} from '../../services/refileTargetResolver';
 import { buildRefilePlan } from '../../services/refilePlanner';
 import { applyRefilePlan } from '../../services/refileApplier';
 import { getConfigService } from '../../services/configService';
+import { OrgSymbolIndexService } from '../../services/orgSymbolIndexService';
 
 /**
  * Entry point: execute the refile command.
@@ -80,21 +94,48 @@ export async function executeRefileCommand(): Promise<void> {
   };
 
   // Step 4: Resolve valid targets
-  const resolverInput: RefileTargetResolverInput = { document, source };
-  const resolverResult = resolveRefileTargets(resolverInput);
+  // For untitled/in-memory documents: use document-level resolution only
+  // For saved documents: use workspace-level resolution (handles both same-file and cross-file)
+  const isUntitledDocument = document.uri.scheme === 'untitled';
 
-  if (!resolverResult.ok) {
-    switch (resolverResult.error) {
-      case RefileError.NoValidTargets:
-        vscode.window.showInformationMessage('VOrg: No valid refile targets in this document.');
-        break;
-      default:
-        vscode.window.showErrorMessage(`VOrg: Failed to resolve targets: ${resolverResult.error}`);
+  let targets: RefileTargetWithDisplay[] = [];
+
+  if (isUntitledDocument) {
+    // Use document-level resolution for untitled files
+    const resolverInput: RefileTargetResolverInput = { document, source };
+    const docResolverResult = resolveRefileTargets(resolverInput);
+    if (docResolverResult.ok) {
+      targets = docResolverResult.targets;
     }
-    return;
-  }
+  } else {
+    // Use workspace-level resolution for saved files
+    // resolveWorkspaceRefileTargets handles both same-file and cross-file targets
+    const indexService = OrgSymbolIndexService.getInstance();
+    const indexedSymbols = await indexService.getAllSymbols();
 
-  const targets: RefileTargetWithDisplay[] = resolverResult.targets;
+    if (indexedSymbols.length > 0) {
+      // Convert IndexedHeadingSymbol to IndexedHeading format expected by resolver
+      const indexedHeadings: IndexedHeading[] = indexedSymbols.map(s => ({
+        uri: s.uri.toString(),
+        line: s.line,
+        level: s.level,
+        title: s.text,
+        displayName: s.displayName,
+        relativePath: s.relativePath,
+      }));
+
+      const workspaceInput: WorkspaceRefileTargetInput = {
+        source,
+        sourceDocument: document,
+        indexedHeadings,
+      };
+
+      const workspaceResult = resolveWorkspaceRefileTargets(workspaceInput);
+      if (workspaceResult.ok) {
+        targets = workspaceResult.targets;
+      }
+    }
+  }
 
   if (targets.length === 0) {
     vscode.window.showInformationMessage('VOrg: No valid refile targets found.');
@@ -126,13 +167,32 @@ export async function executeRefileCommand(): Promise<void> {
   }
 
   const selectedTargetWithDisplay = targets[selectedIndex];
-  const target: RefileTarget = {
-    ...selectedTargetWithDisplay.target,
-    uri: document.uri.toString(),
-  };
+  // For same-file targets, the resolver sets uri=''; set it to current document
+  // For cross-file targets, the resolver already sets the proper uri
+  const target: RefileTarget = selectedTargetWithDisplay.target.uri
+    ? selectedTargetWithDisplay.target
+    : { ...selectedTargetWithDisplay.target, uri: document.uri.toString() };
 
   // Step 6: Build refile plan
-  const planResult = buildRefilePlan(source, target, document);
+  // Detect whether this is a cross-file refile
+  const isCrossFile = target.uri !== source.uri;
+  let planResult;
+
+  if (isCrossFile) {
+    // For cross-file refile, open the target document so planner can find insertion point
+    let targetDocument: vscode.TextDocument;
+    try {
+      targetDocument = await vscode.workspace.openTextDocument(
+        vscode.Uri.parse(target.uri)
+      );
+    } catch {
+      vscode.window.showErrorMessage(`VOrg: Could not open target file: ${target.uri}`);
+      return;
+    }
+    planResult = buildRefilePlan(source, target, document, targetDocument);
+  } else {
+    planResult = buildRefilePlan(source, target, document);
+  }
 
   if (!planResult.ok) {
     switch (planResult.error) {
