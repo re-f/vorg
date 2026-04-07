@@ -145,7 +145,7 @@ export async function executeRefileCommand(): Promise<void> {
   // Step 5: Show Quick Pick for target selection
   const quickPickItems: vscode.QuickPickItem[] = targets.map((targetWithDisplay) => ({
     label: targetWithDisplay.displayInfo.label,
-    description: targetWithDisplay.displayInfo.outlinePathString || undefined,
+    description: (targetWithDisplay.displayInfo.description ?? targetWithDisplay.displayInfo.outlinePathString) || undefined,
     detail: targetWithDisplay.displayInfo.levelIndicator,
   }));
 
@@ -153,6 +153,7 @@ export async function executeRefileCommand(): Promise<void> {
     placeHolder: 'Select refile target',
     title: 'Refile to...',
     ignoreFocusOut: true,
+    matchOnDescription: true,
   });
 
   // User cancelled

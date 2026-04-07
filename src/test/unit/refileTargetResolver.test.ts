@@ -740,9 +740,11 @@ suite('resolveWorkspaceRefileTargets', () => {
     const fileBTarget = targets.find((t: RefileTargetWithDisplay) => t.target.uri === fileB);
     assert.ok(fileBTarget, 'should have a target from file B');
 
-    // Cross-file display info should include file path
-    assert.ok(fileBTarget.displayInfo.outlinePathString.startsWith('[b.org]'),
-      'cross-file target should have file path prefix');
+    // Cross-file display info should include file path in description for search
+    assert.ok(fileBTarget.displayInfo.description?.startsWith('b.org'),
+      'cross-file target should have file path in description for search matching');
+    assert.strictEqual(fileBTarget.displayInfo.outlinePathString, '',
+      'outlinePathString should not include file path prefix');
   });
 
   test('should not include file path for same-file targets', () => {
@@ -775,6 +777,9 @@ suite('resolveWorkspaceRefileTargets', () => {
     // Same-file display info should NOT have file path prefix
     assert.ok(!sameFileTarget.displayInfo.outlinePathString.startsWith('['),
       'same-file target should not have file path prefix');
+    // Same-file targets should NOT have description set
+    assert.strictEqual(sameFileTarget.displayInfo.description, undefined,
+      'same-file target should not have description');
   });
 
   test('should build correct outline path for cross-file target', () => {
@@ -852,10 +857,10 @@ suite('resolveWorkspaceRefileTargets', () => {
     const todoTargets = targets.filter((t: RefileTargetWithDisplay) => t.target.headingText === 'Todo');
     assert.strictEqual(todoTargets.length, 2, 'should have 2 Todo targets from different files');
 
-    // Their outlinePathStrings should be different due to file path prefix
-    const pathStrings = todoTargets.map((t: RefileTargetWithDisplay) => t.displayInfo.outlinePathString);
-    const uniquePaths = new Set(pathStrings);
-    assert.strictEqual(uniquePaths.size, 2, 'cross-file targets with same text should be distinguishable by file path');
+    // Their descriptions should be different due to file path prefix (for search matching)
+    const descriptions = todoTargets.map((t: RefileTargetWithDisplay) => t.displayInfo.description);
+    const uniqueDescriptions = new Set(descriptions);
+    assert.strictEqual(uniqueDescriptions.size, 2, 'cross-file targets with same text should be distinguishable by file path in description');
   });
 
   // ============ Backward Compatibility with Same-file Behavior ============

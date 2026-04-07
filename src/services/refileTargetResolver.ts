@@ -28,6 +28,8 @@ import { DEFAULT_TODO_KEYWORDS, parseTodoKeywords } from '../utils/constants';
 export interface RefileTargetDisplayInfo {
   /** Human-readable label for Quick Pick */
   label: string;
+  /** Full path for search matching (includes file path for cross-file targets) */
+  description?: string;
   /** Outline path as a single display string (e.g., "H1 > H2 > H3") */
   outlinePathString: string;
   /** Level display (e.g., "L2") */
@@ -366,13 +368,17 @@ function buildWorkspaceDisplayInfo(
     ? `${outlinePathString} > ${target.headingText}`
     : target.headingText;
 
-  // For cross-file targets, prepend file path to description
   const isCrossFile = target.uri !== sourceUri;
-  const filePathPrefix = isCrossFile ? `[${relativePath}] ` : '';
+
+  // For cross-file targets, include file path in description for search matching
+  const description = isCrossFile
+    ? `${relativePath}${outlinePathString ? ' > ' + outlinePathString : ''}`
+    : undefined;
 
   return {
     label,
-    outlinePathString: filePathPrefix + outlinePathString,
+    description,
+    outlinePathString,
     levelIndicator: `L${target.level}`,
   };
 }
