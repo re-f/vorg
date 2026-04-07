@@ -3,19 +3,8 @@ import * as vscode from 'vscode';
 import { OrgOutlineProvider } from '../../outline/orgOutlineProvider';
 import { ensureTestReady } from './testUtils';
 
-/**
- * 辅助函数：提取纯显示名称（去除拼音信息）
- * 符号名称格式为：displayName + \u200B + pinyinInfo
- */
-function getDisplayName(name: string): string {
-    return name.split('\u200B')[0];
-}
-
-/**
- * 辅助函数：查找符号（忽略拼音部分）
- */
 function findSymbol(symbols: vscode.DocumentSymbol[], expectedName: string): vscode.DocumentSymbol | undefined {
-    return symbols.find(s => getDisplayName(s.name).includes(expectedName));
+    return symbols.find(s => s.name.includes(expectedName));
 }
 
 suite('OrgOutlineProvider Test Suite', () => {
@@ -157,15 +146,13 @@ suite('OrgOutlineProvider Test Suite', () => {
         // 查找 TODO 标题
         const todoHeading = findSymbol(symbols, 'TODO 待完成任务');
         assert.ok(todoHeading, 'Should find TODO heading');
-        const todoDisplayName = getDisplayName(todoHeading.name);
-        assert.ok(todoDisplayName.includes(':urgent:work:'), 'Should include tags');
+        assert.ok(todoHeading.name.includes(':urgent:work:'), 'Should include tags');
         assert.strictEqual(todoHeading.detail, 'TODO');
 
         // 查找 DONE 标题
         const doneHeading = findSymbol(symbols, 'DONE 已完成任务');
         assert.ok(doneHeading, 'Should find DONE heading');
-        const doneDisplayName = getDisplayName(doneHeading.name);
-        assert.ok(doneDisplayName.includes(':completed:'), 'Should include tags');
+        assert.ok(doneHeading.name.includes(':completed:'), 'Should include tags');
         assert.strictEqual(doneHeading.detail, 'DONE');
     });
 

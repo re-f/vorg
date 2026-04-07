@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { HeadingParser } from '../parsers/headingParser';
 import { HeadingSymbolUtils } from '../utils/headingSymbolUtils';
-import { getPinyinString } from '../utils/pinyinUtils';
 import { getConfigService } from '../services/configService';
 
 /**
@@ -74,20 +73,6 @@ export class OrgOutlineProvider implements vscode.DocumentSymbolProvider {
         // 构建显示名称
         const displayName = HeadingParser.buildDisplayName(effectiveTitle, todoStatus, tags);
 
-        // 计算拼音（用于搜索）
-        const pinyinText = getPinyinString(effectiveTitle);
-        const pinyinDisplayName = getPinyinString(displayName);
-
-        // 将拼音信息添加到 name 中（用零宽空格分隔，不影响显示但能被搜索）
-        // VS Code 的文档符号搜索主要搜索 name 字段
-        const ZERO_WIDTH_SPACE = '\u200B'; // 零宽空格
-        let searchableName = displayName;
-        if (pinyinText || pinyinDisplayName) {
-          const pinyinInfo = [pinyinText, pinyinDisplayName].filter(p => p).join(' ');
-          // 在 name 中添加拼音，用零宽空格分隔，这样既不影响显示，又能被搜索到
-          searchableName = `${displayName}${ZERO_WIDTH_SPACE}${pinyinInfo}`;
-        }
-
         // detail 保持原有的 TODO 状态
         const detail = todoStatus || '';
 
@@ -112,7 +97,7 @@ export class OrgOutlineProvider implements vscode.DocumentSymbolProvider {
         // 创建符号：range 包含整个子树，selectionRange 是标题行
         const fullRange = new vscode.Range(i, 0, endLine, lines[endLine].length);
         const symbol = new vscode.DocumentSymbol(
-          searchableName,  // 包含拼音的搜索名称
+          displayName,
           detail,
           kind,
           fullRange,

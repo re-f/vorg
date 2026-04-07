@@ -81,5 +81,9 @@ VOrg-QL 是一个 S-Exp 到 SQL 的转译器。
 *   **Phase 2**: 现代化查询系统（VOrg-QL, Embedded Views）。
 *   **Phase 3**: 现代化 Agenda 视图（Planned）。
 
+## 6. 进一步阅读
+
+- 搜索与拼音相关的长期设计约束，请参阅 `docs/dev/SEARCH_AND_PINYIN.md`
+
 ---
 *更多技术决策细节请查阅代码库中的 `src` 目录。*

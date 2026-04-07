@@ -46,11 +46,6 @@ suite('Extension Test Suite', () => {
         assert.ok(symbols, 'Should return symbols');
         assert.ok(symbols.length > 0, 'Should have at least one symbol');
 
-        // 辅助函数：提取纯显示名称（去除拼音信息）
-        const getDisplayName = (name: string): string => {
-            return name.split('\u200B')[0];
-        };
-
         // 查找标题符号（使用新的符号映射：Namespace, Class, Interface）
         const headingSymbols = symbols.filter(s =>
             s.kind === vscode.SymbolKind.Namespace ||
@@ -61,7 +56,8 @@ suite('Extension Test Suite', () => {
         assert.ok(headingSymbols.length > 0, 'Should have heading symbols');
 
         // 验证能找到第一个标题
-        const firstHeading = headingSymbols.find(s => getDisplayName(s.name).includes('First Heading'));
+        const firstHeading = headingSymbols.find(s => s.name.includes('First Heading'));
         assert.ok(firstHeading, 'Should find First Heading');
     });
-}); 
+
+});

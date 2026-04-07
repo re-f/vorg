@@ -53,6 +53,8 @@
     "onCommand:vorg.demoteSubtree",
     "onCommand:vorg.ctrlCtrl",
     "onCommand:vorg.refile",
+    "onCommand:vorg.goToSymbolInEditor",
+    "onCommand:vorg.goToSymbolInWorkspace",
     "onCommand:vorg.debug.refreshHighlighting"
   ],
   "main": "./out/extension.js",
@@ -291,6 +293,18 @@
         "enablement": "editorLangId == 'org'"
       },
       {
+        "command": "vorg.goToSymbolInEditor",
+        "title": "VOrg: Go to Heading in Editor",
+        "icon": "$(list-tree)",
+        "enablement": "editorLangId == 'org'"
+      },
+      {
+        "command": "vorg.goToSymbolInWorkspace",
+        "title": "VOrg: Go to Heading in Workspace",
+        "icon": "$(symbol-namespace)",
+        "enablement": "editorLangId == 'org'"
+      },
+      {
         "command": "vorg.perspectives.refresh",
         "title": "Refresh Perspectives",
         "icon": "$(refresh)"
@@ -511,6 +525,18 @@
         "key": "ctrl+c ctrl+w",
         "mac": "ctrl+c ctrl+w",
         "when": "editorLangId == 'org'"
+      },
+      {
+        "command": "vorg.goToSymbolInEditor",
+        "key": "ctrl+shift+o",
+        "mac": "cmd+shift+o",
+        "when": "editorTextFocus && editorLangId == 'org'"
+      },
+      {
+        "command": "vorg.goToSymbolInWorkspace",
+        "key": "ctrl+t",
+        "mac": "cmd+t",
+        "when": "editorTextFocus && editorLangId == 'org'"
       }
     ]
   },
