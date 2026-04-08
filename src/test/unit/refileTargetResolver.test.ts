@@ -901,3 +901,226 @@ suite('resolveWorkspaceRefileTargets', () => {
   });
 
 });
+
+// =============================================================================
+// Cross-File Duplicate Headlines Tests
+// These tests verify correct disambiguation when multiple files have same heading names
+// =============================================================================
+
+suite('resolveWorkspaceRefileTargets: cross-file duplicate headlines', () => {
+
+  function createIndexedHeading(params: {
+    uri?: string;
+    line?: number;
+    level?: number;
+    title?: string;
+    relativePath?: string;
+  }): IndexedHeading {
+    return {
+      uri: params.uri || 'file:///test.org',
+      line: params.line ?? 0,
+      level: params.level ?? 1,
+      title: params.title || `H${params.line || 0}`,
+      displayName: params.title || `H${params.line || 0}`,
+      relativePath: params.relativePath || 'test.org',
+    };
+  }
+
+  function createSource(uri: string, startLine: number, endLine: number, rootLevel: number = 1): RefileSource {
+    return {
+      uri,
+      startLine,
+      endLine,
+      rawText: '',
+      rootLevel,
+    };
+  }
+
+  /**
+   * Test: Same heading text in different subdirectories
+   * project/src/file.org and project/docs/file.org both have "Notes" heading
+   * User should be able to distinguish by file path
+   */
+  test('should distinguish headings with same name in different subdirectories', () => {
+    const fileA = 'file:///project/src/main.org';
+    const fileB = 'file:///project/docs/main.org';
+
+    const indexedHeadings: IndexedHeading[] = [
+      createIndexedHeading({ uri: fileA, line: 0, level: 1, title: 'Tasks', relativePath: 'src/main.org' }),
+      createIndexedHeading({ uri: fileA, line: 1, level: 2, title: 'Todo', relativePath: 'src/main.org' }), // source
+      createIndexedHeading({ uri: fileB, line: 0, level: 1, title: 'Notes', relativePath: 'docs/main.org' }),
+      createIndexedHeading({ uri: fileB, line: 1, level: 2, title: 'Todo', relativePath: 'docs/main.org' }),
+    ];
+
+    const source = createSource(fileA, 1, 1, 2);
+    const sourceDoc = createMockDocument('* Tasks\n** Todo');
+
+    const input: WorkspaceRefileTargetInput = {
+      source,
+      sourceDocument: sourceDoc,
+      indexedHeadings,
+    };
+
+    const result = resolveWorkspaceRefileTargets(input);
+    assert.ok(result.ok);
+
+    const targets = (result as any).targets;
+    const todoTargets = targets.filter((t: RefileTargetWithDisplay) => t.target.headingText === 'Todo');
+
+    // Should have one Todo target from file B (different from source file A)
+    // The one from file A is the source itself and should be filtered
+    assert.strictEqual(todoTargets.length, 1, 'should have 1 Todo target from different file');
+
+    // The Todo target should be from file B, not file A
+    assert.strictEqual(todoTargets[0].target.uri, fileB, 'Todo target should be from docs/main.org');
+  });
+
+  /**
+   * Test: Multiple files all have "Archive" as root heading
+   * User selects correct one based on file path in description
+   */
+  test('should allow user to select correct target among many files with same root heading', () => {
+    const fileA = 'file:///project/a.org';
+    const fileB = 'file:///project/b.org';
+    const fileC = 'file:///project/c.org';
+
+    const indexedHeadings: IndexedHeading[] = [
+      createIndexedHeading({ uri: fileA, line: 0, level: 1, title: 'Archive', relativePath: 'a.org' }),
+      createIndexedHeading({ uri: fileA, line: 1, level: 2, title: 'Old', relativePath: 'a.org' }),
+      createIndexedHeading({ uri: fileB, line: 0, level: 1, title: 'Archive', relativePath: 'b.org' }),
+      createIndexedHeading({ uri: fileB, line: 1, level: 2, title: 'Done', relativePath: 'b.org' }),
+      createIndexedHeading({ uri: fileC, line: 0, level: 1, title: 'Archive', relativePath: 'c.org' }),
+      createIndexedHeading({ uri: fileC, line: 1, level: 2, title: 'Completed', relativePath: 'c.org' }),
+    ];
+
+    // Source is Archive at line 0 in file C (so it gets filtered out)
+    // We're looking for Archive in other files
+    const source = createSource(fileC, 0, 0, 1);
+    const sourceDoc = createMockDocument('* Archive\n** Completed');
+
+    const input: WorkspaceRefileTargetInput = {
+      source,
+      sourceDocument: sourceDoc,
+      indexedHeadings,
+    };
+
+    const result = resolveWorkspaceRefileTargets(input);
+    assert.ok(result.ok);
+
+    const targets = (result as any).targets;
+    const archiveTargets = targets.filter((t: RefileTargetWithDisplay) => t.target.headingText === 'Archive');
+
+    // Should have Archive from file A and file B (file C's Archive is the source, filtered)
+    assert.strictEqual(archiveTargets.length, 2, 'should have 2 Archive targets from different files');
+
+    // Each should have different file path in description
+    const descriptions: string[] = archiveTargets.map((t: RefileTargetWithDisplay) => t.displayInfo.description as string);
+    assert.ok(descriptions.every((d: string) => d !== undefined), 'all archive targets should have description');
+    assert.strictEqual(new Set(descriptions).size, 2, 'descriptions should be unique');
+  });
+
+  /**
+   * Test: Nested headings with same name across files
+   * project/src.org has "Parent > Child"
+   * project/docs.org also has "Parent > Child"
+   * Both should be distinguishable
+   */
+  test('should distinguish nested headings with same path in different files', () => {
+    const fileA = 'file:///project/src.org';
+    const fileB = 'file:///project/docs.org';
+
+    const indexedHeadings: IndexedHeading[] = [
+      createIndexedHeading({ uri: fileA, line: 0, level: 1, title: 'Parent', relativePath: 'src.org' }),
+      createIndexedHeading({ uri: fileA, line: 1, level: 2, title: 'Child', relativePath: 'src.org' }),
+      createIndexedHeading({ uri: fileA, line: 2, level: 2, title: 'Sibling', relativePath: 'src.org' }),
+      createIndexedHeading({ uri: fileB, line: 0, level: 1, title: 'Parent', relativePath: 'docs.org' }),
+      createIndexedHeading({ uri: fileB, line: 1, level: 2, title: 'Child', relativePath: 'docs.org' }),
+      createIndexedHeading({ uri: fileB, line: 2, level: 2, title: 'Another', relativePath: 'docs.org' }),
+    ];
+
+    // Source is Sibling in file A
+    const source = createSource(fileA, 2, 2, 2);
+    const sourceDoc = createMockDocument('* Parent\n** Child\n** Sibling');
+
+    const input: WorkspaceRefileTargetInput = {
+      source,
+      sourceDocument: sourceDoc,
+      indexedHeadings,
+    };
+
+    const result = resolveWorkspaceRefileTargets(input);
+    assert.ok(result.ok);
+
+    const targets = (result as any).targets;
+
+    // Should have Parent (line 0) from file A and Child (line 1) from file A
+    // Plus Parent and Child from file B
+    // Child from file A is the source's sibling, not descendant, so it's valid
+    // Wait, source is Sibling (line 2), Child (line 1) is at same level but before source
+    // So Child (line 1) should be filtered since it's not an ancestor
+    // Actually Child is at line 1, which is before source line 2, so it's NOT inside source subtree
+    // And it's not source itself, so it should be a target
+
+    // Filter out targets from file A that are the source itself (Sibling at line 2)
+    const fileATargets = targets.filter((t: RefileTargetWithDisplay) =>
+      t.target.uri === fileA && t.target.line !== 2
+    );
+    const fileBTargets = targets.filter((t: RefileTargetWithDisplay) => t.target.uri === fileB);
+
+    assert.ok(fileATargets.length > 0 || fileBTargets.length > 0, 'should have cross-file targets');
+
+    // Both files should have the Parent > Child path available
+    const childTargets = targets.filter((t: RefileTargetWithDisplay) =>
+      t.target.headingText === 'Child' && t.target.uri === fileB
+    );
+    assert.strictEqual(childTargets.length, 1, 'should have Child target from docs.org');
+    assert.deepStrictEqual(childTargets[0].target.outlinePath, ['Parent'], 'Child should have Parent path');
+  });
+
+  /**
+   * Test: Description includes relative path for cross-file targets
+   * This helps users identify which file they're targeting
+   */
+  test('cross-file targets should have file path in description for identification', () => {
+    const fileA = 'file:///project/src/main.org';
+    const fileB = 'file:///project/docs/guide.org';
+
+    const indexedHeadings: IndexedHeading[] = [
+      createIndexedHeading({ uri: fileA, line: 0, level: 1, title: 'Tasks', relativePath: 'src/main.org' }),
+      createIndexedHeading({ uri: fileA, line: 1, level: 2, title: 'Todo', relativePath: 'src/main.org' }), // source
+      createIndexedHeading({ uri: fileB, line: 0, level: 1, title: 'Notes', relativePath: 'docs/guide.org' }),
+      createIndexedHeading({ uri: fileB, line: 1, level: 2, title: 'Ideas', relativePath: 'docs/guide.org' }),
+    ];
+
+    const source = createSource(fileA, 1, 1, 2);
+    const sourceDoc = createMockDocument('* Tasks\n** Todo');
+
+    const input: WorkspaceRefileTargetInput = {
+      source,
+      sourceDocument: sourceDoc,
+      indexedHeadings,
+    };
+
+    const result = resolveWorkspaceRefileTargets(input);
+    assert.ok(result.ok);
+
+    const targets = (result as any).targets;
+
+    // Cross-file target (from file B) should have description set
+    const notesTarget = targets.find((t: RefileTargetWithDisplay) =>
+      t.target.uri === fileB && t.target.headingText === 'Notes'
+    );
+    assert.ok(notesTarget, 'should find Notes target from file B');
+    assert.ok(notesTarget.displayInfo.description?.includes('guide.org'),
+      'description should include file path for cross-file target');
+
+    // Same-file target (from file A, line 0) should not have description
+    const tasksTarget = targets.find((t: RefileTargetWithDisplay) =>
+      t.target.uri === fileA && t.target.headingText === 'Tasks'
+    );
+    assert.ok(tasksTarget, 'should find Tasks target from file A');
+    assert.strictEqual(tasksTarget.displayInfo.description, undefined,
+      'same-file target should not have description');
+  });
+
+});

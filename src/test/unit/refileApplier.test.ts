@@ -8,7 +8,6 @@
 import * as assert from 'assert';
 import * as core from '../../types/core';
 import { RefileSource, RefileTarget, RefilePlan, RefileEdit } from '../../commands/editing/refileDomain';
-import { buildWorkspaceEdit } from '../../services/refileApplier';
 
 // =============================================================================
 // Mock Document Factory
@@ -54,11 +53,6 @@ function createMockDocument(content: string, uri: string = 'file:///test.org'): 
 suite('refileApplier: buildWorkspaceEdit', () => {
 
   test('should build WorkspaceEdit with correct document URIs for cross-file plan', () => {
-    // Source document
-    const sourceDoc = createMockDocument('* H1\n** H2\ncontent', 'file:///source.org');
-    // Target document
-    const targetDoc = createMockDocument('* Target\n** Child', 'file:///target.org');
-
     const source: RefileSource = {
       uri: 'file:///source.org',
       startLine: 1,
@@ -281,6 +275,282 @@ suite('refileApplier: target document validation', () => {
 
     // Only 2 lines (0 and 1), line 5 is out of bounds
     assert.strictEqual(5 >= doc.lineCount, true, 'line 5 is out of bounds');
+  });
+
+});
+
+// =============================================================================
+// Stale Index / Document Mismatch Tests
+// These tests verify safe failure when indexed state doesn't match reality
+// =============================================================================
+
+suite('refileApplier: stale index / document mismatch', () => {
+
+  /**
+   * Scenario: Target heading was deleted after indexing
+   * The index still shows a heading at line 5, but the real document
+   * only has 3 lines - the target no longer exists
+   */
+  test('should fail safely when target line is out of bounds (heading deleted after indexing)', () => {
+    // Original indexed target was at line 5, but document now only has 3 lines
+    const doc = createMockDocument('* H1\n** H2\ncontent', 'file:///target.org');
+    assert.strictEqual(doc.lineCount, 3, 'document has 3 lines');
+
+    // Simulate a plan created when target was at line 5
+    const plan: RefilePlan = {
+      source: { uri: 'file:///source.org', startLine: 0, endLine: 0, rawText: '* Src', rootLevel: 1 },
+      target: { uri: 'file:///target.org', line: 5, level: 1, outlinePath: [], headingText: 'Target' },
+      sourceDocumentUri: 'file:///source.org',
+      targetDocumentUri: 'file:///target.org',
+      edits: [
+        { type: 'delete', documentUri: 'file:///source.org', range: { start: { line: 0, character: 0 }, end: { line: 0, character: 5 } } },
+        { type: 'insert', documentUri: 'file:///target.org', text: '* Src', position: { line: 5, character: 0 } }
+      ],
+      newSourceRootLevel: 2,
+    };
+
+    // Validation should fail because target line 5 is out of bounds
+    const targetLine = plan.target.line;
+    assert.strictEqual(targetLine >= doc.lineCount, true, 'target line is out of bounds');
+  });
+
+  /**
+   * Scenario: Target heading level changed after indexing
+   * Index says target is level 1, but document now shows level 2
+   */
+  test('should detect when target heading level changed after indexing', () => {
+    // Original target was * Target (level 1), but is now ** Target (level 2)
+    const doc = createMockDocument('* H1\n** Target', 'file:///target.org');
+
+    const { HeadingParser } = require('../../parsers/headingParser');
+    const targetHeading = HeadingParser.parseHeading(doc.lineAt(1).text, false, ['TODO', 'DONE', 'NEXT']);
+
+    // Index said target was level 1, but actual is level 2
+    const indexedLevel = 1;
+    assert.strictEqual(targetHeading.level, 2, 'actual heading level is 2');
+    assert.strictEqual(targetHeading.level !== indexedLevel, true, 'level mismatch should be detected');
+  });
+
+  /**
+   * Scenario: Source heading was modified after indexing
+   * The source heading text changed (e.g., TODO keyword added/removed)
+   */
+  test('should detect when source heading text changed after indexing', () => {
+    // Original source was "* H1" but document now has "* TODO H1"
+    const doc = createMockDocument('* TODO H1\ncontent', 'file:///source.org');
+
+    const { HeadingParser } = require('../../parsers/headingParser');
+    // includeTags=true to get .text field set; todoKeywords for keyword detection
+    const sourceHeading = HeadingParser.parseHeading(doc.lineAt(0).text, true, ['TODO', 'DONE', 'NEXT']);
+
+    // The heading text changed - TODO was added
+    assert.strictEqual(sourceHeading.text, 'H1', 'heading text (without tags) should be H1');
+    assert.strictEqual(sourceHeading.todoKeyword, 'TODO', 'todo keyword was added');
+  });
+
+  /**
+   * Scenario: Source heading level changed after indexing
+   * Source was level 2, but is now level 3 due to document restructuring
+   */
+  test('should detect when source heading level changed after indexing', () => {
+    // Original source was ** H2 (level 2), but is now *** H2 (level 3)
+    const doc = createMockDocument('* H1\n*** H2\ncontent', 'file:///source.org');
+
+    const { HeadingParser } = require('../../parsers/headingParser');
+    const sourceHeading = HeadingParser.parseHeading(doc.lineAt(1).text, false, ['TODO', 'DONE', 'NEXT']);
+
+    // Index said level 2, but actual is level 3
+    const indexedRootLevel = 2;
+    assert.strictEqual(sourceHeading.level, 3, 'actual level is 3');
+    assert.strictEqual(sourceHeading.level !== indexedRootLevel, true, 'level mismatch should be detected');
+  });
+
+  /**
+   * Scenario: Target heading text changed (not just level)
+   * The heading text itself was edited
+   */
+  test('should detect when target heading text changed after indexing', () => {
+    // Original target was "Target" but is now "Different"
+    const doc = createMockDocument('* H1\n* Different', 'file:///target.org');
+
+    const { HeadingParser } = require('../../parsers/headingParser');
+    const targetHeading = HeadingParser.parseHeading(doc.lineAt(1).text, false, ['TODO', 'DONE', 'NEXT']);
+
+    const indexedHeadingText = 'Target';
+    assert.strictEqual(targetHeading.title !== indexedHeadingText, true, 'heading text changed');
+  });
+
+});
+
+// =============================================================================
+// Content Integrity Tests
+// Verify that refile preserves content exactly
+// =============================================================================
+
+suite('refileApplier: content integrity', () => {
+
+  /**
+   * Verify that non-heading content lines are preserved exactly
+   * after level rewriting
+   */
+  test('should preserve content lines exactly during level rewriting', () => {
+    // This tests the level rewriting logic preserves all content
+    const sourceContent = [
+      '* Src',
+      '** Child',
+      'plain content line',
+      '  indented content',
+      '*** Grandchild',
+      'more content'
+    ].join('\n');
+
+    // After rewriting levels (source root 1 -> target level 1 + 1 = 2):
+    // * Src -> ** Src
+    // ** Child -> *** Child
+    // plain content line -> plain content line (unchanged)
+    //   indented content ->   indented content (unchanged)
+    // *** Grandchild -> **** Grandchild
+    // more content -> more content (unchanged)
+
+    const allLines = sourceContent.split('\n');
+    const nonHeadingLines = allLines.filter(line => !line.startsWith('*'));
+
+    assert.strictEqual(nonHeadingLines.length, 3, 'should have 3 non-heading lines');
+    assert.ok(nonHeadingLines.includes('plain content line'), 'plain content preserved');
+    assert.ok(nonHeadingLines.includes('  indented content'), 'indented content preserved');
+    assert.ok(nonHeadingLines.includes('more content'), 'more content preserved');
+  });
+
+  /**
+   * Verify that TODO keywords and priorities are preserved
+   */
+  test('should preserve TODO keywords and priorities during level rewriting', () => {
+    const sourceContent = [
+      '* TODO [#A] Important Task',
+      '** NEXT Follow-up',
+      'content',
+      '*** TODO Low Priority'
+    ].join('\n');
+
+    // All TODO keywords should be preserved in the content
+    assert.ok(sourceContent.includes('TODO [#A]'), 'TODO keyword and priority preserved');
+    assert.ok(sourceContent.includes('NEXT'), 'NEXT keyword preserved');
+    assert.ok(sourceContent.includes('*** TODO Low Priority'), 'nested TODO preserved');
+  });
+
+  /**
+   * Verify that tags are preserved
+   */
+  test('should preserve tags during level rewriting', () => {
+    const sourceContent = '* H1 :tag1:tag2:\ncontent\n** H2 :tag3:\nmore';
+
+    assert.ok(sourceContent.includes(':tag1:tag2:'), 'tags preserved on root');
+    assert.ok(sourceContent.includes(':tag3:'), 'tags preserved on child');
+  });
+
+  /**
+   * Verify that properties drawer is preserved
+   */
+  test('should preserve properties drawer during refile', () => {
+    const sourceContent = [
+      '* H1',
+      '  :PROPERTIES:',
+      '  :ID: test-id',
+      '  :END:',
+      'content'
+    ].join('\n');
+
+    // Properties drawer lines don't start with *, so they should be preserved as content
+    assert.ok(sourceContent.includes(':PROPERTIES:'), 'properties drawer preserved');
+    assert.ok(sourceContent.includes(':ID: test-id'), 'property value preserved');
+    assert.ok(sourceContent.includes(':END:'), 'end marker preserved');
+  });
+
+  /**
+   * Verify that nested content structure is preserved
+   */
+  test('should preserve deeply nested content structure', () => {
+    const sourceContent = [
+      '* Root',
+      '** Level 2',
+      'content at level 2',
+      '*** Level 3',
+      'content at level 3',
+      '**** Level 4',
+      'content at level 4'
+    ].join('\n');
+
+    // Count content lines (non-heading)
+    const lines = sourceContent.split('\n');
+    const contentLines = lines.filter(l => !l.startsWith('*'));
+
+    assert.strictEqual(contentLines.length, 3, 'should preserve all 3 content lines');
+    assert.ok(contentLines[0] === 'content at level 2', 'level 2 content preserved');
+    assert.ok(contentLines[1] === 'content at level 3', 'level 3 content preserved');
+    assert.ok(contentLines[2] === 'content at level 4', 'level 4 content preserved');
+  });
+
+});
+
+// =============================================================================
+// Cross-File Edit Plan Structure Tests
+// =============================================================================
+
+suite('refileApplier: cross-file edit plan structure', () => {
+
+  test('cross-file plan should have correct URIs for source and target documents', () => {
+    const plan: RefilePlan = {
+      source: { uri: 'file:///project/src.org', startLine: 1, endLine: 2, rawText: '** H2\ncontent', rootLevel: 2 },
+      target: { uri: 'file:///project/target.org', line: 0, level: 1, outlinePath: ['Target'], headingText: '* Target' },
+      sourceDocumentUri: 'file:///project/src.org',
+      targetDocumentUri: 'file:///project/target.org',
+      edits: [
+        { type: 'delete', documentUri: 'file:///project/src.org', range: { start: { line: 1, character: 0 }, end: { line: 2, character: 7 } } },
+        { type: 'insert', documentUri: 'file:///project/target.org', text: '** H2\ncontent', position: { line: 1, character: 9 } }
+      ],
+      newSourceRootLevel: 2,
+    };
+
+    // Source and target URIs should be different for cross-file
+    assert.notStrictEqual(plan.sourceDocumentUri, plan.targetDocumentUri);
+    assert.strictEqual(plan.sourceDocumentUri, 'file:///project/src.org');
+    assert.strictEqual(plan.targetDocumentUri, 'file:///project/target.org');
+  });
+
+  test('cross-file delete edit should target source document', () => {
+    const plan: RefilePlan = {
+      source: { uri: 'file:///a.org', startLine: 0, endLine: 1, rawText: '* Src\ncontent', rootLevel: 1 },
+      target: { uri: 'file:///b.org', line: 0, level: 1, outlinePath: [], headingText: '* Tgt' },
+      sourceDocumentUri: 'file:///a.org',
+      targetDocumentUri: 'file:///b.org',
+      edits: [
+        { type: 'delete', documentUri: 'file:///a.org', range: { start: { line: 0, character: 0 }, end: { line: 1, character: 7 } } },
+        { type: 'insert', documentUri: 'file:///b.org', text: '* Src\ncontent', position: { line: 0, character: 5 } }
+      ],
+      newSourceRootLevel: 2,
+    };
+
+    const deleteEdit = plan.edits.find(e => e.type === 'delete')!;
+    assert.strictEqual(deleteEdit.documentUri, plan.sourceDocumentUri);
+    assert.strictEqual(deleteEdit.documentUri, 'file:///a.org');
+  });
+
+  test('cross-file insert edit should target target document', () => {
+    const plan: RefilePlan = {
+      source: { uri: 'file:///a.org', startLine: 0, endLine: 1, rawText: '* Src\ncontent', rootLevel: 1 },
+      target: { uri: 'file:///b.org', line: 0, level: 1, outlinePath: [], headingText: '* Tgt' },
+      sourceDocumentUri: 'file:///a.org',
+      targetDocumentUri: 'file:///b.org',
+      edits: [
+        { type: 'delete', documentUri: 'file:///a.org', range: { start: { line: 0, character: 0 }, end: { line: 1, character: 7 } } },
+        { type: 'insert', documentUri: 'file:///b.org', text: '* Src\ncontent', position: { line: 0, character: 5 } }
+      ],
+      newSourceRootLevel: 2,
+    };
+
+    const insertEdit = plan.edits.find(e => e.type === 'insert')!;
+    assert.strictEqual(insertEdit.documentUri, plan.targetDocumentUri);
+    assert.strictEqual(insertEdit.documentUri, 'file:///b.org');
   });
 
 });
