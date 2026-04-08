@@ -1,6 +1,6 @@
 ---
 description: VOrg 项目版本发布流程规则
-globs: ["package.json", "CHANGELOG.md"]
+globs: ["package.json", "CHANGELOG.md", "src/changelogPanel.ts"]
 alwaysApply: false
 ---
 
@@ -34,7 +34,9 @@ alwaysApply: false
   - `♻️ 代码重构`
 - **重要规则**：
   - **功能描述必须包含使用方法**：对于新增功能，特别是用户交互功能（如工作区符号搜索），必须说明如何使用（快捷键、操作步骤等）
+  - **不要写实现细节**：禁止在 CHANGELOG 中写内部实现细节，如"自动重算层级"、"保留 TODO 关键字"、"索引更新"等。只写用户能直接感受到的功能效果。
   - **不要写文档更新**：CHANGELOG 中不要包含 `📝 文档更新` 类别，文档更新不应作为版本发布内容
+  - **分类要准确**：outline path 显示、文件路径显示等 UI 增强应归为 `🔧 改进优化`，而不是 `✨ 新增功能`
 - 从 git 历史中提取变更信息：
   ```bash
   git log --oneline --since="上次发布版本日期"
@@ -54,9 +56,30 @@ alwaysApply: false
   # X.Y.Z 版本变更
   ## 新增功能
   - **功能名称**：简要描述和使用方法
-  
+
   ## Bug 修复
   - **修复内容**：简要描述
+  ```
+
+### 3.2. 更新 src/changelogPanel.ts
+- **必须更新 src/changelogPanel.ts 中的 CHANGELOG 数据**：每次发布新版本时都要同步更新
+- `src/changelogPanel.ts` 中的 `CHANGELOG` 常量是扩展内嵌更新日志 UI 的数据来源
+- 更新规则与 CHANGELOG.md 保持一致：
+  - 只写用户可见的功能，不写实现细节
+  - 分类准确：`✨` 用于新功能，`🔧` 用于改进优化，`🐛` 用于 Bug 修复
+  - 每条内容尽量精简，控制在 50 字以内
+- 示例格式：
+  ```typescript
+  const CHANGELOG: Record<string, ChangelogEntry> = {
+    '1.2.0': {
+      title: '版本主题',
+      items: [
+        { tag: '✨', tagColor: '#3fb950', text: '新功能：描述，使用方法' },
+        { tag: '🔧', tagColor: '#79c0ff', text: '改进描述' },
+        { tag: '🐛', tagColor: '#58a6ff', text: '修复描述' },
+      ],
+    },
+  };
   ```
 
 ### 4. 构建和打包
@@ -71,6 +94,7 @@ alwaysApply: false
 - [ ] 版本号已更新
 - [ ] CHANGELOG.md 已更新（包含功能使用方法，不包含文档更新）
 - [ ] release.md 已更新（只包含用户可见功能）
+- [ ] src/changelogPanel.ts 中的 CHANGELOG 数据已同步更新
 - [ ] 构建成功无错误
 - [ ] VSIX 文件已生成
 - [ ] Git 提交已创建
@@ -124,11 +148,17 @@ alwaysApply: false
 - **优化标题**：详细描述
   - 子项说明
   - 子项说明
-
-### 📝 文档更新
-
-- **更新标题**：详细描述
 ```
+
+**注意**：`📝 文档更新` 不应出现在 CHANGELOG 中。
+
+**正确示例**：
+- ✨ `Org Refile：支持将子树移动到同一文件或跨文件的指定目标标题下。使用方法：Ctrl+C Ctrl+W`
+- 🔧 `跨文件目标在 Quick Pick 描述中显示文件路径，便于区分同名标题`
+
+**错误示例（不要这样写）**：
+- ✨ `移动后自动重算层级，保留 TODO 关键字、优先级、标签、内容结构` — 这是实现细节，用户不关心
+- ✨ `显示完整 outline path（如 H1 > H2）进行区分` — 应归为改进优化，不是新功能
 
 ## Git 历史分析
 

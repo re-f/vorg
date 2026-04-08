@@ -41,6 +41,7 @@ import { TagCommands } from './commands/editing/tagCommands';
 import { DateCommands } from './commands/editing/dateCommands';
 import { registerRefileCommands } from './commands/editing/refileCommands';
 import { SymbolQuickPickCommands } from './commands/symbolQuickPickCommands';
+import { showChangelogIfNeeded, ChangelogPanel } from './changelogPanel';
 // import { DatabaseConnection } from './database/connection'; // 已移除顶级导入
 import * as path from 'path';
 
@@ -717,6 +718,18 @@ export async function activate(context: vscode.ExtensionContext) {
   if (vscode.window.activeTextEditor?.document.languageId === 'org') {
     syntaxHighlighter.applyHighlighting(vscode.window.activeTextEditor);
   }
+
+  // 显示更新日志（首次安装或版本更新时）
+  const packageJson = require('../package.json');
+  showChangelogIfNeeded(context, packageJson.version);
+
+  // 注册手动显示更新日志的命令（方便调试）
+  context.subscriptions.push(
+    vscode.commands.registerCommand('vorg.showChangelog', () => {
+      const pkg = require('../package.json');
+      ChangelogPanel.show(context, pkg.version, 'manual');
+    })
+  );
 }
 
 /**
