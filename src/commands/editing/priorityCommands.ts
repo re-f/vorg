@@ -45,11 +45,11 @@ export class PriorityCommands {
 
             /**
              * 语义顺序: 空 (None) < [#C] (低) < [#B] (中) < [#A] (高)
-             * 循环逻辑: [null, '[#C]', '[#B]', '[#A]']
+             * 循环逻辑: [null, 'C', 'B', 'A']  (与 headingInfo.priority 的值格式匹配)
              * Up:   None -> C -> B -> A -> None
              * Down: None -> A -> B -> C -> None
              */
-            const priorities = [null, '[#C]', '[#B]', '[#A]'];
+            const priorities = [null, 'C', 'B', 'A'];
 
             // 找到当前匹配的索引
             let currentIndex = priorities.indexOf(headingInfo.priority);

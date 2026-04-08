@@ -42,7 +42,9 @@ suite('TodoStateCommands Integration Test Suite', () => {
         await vscode.commands.executeCommand('vorg.setTodoState', 'DONE');
         await wait();
 
-        assert.strictEqual(doc.getText(), '* DONE Heading 1');
+        // DONE has @ flag (DONE(@)), so it adds a CLOSED timestamp after the heading.
+        // We only verify the heading line itself changed correctly.
+        assert.strictEqual(doc.lineAt(0).text, '* DONE Heading 1');
     });
 
     test('Set Todo State: 应该移除状态', async () => {

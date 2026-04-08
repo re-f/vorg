@@ -146,11 +146,12 @@ suite('RefileCommands Integration Test Suite', () => {
     test('should abort when source is top-level with one child only', async () => {
         // * H1
         // ** H2
-        // H2 is source, H1 is ancestor (valid), but there's no other sibling
+        // H2 is source, H1 is a valid target (ancestor). Quick Pick cancelled → doc unchanged.
         const { doc } = await setupTest('* H1\n** H2', 1, 3);
 
-        // Execute refile - should show info about no valid targets
-        await executeRefileCommand();
+        await withMockedQuickPick(undefined, async () => {
+            await executeRefileCommand();
+        });
 
         // Document should be unchanged
         assert.strictEqual(doc.getText(), '* H1\n** H2');
@@ -189,7 +190,9 @@ suite('RefileCommands Integration Test Suite', () => {
         // Same as above, but we verify the document is unchanged after Quick Pick cancel
         const { doc } = await setupTest('* H1\n** H2\ncontent\n* H3', 1, 3);
 
-        await executeRefileCommand();
+        await withMockedQuickPick(undefined, async () => {
+            await executeRefileCommand();
+        });
 
         // Document should remain unchanged
         assert.strictEqual(doc.getText(), '* H1\n** H2\ncontent\n* H3');
@@ -205,7 +208,9 @@ suite('RefileCommands Integration Test Suite', () => {
         const { doc } = await setupTest('* H1\n** H2\n* H3', 1, 3);
 
         // Even if planner returns error, command should handle it gracefully
-        await executeRefileCommand();
+        await withMockedQuickPick(undefined, async () => {
+            await executeRefileCommand();
+        });
 
         // Document unchanged - command aborted gracefully
         assert.strictEqual(doc.getText(), '* H1\n** H2\n* H3');
@@ -236,8 +241,9 @@ suite('RefileCommands Integration Test Suite', () => {
         });
 
         const text = doc.getText();
-        // H2 and its content should NOT be at original location (lines 1-2)
-        assert.ok(!text.includes('** H2\ncontent'), 'source subtree should be removed from original location');
+        const lines = text.split('\n');
+        // H2 and its content should appear under H3, not at original location (line 1)
+        assert.ok(lines[1] !== '** H2', 'H2 should have been moved away from line 1');
         // H2 should appear as child of H3 somewhere in the doc
         assert.ok(text.includes('** H2'), 'source heading should appear with adjusted level');
         // H1 should still be there
@@ -246,6 +252,8 @@ suite('RefileCommands Integration Test Suite', () => {
         assert.ok(text.includes('content'), 'content should remain');
         // H3 should still be there
         assert.ok(text.includes('* H3'), 'target H3 should remain');
+        // H2 should be a child of H3 (appear after H3 in the document)
+        assert.ok(text.indexOf('* H3') < text.indexOf('** H2'), 'H2 should appear after H3');
     });
 
     test('should preserve relative levels when moving subtree with children', async () => {
@@ -306,12 +314,19 @@ suite('RefileCommands Integration Test Suite', () => {
         });
 
         const text = doc.getText();
-        // Entire source should be gone from original location
-        assert.strictEqual(text.indexOf('* Src'), -1, 'source heading should be removed');
-        assert.strictEqual(text.indexOf('** SubHeading'), -1, 'source subheading should be removed');
-        assert.strictEqual(text.indexOf('body content'), -1, 'source body content should be removed');
+        const lines = text.split('\n');
+        // * Src (original level 1) should be gone — moved to level 2 under Dest
+        assert.ok(!lines.some(l => l === '* Src'), 'source heading should be removed');
+        // ** SubHeading (original level 2) should be gone — moved to level 3 under Dest
+        assert.ok(!lines.some(l => l === '** SubHeading'), 'source subheading should be removed (original level)');
         // Dest should still exist
         assert.ok(text.includes('* Dest'), 'target should remain');
+        // Source subtree should appear under Dest with adjusted levels
+        assert.ok(text.includes('** Src'), 'source heading should appear at level 2 under Dest');
+        assert.ok(text.includes('*** SubHeading'), 'source subheading should appear at level 3');
+        assert.ok(text.includes('body content'), 'source body content should still exist in moved subtree');
+        // Dest should precede the moved source
+        assert.ok(text.indexOf('* Dest') < text.indexOf('** Src'), 'moved subtree should be under Dest');
     });
 
     // =============================================================================

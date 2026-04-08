@@ -200,10 +200,11 @@ export function planRefile(input: RefilePlannerInput): RefilePlanResult {
   };
 
   // Build insert edit: insert adjusted source at end of target subtree (on target document)
+  // Prepend a newline so the inserted text starts on its own line after the target's last line.
   const insertEdit: RefileEdit = {
     type: 'insert',
     documentUri: target.uri,
-    text: adjustedText,
+    text: '\n' + adjustedText,
     position: { line: insertLine, character: insertChar }
   };
 
