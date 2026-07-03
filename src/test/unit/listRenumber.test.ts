@@ -162,6 +162,22 @@ suite('列表重新编号工具函数测试', () => {
       assert.strictEqual(result[0].newMarker, '1.');
       assert.strictEqual(result[1].newMarker, '2.');
     });
+
+    test('混合列表应只重新编号有序项', () => {
+      const items = [
+        { line: 0, listInfo: createListItemInfo(2, '1.', '有序1') },
+        { line: 1, listInfo: createListItemInfo(2, '-', '无序') },
+        { line: 2, listInfo: createListItemInfo(2, '2.', '有序2') }
+      ];
+
+      const result = ListParser.renumberOrderedListItems(items, 1);
+
+      assert.strictEqual(result.length, 2);
+      assert.strictEqual(result[0].newMarker, '1.');
+      assert.strictEqual(result[0].originalLine, 0);
+      assert.strictEqual(result[1].newMarker, '3.');
+      assert.strictEqual(result[1].originalLine, 2);
+    });
   });
 });
 

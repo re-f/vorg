@@ -66,6 +66,55 @@ suite('EditingCommands Integration Test Suite', () => {
         assert.strictEqual(editor.selection.active.character, 2);
     });
 
+    test('Meta Return: 在有序列表行尾插入下一项并重新编号', async () => {
+        const { doc, editor } = await setupTest('1. first\n2. second\n3. third', 0, 8);
+        await vscode.commands.executeCommand('vorg.metaReturn');
+        await wait();
+
+        assert.strictEqual(
+            doc.getText(),
+            '1. first\n2. \n3. second\n4. third'
+        );
+        assert.strictEqual(editor.selection.active.line, 1);
+        assert.strictEqual(editor.selection.active.character, 3);
+    });
+
+    test('Meta Return: 多层次有序列表在子层级插入下一项', async () => {
+        const content = '1. top\n   1. sub1\n   2. sub2\n2. top2';
+        const { doc, editor } = await setupTest(content, 1, 11);
+        await vscode.commands.executeCommand('vorg.metaReturn');
+        await wait();
+
+        assert.strictEqual(
+            doc.getText(),
+            '1. top\n   1. sub1\n   2. \n   3. sub2\n2. top2'
+        );
+        assert.strictEqual(editor.selection.active.line, 2);
+        assert.strictEqual(editor.selection.active.character, 6);
+    });
+
+    test('Meta Return: 混合列表插入有序项时不修改无序项', async () => {
+        const content = '  1. ordered\n  - bullet\n  2. ordered2';
+        const { doc } = await setupTest(content, 0, 11);
+        await vscode.commands.executeCommand('vorg.metaReturn');
+        await wait();
+
+        assert.strictEqual(
+            doc.getText(),
+            '  1. ordered\n  2. \n  - bullet\n  3. ordered2'
+        );
+    });
+
+    test('Meta Return: 在有序列表中间分割并重新编号', async () => {
+        const { doc, editor } = await setupTest('1. hello world', 0, 8);
+        await vscode.commands.executeCommand('vorg.metaReturn');
+        await wait();
+
+        assert.strictEqual(doc.getText(), '1. hello\n2. world');
+        assert.strictEqual(editor.selection.active.line, 1);
+        assert.strictEqual(editor.selection.active.character, 3);
+    });
+
     test('Meta Return: 在表格中插入新行', async () => {
         const { doc, editor } = await setupTest('| col 1 | col 2 |\n|---|---|', 0, 5);
         await vscode.commands.executeCommand('vorg.metaReturn');
@@ -90,6 +139,20 @@ suite('EditingCommands Integration Test Suite', () => {
         assert.strictEqual(lines[1], 'Inside content');
         assert.strictEqual(lines[2], '* ');
         assert.strictEqual(editor.selection.active.line, 2);
+    });
+
+    test('Ctrl Return: 在有序列表项子树末尾插入同级项', async () => {
+        const content = '1. top\n   note line\n   1. sub\n2. next';
+        const { doc, editor } = await setupTest(content, 0, 6);
+        await vscode.commands.executeCommand('vorg.ctrlReturn');
+        await wait();
+
+        assert.strictEqual(
+            doc.getText(),
+            '1. top\n   note line\n   1. sub\n2. \n3. next'
+        );
+        assert.strictEqual(editor.selection.active.line, 3);
+        assert.strictEqual(editor.selection.active.character, 3);
     });
 
     // --- Smart Return (Ctrl+Alt+Enter) ---

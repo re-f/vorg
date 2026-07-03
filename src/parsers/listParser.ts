@@ -80,6 +80,51 @@ export class ListParser {
   }
 
   /**
+   * 判断是否为有序列表标记
+   */
+  static isOrderedMarker(marker: string): boolean {
+    return /^\d+\.$/.test(marker);
+  }
+
+  /**
+   * 计算在指定层级插入新项时应使用的标记
+   * 有序列表按同级有序项计数；无序列表沿用块首项样式
+   */
+  static getNextMarkerForInsert(
+    document: core.TextDocument,
+    lineNumber: number,
+    indent: number,
+    currentMarker: string
+  ): string {
+    if (!this.isOrderedMarker(currentMarker)) {
+      const firstItemLine = this.findFirstListItemLineAtLevel(document, lineNumber, indent);
+      const firstItem = firstItemLine !== -1
+        ? this.parseListItem(document.lineAt(firstItemLine).text)
+        : null;
+      return firstItem?.marker ?? currentMarker;
+    }
+
+    const firstItemLine = this.findFirstListItemLineAtLevel(document, lineNumber, indent);
+    if (firstItemLine === -1) {
+      return '1.';
+    }
+
+    const itemsAtLevel = this.findItemsAtLevel(document, firstItemLine, indent);
+    const orderedUpToCurrent = itemsAtLevel.filter(
+      item => item.listInfo.isOrdered && item.line <= lineNumber
+    ).length;
+    return `${orderedUpToCurrent + 1}.`;
+  }
+
+  /**
+   * 获取列表项正文起始列（用于行内软换行缩进）
+   */
+  static getListContentColumn(lineText: string): number {
+    const prefixMatch = lineText.match(/^(\s*(?:[-+*]|\d+\.)(?:\s+\[[ X-]\])?\s+)/);
+    return prefixMatch ? prefixMatch[1].length : lineText.length;
+  }
+
+  /**
    * 解析行的缩进
    */
   static parseIndent(lineText: string): string {
@@ -418,8 +463,10 @@ export class ListParser {
   ): Array<SyncItem> {
     const result: Array<SyncItem> = [];
 
-    // 按行号排序，确保处理顺序正确
-    const sortedItems = [...items].sort((a, b) => a.line - b.line);
+    // 仅重新编号有序项，跳过同级无序项
+    const sortedItems = items
+      .filter(item => item.listInfo.isOrdered)
+      .sort((a, b) => a.line - b.line);
 
     sortedItems.forEach((item, index) => {
       const logicalIndex = (newItemLine !== -1 && item.line >= newItemLine) ? (index + 1) : index;

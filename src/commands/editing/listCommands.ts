@@ -5,14 +5,14 @@ import { Logger } from '../../utils/logger';
 
 /**
  * 列表操作命令类
- * 
+ *
  * 提供列表和复选框的插入、缩进、折叠操作，包括：
  * - 插入列表项（M-RET 语义）
  * - 分割列表项（C-RET 语义）
  * - 插入复选框项
  * - 智能缩进和折叠
- * - 基于首项样式的自动同步和重新编号
- * 
+ * - 基于当前项样式的自动同步和重新编号
+ *
  * @class ListCommands
  */
 export class ListCommands {
@@ -30,31 +30,19 @@ export class ListCommands {
     const line = document.lineAt(position.line);
     const indent = ' '.repeat(context.indent || 0);
     const currentIndent = context.indent || 0;
+    const currentMarker = context.marker || '-';
+    const isOrderedContext = ListParser.isOrderedMarker(currentMarker);
 
-    // 确定列表块的起始行和样式（以第一项为准）
     const firstItemLine = ListParser.findFirstListItemLineAtLevel(document, position.line, currentIndent);
     const firstItem = firstItemLine !== -1 ? ListParser.parseListItem(document.lineAt(firstItemLine).text) : null;
-    const isOrderedContext = !!(firstItem && firstItem.isOrdered);
-    const leaderMarker = firstItem ? firstItem.marker : (context.marker || '-');
+    const leaderMarker = firstItem?.marker ?? currentMarker;
+    const marker = ListParser.getNextMarkerForInsert(document, position.line, currentIndent, currentMarker);
 
-    // 确定初步标记
-    let marker = leaderMarker;
-    if (isOrderedContext) {
-      const itemsAtLevel = ListParser.findItemsAtLevel(document, firstItemLine, currentIndent);
-      const itemsUpToCurrent = itemsAtLevel.filter(item => item.line <= position.line).length;
-      marker = `${itemsUpToCurrent + 1}.`;
-    } else {
-      marker = ListParser.getNextMarker(leaderMarker);
-    }
-
-    // 在当前行之后插入新项
     editBuilder.insert(line.range.end, `\n${indent}${marker} `);
 
-    // 同步整个列表块的标记
     const newItemLine = position.line + 1;
     this.syncListMarkers(editBuilder, document, firstItemLine, newItemLine, currentIndent, isOrderedContext, leaderMarker);
 
-    // 返回光标位置
     return new vscode.Position(position.line + 1, indent.length + marker.length + 1);
   }
 
@@ -72,31 +60,22 @@ export class ListCommands {
     const document = editor.document;
     const indent = ' '.repeat(context.indent || 0);
     const currentIndent = context.indent || 0;
+    const currentMarker = context.marker || '-';
+    const isOrderedContext = ListParser.isOrderedMarker(currentMarker);
 
-    // 确定列表块的起始行和样式
     const firstItemLine = ListParser.findFirstListItemLineAtLevel(document, position.line, currentIndent);
     const firstItem = firstItemLine !== -1 ? ListParser.parseListItem(document.lineAt(firstItemLine).text) : null;
-    const isOrderedContext = !!(firstItem && firstItem.isOrdered);
-    const leaderMarker = firstItem ? firstItem.marker : (context.marker || '-');
+    const leaderMarker = firstItem?.marker ?? currentMarker;
 
-    // 找到插入位置
     const itemEnd = ListParser.findListItemEnd(document, position, currentIndent);
     const newItemLine = itemEnd.line + 1;
 
-    // 确定初步标记
-    let marker = '';
-    if (isOrderedContext) {
-      const itemCount = ListParser.countItemsAtLevel(document, position.line, currentIndent);
-      marker = `${itemCount + 1}.`;
-    } else {
-      marker = ListParser.getNextMarker(leaderMarker);
-    }
+    const marker = isOrderedContext
+      ? ListParser.getNextMarkerForInsert(document, position.line, currentIndent, currentMarker)
+      : ListParser.getNextMarker(leaderMarker);
 
-    // 插入新项
-    const insertPosition = new vscode.Position(newItemLine, indent.length + marker.length + 1);
     editBuilder.insert(new vscode.Position(itemEnd.line, itemEnd.character), `\n${indent}${marker} `);
 
-    // 同步整个列表块
     this.syncListMarkers(editBuilder, document, firstItemLine, newItemLine, currentIndent, isOrderedContext, leaderMarker);
 
     return new vscode.Position(newItemLine, indent.length + marker.length + 1);
@@ -115,14 +94,23 @@ export class ListCommands {
     const document = editor.document;
     const indent = ' '.repeat(context.indent || 0);
     const currentIndent = context.indent || 0;
+    const currentMarker = context.marker || '-';
+    const isOrderedContext = ListParser.isOrderedMarker(currentMarker);
 
-    let marker = context.marker || '-';
-    marker = ListParser.getNextMarker(marker);
+    const firstItemLine = ListParser.findFirstListItemLineAtLevel(document, position.line, currentIndent);
+    const marker = isOrderedContext
+      ? ListParser.getNextMarkerForInsert(document, position.line, currentIndent, currentMarker)
+      : ListParser.getNextMarker(currentMarker);
 
     const itemEnd = ListParser.findListItemEnd(document, position, currentIndent);
+    const newItemLine = itemEnd.line + 1;
     editBuilder.insert(new vscode.Position(itemEnd.line, itemEnd.character), `\n${indent}${marker} [ ] `);
 
-    return new vscode.Position(itemEnd.line + 1, indent.length + marker.length + 5);
+    if (isOrderedContext) {
+      this.syncListMarkers(editBuilder, document, firstItemLine, newItemLine, currentIndent, true, currentMarker);
+    }
+
+    return new vscode.Position(newItemLine, indent.length + marker.length + 5);
   }
 
   /**
@@ -138,15 +126,29 @@ export class ListCommands {
     const document = editor.document;
     const line = document.lineAt(position.line);
     const indent = ' '.repeat(context.indent || 0);
+    const currentIndent = context.indent || 0;
+    const currentMarker = context.marker || '-';
+    const isOrderedContext = ListParser.isOrderedMarker(currentMarker);
 
-    let marker = context.marker || '-';
-    marker = ListParser.getNextMarker(marker);
+    const firstItemLine = ListParser.findFirstListItemLineAtLevel(document, position.line, currentIndent);
+    const leaderMarker = firstItemLine !== -1
+      ? ListParser.parseListItem(document.lineAt(firstItemLine).text)?.marker ?? currentMarker
+      : currentMarker;
+
+    const marker = isOrderedContext
+      ? ListParser.getNextMarkerForInsert(document, position.line, currentIndent, currentMarker)
+      : ListParser.getNextMarker(leaderMarker);
 
     const restOfLine = line.text.substring(position.character).trim();
     editBuilder.delete(new vscode.Range(position, line.range.end));
     editBuilder.insert(line.range.end, `\n${indent}${marker} ${restOfLine}`);
 
-    return new vscode.Position(position.line + 1, indent.length + marker.length + 1);
+    const newItemLine = position.line + 1;
+    if (isOrderedContext) {
+      this.syncListMarkers(editBuilder, document, firstItemLine, newItemLine, currentIndent, true, currentMarker);
+    }
+
+    return new vscode.Position(newItemLine, indent.length + marker.length + 1);
   }
 
   /**
@@ -162,15 +164,25 @@ export class ListCommands {
     const document = editor.document;
     const line = document.lineAt(position.line);
     const indent = ' '.repeat(context.indent || 0);
+    const currentIndent = context.indent || 0;
+    const currentMarker = context.marker || '-';
+    const isOrderedContext = ListParser.isOrderedMarker(currentMarker);
 
-    let marker = context.marker || '-';
-    marker = ListParser.getNextMarker(marker);
+    const firstItemLine = ListParser.findFirstListItemLineAtLevel(document, position.line, currentIndent);
+    const marker = isOrderedContext
+      ? ListParser.getNextMarkerForInsert(document, position.line, currentIndent, currentMarker)
+      : ListParser.getNextMarker(currentMarker);
 
     const restOfLine = line.text.substring(position.character).trim();
     editBuilder.delete(new vscode.Range(position, line.range.end));
     editBuilder.insert(line.range.end, `\n${indent}${marker} [ ] ${restOfLine}`);
 
-    return new vscode.Position(position.line + 1, indent.length + marker.length + 5);
+    const newItemLine = position.line + 1;
+    if (isOrderedContext) {
+      this.syncListMarkers(editBuilder, document, firstItemLine, newItemLine, currentIndent, true, currentMarker);
+    }
+
+    return new vscode.Position(newItemLine, indent.length + marker.length + 5);
   }
 
   /**
@@ -287,16 +299,15 @@ export class ListCommands {
       return;
     }
     const itemsInBlock = ListParser.findItemsAtLevel(document, firstItemLine, indent);
-
-    // 使用新实现的工具函数
     const renumbered = isOrdered ? ListParser.renumberOrderedListItems(itemsInBlock, newItemLine) : [];
 
-    itemsInBlock.forEach((item, index) => {
-      let expectedMarker = '';
-      if (isOrdered) {
+    itemsInBlock.forEach((item) => {
+      let expectedMarker = item.listInfo.marker;
+
+      if (item.listInfo.isOrdered) {
         const currentSyncItem = renumbered.find(si => si.originalLine === item.line);
         expectedMarker = currentSyncItem ? currentSyncItem.newMarker : item.listInfo.marker;
-      } else {
+      } else if (!isOrdered) {
         expectedMarker = leaderMarker;
       }
 

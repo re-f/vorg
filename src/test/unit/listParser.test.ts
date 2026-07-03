@@ -147,6 +147,70 @@ suite('ListParser 列表解析测试', () => {
     });
   });
 
+  suite('getNextMarkerForInsert 测试', () => {
+
+    test('多层次有序列表应按层级独立编号', () => {
+      const content = `1. 顶层第一项
+   1. 子项一
+   2. 子项二
+2. 顶层第二项`;
+      const doc = createMockDocument(content);
+
+      assert.strictEqual(
+        ListParser.getNextMarkerForInsert(doc, 0, 0, '1.'),
+        '2.'
+      );
+      assert.strictEqual(
+        ListParser.getNextMarkerForInsert(doc, 1, 3, '1.'),
+        '2.'
+      );
+      assert.strictEqual(
+        ListParser.getNextMarkerForInsert(doc, 2, 3, '2.'),
+        '3.'
+      );
+      assert.strictEqual(
+        ListParser.getNextMarkerForInsert(doc, 3, 0, '2.'),
+        '3.'
+      );
+    });
+
+    test('混合有序和无序列表应只统计有序项', () => {
+      const content = `  1. 有序项1
+  - 无序项
+  2. 有序项2`;
+      const doc = createMockDocument(content);
+
+      assert.strictEqual(
+        ListParser.getNextMarkerForInsert(doc, 0, 2, '1.'),
+        '2.'
+      );
+      assert.strictEqual(
+        ListParser.getNextMarkerForInsert(doc, 2, 2, '2.'),
+        '3.'
+      );
+    });
+
+    test('无序列表应沿用块首标记', () => {
+      const content = `  * 第一项
+  * 第二项`;
+      const doc = createMockDocument(content);
+
+      assert.strictEqual(
+        ListParser.getNextMarkerForInsert(doc, 1, 2, '*'),
+        '*'
+      );
+    });
+  });
+
+  suite('getListContentColumn 测试', () => {
+
+    test('应该返回正文起始列', () => {
+      assert.strictEqual(ListParser.getListContentColumn('1. 内容'), 3);
+      assert.strictEqual(ListParser.getListContentColumn('   2. 内容'), 6);
+      assert.strictEqual(ListParser.getListContentColumn('- [ ] 任务'), 6);
+    });
+  });
+
   suite('parseIndent 和 getIndentLevel 测试', () => {
 
     test('应该解析空缩进', () => {
