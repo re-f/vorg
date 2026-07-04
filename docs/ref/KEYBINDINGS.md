@@ -14,6 +14,7 @@
 | 添加注释 | `Ctrl+C Ctrl+;` | `C-c C-;` |
 | 升级子树 | `Ctrl+C Ctrl+Shift+,` | `C-c C-<` |
 | 降级子树 | `Ctrl+C Ctrl+Shift+.` | `C-c C->` |
+| 插入/切换强调标记 | `Ctrl+C Ctrl+X Ctrl+F` | `C-c C-x C-f` |
 | Meta Return | `Alt+Enter` | `M-RET` |
 | Ctrl Return | `Ctrl+Enter` | `C-RET` |
 | Smart Return | `Ctrl+Alt+Enter` | `C-M-RET` |
@@ -35,6 +36,9 @@
 - `Ctrl+C Ctrl+C` - 执行当前上下文操作 (类似 `C-c C-c`)
   - 在 Checkbox 上：切换完成状态。
   - 在标题/列表上：执行通用逻辑。
+
+### 强调标记
+- `Ctrl+C Ctrl+X Ctrl+F` - 插入/切换强调标记 (类似 `C-c C-x C-f`，即 `org-emphasize`)
 
 ### 链接操作
 - `Ctrl+C Ctrl+L` - 插入链接 (类似 `C-c C-l`)
@@ -70,6 +74,7 @@
 | `C-c C-s` | `Ctrl+C Ctrl+S` | 设置计划日期 (Scheduled) |
 | `C-c C-d` | `Ctrl+C Ctrl+D` | 设置截止日期 (Deadline) |
 | `C-c C-x p` | `Ctrl+C Ctrl+X P` | 设置属性 |
+| `C-c C-x C-f` | `Ctrl+C Ctrl+X Ctrl+F` | 插入/切换强调标记 |
 | `C-c C-l` | `Ctrl+C Ctrl+L` | 插入链接 |
 | `C-c C-o` | `Ctrl+C Ctrl+O` | 跟随链接 |
 | `M-RET` | `Alt+Enter` | 插入同级项 |

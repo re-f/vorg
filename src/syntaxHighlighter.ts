@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { getConfigService } from './services/configService';
 import { TodoKeywordConfig } from './utils/constants';
+import { EmphasisType, findEmphasisMatches } from './utils/emphasisPatterns';
 
 /**
  * 语法高亮器类
@@ -35,6 +36,10 @@ export class SyntaxHighlighter {
                     comment: { color: '#6A9955', background: 'transparent' },                   // 绿色注释
                     bold: { color: '#FFFFFF', background: 'rgba(255, 255, 255, 0.1)' },       // 白色加粗
                     italic: { color: '#D4D4D4', background: 'transparent' },                   // 斜体
+                    underline: { color: '#D4D4D4', background: 'transparent' },                // 下划线
+                    strikethrough: { color: '#9B9B9B', background: 'transparent' },            // 删除线
+                    verbatim: { color: '#CE9178', background: 'rgba(206, 145, 120, 0.1)' },     // 逐字（橙色系）
+                    code: { color: '#CE9178', background: 'rgba(206, 145, 120, 0.1)' },        // 代码（等宽字体样式）
                     priority: { color: '#FF6B6B', background: 'rgba(255, 107, 107, 0.15)' },  // 红色优先级
                 };
             case vscode.ColorThemeKind.Light:
@@ -52,6 +57,10 @@ export class SyntaxHighlighter {
                     comment: { color: '#008000', background: 'transparent' },                // 绿色注释
                     bold: { color: '#000000', background: 'rgba(0, 0, 0, 0.1)' },           // 黑色加粗
                     italic: { color: '#000000', background: 'transparent' },                 // 斜体
+                    underline: { color: '#000000', background: 'transparent' },               // 下划线
+                    strikethrough: { color: '#707070', background: 'transparent' },           // 删除线
+                    verbatim: { color: '#A31515', background: 'rgba(163, 21, 21, 0.08)' },     // 逐字
+                    code: { color: '#A31515', background: 'rgba(163, 21, 21, 0.08)' },        // 代码
                     priority: { color: '#D32F2F', background: 'rgba(211, 47, 47, 0.15)' },  // 红色优先级
                 };
             default:
@@ -68,6 +77,10 @@ export class SyntaxHighlighter {
                     comment: { color: '#6A9955', background: 'transparent' },
                     bold: { color: '#FFFFFF', background: 'rgba(255, 255, 255, 0.1)' },
                     italic: { color: '#D4D4D4', background: 'transparent' },
+                    underline: { color: '#D4D4D4', background: 'transparent' },
+                    strikethrough: { color: '#9B9B9B', background: 'transparent' },
+                    verbatim: { color: '#CE9178', background: 'rgba(206, 145, 120, 0.1)' },
+                    code: { color: '#CE9178', background: 'rgba(206, 145, 120, 0.1)' },
                     priority: { color: '#FF6B6B', background: 'rgba(255, 107, 107, 0.15)' },
                 };
         }
@@ -147,6 +160,37 @@ export class SyntaxHighlighter {
             fontStyle: 'italic',
         }));
 
+        // 下划线文本
+        this.decorationTypes.set('underline', vscode.window.createTextEditorDecorationType({
+            color: colors.underline.color,
+            textDecoration: 'underline',
+        }));
+
+        // 删除线文本
+        this.decorationTypes.set('strikethrough', vscode.window.createTextEditorDecorationType({
+            color: colors.strikethrough.color,
+            textDecoration: 'line-through',
+        }));
+
+        // 逐字文本（verbatim，原样导出，不做 Org 语法处理）
+        this.decorationTypes.set('verbatim', vscode.window.createTextEditorDecorationType({
+            color: colors.verbatim.color,
+            backgroundColor: colors.verbatim.background,
+        }));
+
+        // 代码文本（code，原样导出，不做 Org 语法处理）
+        this.decorationTypes.set('code', vscode.window.createTextEditorDecorationType({
+            color: colors.code.color,
+            backgroundColor: colors.code.background,
+        }));
+
+        // 强调标记分隔符（用于 org-hide-emphasis-markers：隐藏 * / _ = ~ + 等标记字符本身）
+        // VS Code 没有原生的"隐藏字符"装饰属性，这里借助 textDecoration 可拼接任意 CSS 声明的特性，
+        // 追加 display: none 达到隐藏效果（社区插件常用技巧）。
+        this.decorationTypes.set('emphasisMarker', vscode.window.createTextEditorDecorationType({
+            textDecoration: 'none; display: none;',
+        }));
+
         // 优先级标记
         this.decorationTypes.set('priority', vscode.window.createTextEditorDecorationType({
             color: colors.priority.color,
@@ -192,6 +236,7 @@ export class SyntaxHighlighter {
         this.applyKeywordHighlighting(editor, lines);
         this.applyCommentHighlighting(editor, lines);
         this.applyPriorityHighlighting(editor, lines);
+        this.applyEmphasisMarkerHighlighting(editor, lines);
     }
 
     /**
@@ -420,6 +465,93 @@ export class SyntaxHighlighter {
         });
 
         editor.setDecorations(decorationType, decorations);
+    }
+
+    /**
+     * 应用强调标记高亮/隐藏
+     *
+     * 对应 Emacs org-hide-emphasis-markers：当配置开启时，隐藏 * / _ = ~ + 标记字符本身，
+     * 并对标记包裹的内容应用对应的视觉样式（粗体/斜体/下划线/删除线/等宽），
+     * 否则跳过额外装饰渲染（继续依赖 TextMate 的 markup.*.org scope 着色）。
+     *
+     * 光标（选区 active 位置）落在某个标记范围内时，该标记的分隔符会临时保持可见，
+     * 以便用户能正常编辑标记字符（对齐 Emacs 行为：光标移入时取消隐藏）。
+     */
+    private applyEmphasisMarkerHighlighting(editor: vscode.TextEditor, lines: string[]): void {
+        const markerType = this.decorationTypes.get('emphasisMarker');
+        const styleTypes: Record<EmphasisType, vscode.TextEditorDecorationType | undefined> = {
+            bold: this.decorationTypes.get('bold'),
+            italic: this.decorationTypes.get('italic'),
+            underline: this.decorationTypes.get('underline'),
+            strikethrough: this.decorationTypes.get('strikethrough'),
+            verbatim: this.decorationTypes.get('verbatim'),
+            code: this.decorationTypes.get('code'),
+        };
+
+        if (!markerType) {
+            return;
+        }
+
+        const config = getConfigService();
+        const hideMarkers = config.getHideEmphasisMarkers();
+
+        if (!hideMarkers) {
+            // 不隐藏标记时不做额外装饰渲染：TextMate 的 markup.*.org scope 已经提供了基本样式
+            editor.setDecorations(markerType, []);
+            (Object.keys(styleTypes) as EmphasisType[]).forEach(type => {
+                const decorationType = styleTypes[type];
+                if (decorationType) {
+                    editor.setDecorations(decorationType, []);
+                }
+            });
+            return;
+        }
+
+        const markerRanges: vscode.Range[] = [];
+        const styleRanges: Record<EmphasisType, vscode.Range[]> = {
+            bold: [],
+            italic: [],
+            underline: [],
+            strikethrough: [],
+            verbatim: [],
+            code: [],
+        };
+
+        const cursorLine = editor.selection.active.line;
+        const cursorChar = editor.selection.active.character;
+
+        lines.forEach((line, lineIndex) => {
+            const matches = findEmphasisMatches(line);
+            for (const match of matches) {
+                styleRanges[match.type].push(new vscode.Range(
+                    new vscode.Position(lineIndex, match.contentStart),
+                    new vscode.Position(lineIndex, match.contentEnd)
+                ));
+
+                const cursorInsideMatch = lineIndex === cursorLine
+                    && cursorChar >= match.start
+                    && cursorChar <= match.end;
+
+                if (!cursorInsideMatch) {
+                    markerRanges.push(new vscode.Range(
+                        new vscode.Position(lineIndex, match.start),
+                        new vscode.Position(lineIndex, match.start + 1)
+                    ));
+                    markerRanges.push(new vscode.Range(
+                        new vscode.Position(lineIndex, match.end - 1),
+                        new vscode.Position(lineIndex, match.end)
+                    ));
+                }
+            }
+        });
+
+        editor.setDecorations(markerType, markerRanges);
+        (Object.keys(styleRanges) as EmphasisType[]).forEach(type => {
+            const decorationType = styleTypes[type];
+            if (decorationType) {
+                editor.setDecorations(decorationType, styleRanges[type]);
+            }
+        });
     }
 
     /**

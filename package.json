@@ -83,6 +83,12 @@
           "default": true,
           "description": "是否在编辑器中显示操作按钮（CodeLens），如标题行的 Promote、Demote 等"
         },
+        "vorg.hideEmphasisMarkers": {
+          "type": "boolean",
+          "default": false,
+          "description": "是否隐藏强调标记字符（*、/、_、=、~、+），只显示强调后的文本样式。对应 Emacs org-hide-emphasis-markers。光标移入标记范围内时会临时显示标记字符以便编辑。",
+          "markdownDescription": "是否隐藏强调标记字符（`*` `/` `_` `=` `~` `+`），只显示强调后的文本样式（粗体/斜体/下划线/删除线/等宽）。对应 Emacs `org-hide-emphasis-markers`。\n\n- 光标移入标记范围内时会临时显示标记字符以便编辑\n- 开启后编辑器会额外渲染强调样式（否则标记隐藏后无法看出文本曾被强调）"
+        },
         "vorg.perspectives": {
           "type": "array",
           "default": [
@@ -272,6 +278,12 @@
         "command": "vorg.setTags",
         "title": "VOrg: Set Tags",
         "icon": "$(tag)",
+        "enablement": "editorLangId == 'org'"
+      },
+      {
+        "command": "vorg.emphasize",
+        "title": "VOrg: Emphasize (Bold/Italic/Underline/Verbatim/Code/Strike-through)",
+        "icon": "$(text-size)",
         "enablement": "editorLangId == 'org'"
       },
       {
@@ -510,6 +522,12 @@
         "command": "vorg.setTags",
         "key": "ctrl+c ctrl+q",
         "mac": "ctrl+c ctrl+q",
+        "when": "editorTextFocus && editorLangId == 'org' && !editorReadonly"
+      },
+      {
+        "command": "vorg.emphasize",
+        "key": "ctrl+c ctrl+x ctrl+f",
+        "mac": "ctrl+c ctrl+x ctrl+f",
         "when": "editorTextFocus && editorLangId == 'org' && !editorReadonly"
       },
       {

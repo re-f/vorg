@@ -38,6 +38,7 @@ import { PropertyParser } from './parsers/propertyParser';
 import { PropertyService } from './services/propertyService';
 import { PriorityCommands } from './commands/editing/priorityCommands';
 import { TagCommands } from './commands/editing/tagCommands';
+import { EmphasisCommands } from './commands/editing/emphasisCommands';
 import { DateCommands } from './commands/editing/dateCommands';
 import { registerRefileCommands } from './commands/editing/refileCommands';
 import { SymbolQuickPickCommands } from './commands/symbolQuickPickCommands';
@@ -241,6 +242,7 @@ export async function activate(context: vscode.ExtensionContext) {
   DebugCommands.registerCommands(context);
   PriorityCommands.registerCommands(context);
   TagCommands.registerCommands(context);
+  EmphasisCommands.registerCommands(context);
   DateCommands.registerCommands(context);
   SymbolQuickPickCommands.registerCommands(context);
   registerRefileCommands(context);
@@ -711,6 +713,24 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.onDidChangeActiveColorTheme(() => {
       syntaxHighlighter.refreshHighlighting();
+    })
+  );
+
+  // 监听光标/选区变化：光标移入被隐藏的强调标记范围时临时显示标记字符（对齐 org-hide-emphasis-markers 行为）
+  context.subscriptions.push(
+    vscode.window.onDidChangeTextEditorSelection((event) => {
+      if (event.textEditor.document.languageId === 'org') {
+        syntaxHighlighter.applyHighlighting(event.textEditor);
+      }
+    })
+  );
+
+  // 监听配置变化：vorg.hideEmphasisMarkers 等配置更新后立即刷新装饰
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration('vorg.hideEmphasisMarkers')) {
+        syntaxHighlighter.refreshHighlighting();
+      }
     })
   );
 
