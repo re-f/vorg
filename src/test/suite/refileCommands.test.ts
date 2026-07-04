@@ -168,17 +168,12 @@ suite('RefileCommands Integration Test Suite', () => {
         // * H3
         const { doc } = await setupTest('* H1\n** H2\ncontent\n* H3', 1, 3);
 
-        // Execute refile - this should reach the Quick Pick stage
-        // Since we don't select anything, it will abort after Quick Pick
-        // We use a timeout to prevent the test from hanging
-        const result = Promise.race([
-            executeRefileCommand(),
-            new Promise<void>((resolve) => setTimeout(resolve, 100))
-        ]);
+        // Mock Quick Pick cancel — verifies the command reaches target selection
+        // without leaving a real Quick Pick open (which can steal focus and mutate the doc)
+        await withMockedQuickPick(undefined, async () => {
+            await executeRefileCommand();
+        });
 
-        await result;
-
-        // Document should be unchanged (Quick Pick was shown but not selected)
         assert.strictEqual(doc.getText(), '* H1\n** H2\ncontent\n* H3');
     });
 

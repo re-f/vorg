@@ -54,4 +54,41 @@ suite('LinkCommands Integration Test Suite', () => {
         assert.strictEqual(editor.selection.active.line, 0);
     });
 
+    test('Follow Link: 应该能跳转到 * 前缀标题链接', async () => {
+        const content = [
+            '* Target Heading',
+            'Some content',
+            '[[*Target Heading]]'
+        ].join('\n');
+        const { editor } = await setupTest(content, 2, 5);
+
+        await vscode.commands.executeCommand('vorg.followLink');
+        await wait();
+
+        assert.strictEqual(editor.selection.active.line, 0);
+    });
+
+    test('Definition Provider: 应与 followLink 解析到同一标题位置', async () => {
+        const content = [
+            '* Target Heading',
+            '[[Target Heading]]'
+        ].join('\n');
+        const { doc, editor } = await setupTest(content, 1, 5);
+
+        await vscode.commands.executeCommand('vorg.followLink');
+        await wait();
+        const followLine = editor.selection.active.line;
+
+        editor.selection = new vscode.Selection(new vscode.Position(1, 5), new vscode.Position(1, 5));
+        const definitions = await vscode.commands.executeCommand<vscode.Location[] | vscode.Location | undefined>(
+            'vscode.executeDefinitionProvider',
+            doc.uri,
+            new vscode.Position(1, 5)
+        );
+
+        const definitionList = Array.isArray(definitions) ? definitions : definitions ? [definitions] : [];
+        assert.ok(definitionList.length > 0, 'Definition provider 应返回目标位置');
+        assert.strictEqual(definitionList[0].range.start.line, followLine);
+    });
+
 });

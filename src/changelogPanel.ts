@@ -15,6 +15,16 @@ interface ChangelogEntry {
 
 // 更新日志数据
 const CHANGELOG: Record<string, ChangelogEntry> = {
+  '1.2.0': {
+    title: '链接统一与强调格式',
+    items: [
+      { tag: '✨', tagColor: '#3fb950', text: '强调格式切换：Ctrl+C Ctrl+X Ctrl+F 在粗体/斜体/下划线等格式间切换' },
+      { tag: '✨', tagColor: '#3fb950', text: '隐藏强调标记：vorg.hideEmphasisMarkers 可隐藏 * / _ 等标记，光标移入时临时显示' },
+      { tag: '🔧', tagColor: '#79c0ff', text: '链接插入统一：[[ 补全与 Ctrl+C Ctrl+L → Heading 均生成跨文件 id 链接并自动补 ID' },
+      { tag: '🔧', tagColor: '#79c0ff', text: '链接导航统一：Ctrl+C Ctrl+O、Ctrl+Click 支持标题、*标题、file::锚点跳转' },
+      { tag: '🐛', tagColor: '#58a6ff', text: '修复 Alt/Ctrl+Enter 插入列表项时嵌套有序列表编号错误' },
+    ],
+  },
   '1.1.0': {
     title: 'Org Refile 子树移动',
     items: [

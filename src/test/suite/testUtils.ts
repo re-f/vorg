@@ -8,6 +8,12 @@ import { ConfigService } from '../../services/configService';
  * 确保测试环境已准备就绪（数据库和配置已初始化）
  */
 export async function ensureTestReady(): Promise<void> {
+    // 0. 确保扩展已激活（避免首个 org 命令在 activate 完成前被调用而静默失败）
+    const extension = vscode.extensions.getExtension('vorg.vorg');
+    if (extension && !extension.isActive) {
+        await extension.activate();
+    }
+
     // 1. 确保 ConfigService 已初始化
     if (!ConfigService.getInstance()) {
         ConfigService.setInstance(ConfigService.default());

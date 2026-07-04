@@ -62,7 +62,7 @@
 
 import * as vscode from 'vscode';
 import { OrgSymbolIndexService, IndexedHeadingSymbol } from '../services/orgSymbolIndexService';
-import { PropertyParser } from '../parsers/propertyParser';
+import { LinkInsertionService } from '../services/linkInsertionService';
 import { HeadingParser } from '../parsers/headingParser';
 import { getConfigService } from '../services/configService';
 import { Logger } from '../utils/logger';
@@ -106,9 +106,11 @@ interface LinkInputInfo {
  */
 export class OrgCompletionProvider implements vscode.CompletionItemProvider {
   private indexService: OrgSymbolIndexService;
+  private linkInsertionService: LinkInsertionService;
 
   constructor() {
     this.indexService = OrgSymbolIndexService.getInstance();
+    this.linkInsertionService = LinkInsertionService.getInstance();
   }
 
   /**
@@ -179,63 +181,6 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
   }
 
   /**
-   * 过滤符号列表，只保留匹配查询的符号
-   * 
-   * 支持字符串匹配和拼音搜索：
-   * - 字符串直接匹配（原有功能）：匹配 text 和 displayName
-   * - 拼音匹配：匹配缓存的拼音字段（全拼和首字母）
-   */
-  private filterSymbolsByQuery(
-    symbols: IndexedHeadingSymbol[],
-    query: string
-  ): IndexedHeadingSymbol[] {
-    if (!query) {
-      return symbols;
-    }
-
-    const queryLower = query.toLowerCase();
-    return symbols.filter(symbol => {
-      const symbolText = symbol.text.toLowerCase();
-      const symbolDisplayName = symbol.displayName.toLowerCase();
-
-      // 字符串匹配（原有功能）
-      if (symbolText.includes(queryLower) || symbolDisplayName.includes(queryLower)) {
-        return true;
-      }
-
-      // 拼音匹配（使用缓存的拼音字段）
-      // 安全检查：确保拼音字段存在且不为空
-      const pinyinText = symbol.pinyinText || '';
-      const pinyinDisplayName = symbol.pinyinDisplayName || '';
-      if (pinyinText || pinyinDisplayName) {
-        const symbolPinyinText = pinyinText.toLowerCase();
-        const symbolPinyinDisplayName = pinyinDisplayName.toLowerCase();
-        if (symbolPinyinText.includes(queryLower) || symbolPinyinDisplayName.includes(queryLower)) {
-          return true;
-        }
-      }
-
-      return false;
-    });
-  }
-
-  /**
-   * 获取或生成标题的 ID
-   */
-  private async getOrGenerateId(
-    symbol: IndexedHeadingSymbol
-  ): Promise<string> {
-    try {
-      const targetDocument = await vscode.workspace.openTextDocument(symbol.uri);
-      const { id } = PropertyParser.getOrGenerateIdForHeading(targetDocument, symbol.line);
-      return id;
-    } catch (error) {
-      Logger.warn(`[CompletionProvider] 无法读取文件 ${symbol.uri.fsPath}，使用占位符 ID`);
-      return 'PLACEHOLDER_ID';
-    }
-  }
-
-  /**
    * 提供自动补全项
    */
   async provideCompletionItems(
@@ -257,15 +202,11 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
     }
 
 
-    // 获取所有 headline
-    const allSymbols = await this.indexService.getAllSymbols();
+    const filteredSymbols = await this.linkInsertionService.getHeadingCandidates(inputInfo.query);
 
     if (token.isCancellationRequested) {
       return undefined;
     }
-
-    // 根据查询文本过滤符号
-    const filteredSymbols = this.filterSymbolsByQuery(allSymbols, inputInfo.query);
 
     // 为每个符号创建补全项
     const completionItems: vscode.CompletionItem[] = [];
@@ -274,7 +215,7 @@ export class OrgCompletionProvider implements vscode.CompletionItemProvider {
         break;
       }
 
-      const idToUse = await this.getOrGenerateId(symbol);
+      const idToUse = await this.linkInsertionService.peekHeadingId(symbol);
       const completionItem = this.createCompletionItem(
         symbol,
         inputInfo,

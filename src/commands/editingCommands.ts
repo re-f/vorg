@@ -146,7 +146,10 @@ export class EditingCommands {
     const line = document.lineAt(position.line);
     const lineText = line.text;
     const isAtBeginning = position.character === 0 || lineText.slice(0, position.character).trim() === '';
-    const isAtEnd = position.character >= lineText.trimEnd().length;
+    const trimmedEnd = lineText.trimEnd().length;
+    // 光标在行尾（含最后一个内容字符上）时插入新项，否则分割当前项
+    const isAtEnd = position.character >= trimmedEnd
+      || (trimmedEnd > 0 && position.character === trimmedEnd - 1);
 
     let newCursorPosition: vscode.Position | null = null;
 

@@ -35,7 +35,7 @@ import { HeadingCodeLensProvider } from './codelens/headingCodeLensProvider';
 import { OrgSymbolIndexService } from './services/orgSymbolIndexService';
 import { OrgCompletionProvider } from './completion/orgCompletionProvider';
 import { PropertyParser } from './parsers/propertyParser';
-import { PropertyService } from './services/propertyService';
+import { LinkInsertionService } from './services/linkInsertionService';
 import { PriorityCommands } from './commands/editing/priorityCommands';
 import { TagCommands } from './commands/editing/tagCommands';
 import { EmphasisCommands } from './commands/editing/emphasisCommands';
@@ -52,24 +52,14 @@ import * as path from 'path';
  */
 
 /**
- * 获取或生成标题的 ID
- * 
- * @param targetDocument - 目标文档
- * @param symbolLine - 标题所在行号
- * @param providedId - 已提供的 ID（可选）
- * @returns ID 和是否需要插入的标志
+ * 获取或生成标题的 ID（补全命令使用）
  */
 async function getOrGenerateIdForCompletion(
-  targetDocument: vscode.TextDocument,
+  symbolUri: vscode.Uri,
   symbolLine: number,
-  providedId?: string
-): Promise<{ id: string; needsInsert: boolean }> {
-  const result = PropertyParser.getOrGenerateIdForHeading(targetDocument, symbolLine);
-
-  // 如果提供了真实 ID，检查是否与文档中的 ID 一致
-  // 如果不一致，使用文档中的 ID（静默处理，不需要日志）
-
-  return result;
+  _providedId?: string
+): Promise<{ id: string; needsInsert: boolean; edit?: vscode.WorkspaceEdit; targetDocument: vscode.TextDocument }> {
+  return LinkInsertionService.getInstance().ensureHeadingId(symbolUri, symbolLine);
 }
 
 /**
@@ -163,15 +153,6 @@ function moveCursorAfterLink(editor: vscode.TextEditor, lineNumber: number): voi
 
 /**
  * 插入 ID 到目标文档并保存
- * 
- * 这是补全功能相关的操作，负责：
- * 1. 使用 PropertyParser 准备编辑操作（只处理 orgmode 元素）
- * 2. 应用编辑并保存文件（VS Code 相关操作）
- * 
- * @param symbolUri - 目标文档 URI
- * @param targetDocument - 目标文档
- * @param symbolLine - 标题所在行号
- * @param idToUse - 要插入的 ID
  */
 async function insertIdToTargetDocument(
   symbolUri: vscode.Uri,
@@ -179,34 +160,12 @@ async function insertIdToTargetDocument(
   symbolLine: number,
   idToUse: string
 ): Promise<void> {
-  // 使用 PropertyService 准备编辑操作
-  const workspaceEdit = PropertyService.prepareIdInsertionEdit(
+  await LinkInsertionService.getInstance().applyIdInsertionToTarget(
     symbolUri,
     targetDocument,
     symbolLine,
     idToUse
   );
-
-  // 应用编辑（不会切换文档）
-  const success = await vscode.workspace.applyEdit(workspaceEdit);
-  if (!success) {
-    Logger.error(`[CompletionProvider] 应用编辑失败`);
-    return;
-  }
-
-  // 保存目标文件（VS Code 相关操作）
-  const targetEditor = vscode.window.visibleTextEditors.find(
-    editor => editor.document.uri.toString() === symbolUri.toString()
-  );
-
-  if (targetEditor) {
-    // 如果目标文件已经在编辑器中打开，保存它
-    await targetEditor.document.save();
-  } else {
-    // 如果目标文件没有打开，重新打开并保存
-    const doc = await vscode.workspace.openTextDocument(symbolUri);
-    await doc.save();
-  }
 }
 
 
@@ -547,9 +506,8 @@ export async function activate(context: vscode.ExtensionContext) {
         const currentText = currentLine.text;
 
         // 打开目标文档，获取或生成 ID
-        const targetDocument = await vscode.workspace.openTextDocument(symbolUri);
-        const { id: idToUse, needsInsert } = await getOrGenerateIdForCompletion(
-          targetDocument,
+        const { id: idToUse, needsInsert, edit: idInsertEdit, targetDocument } = await getOrGenerateIdForCompletion(
+          symbolUri,
           symbolLine,
           providedId
         );
@@ -558,30 +516,22 @@ export async function activate(context: vscode.ExtensionContext) {
         const isSameDocument = currentDocument.uri.toString() === symbolUri.toString();
 
         // 如果需要插入 ID，先准备编辑操作（在编辑当前行之前）
-        let idInsertEdit: vscode.WorkspaceEdit | undefined;
-        if (needsInsert) {
-          idInsertEdit = PropertyService.prepareIdInsertionEdit(
-            symbolUri,
-            targetDocument,
-            symbolLine,
-            idToUse
-          );
-        }
+        const preparedIdInsertEdit = needsInsert ? idInsertEdit : undefined;
 
         // 替换当前行中的 ID（可能是占位符或已提供的 ID）
         const newText = replaceIdInText(currentText, idToUse);
 
         // 如果目标文档是当前文档，需要合并编辑操作
-        if (isSameDocument && needsInsert && idInsertEdit) {
+        if (isSameDocument && needsInsert && preparedIdInsertEdit) {
           // 将当前行的替换操作添加到同一个 WorkspaceEdit 中
           const currentLineRange = new vscode.Range(
             new vscode.Position(currentPosition.line, 0),
             new vscode.Position(currentPosition.line, currentLine.text.length)
           );
-          idInsertEdit.replace(currentDocument.uri, currentLineRange, newText);
+          preparedIdInsertEdit.replace(currentDocument.uri, currentLineRange, newText);
 
           // 应用合并后的编辑
-          const success = await vscode.workspace.applyEdit(idInsertEdit);
+          const success = await vscode.workspace.applyEdit(preparedIdInsertEdit);
           if (!success) {
             Logger.error(`[CompletionProvider] 应用编辑失败`);
             return;

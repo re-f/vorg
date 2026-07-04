@@ -7,10 +7,8 @@
  */
 
 import * as vscode from 'vscode';
-import { HeadingParser } from '../parsers/headingParser';
-import { LinkParser } from '../parsers/linkParser';
-import { LinkUtils } from '../utils/linkUtils';
-import { getConfigService } from '../services/configService';
+import { LinkInsertionService, HeadingQuickPickItem } from '../services/linkInsertionService';
+import { LinkNavigationService } from '../services/linkNavigationService';
 
 /**
  * 链接命令处理类
@@ -21,26 +19,20 @@ import { getConfigService } from '../services/configService';
  * - 跟随链接：跳转到链接目标（文件、URL、ID、标题等）
  * - 插入链接：交互式插入各种类型的链接
  * 
- * 支持的链接类型：
- * - HTTP/HTTPS 链接：在浏览器中打开
- * - 文件链接：打开文件或跳转到文件中的位置
- * - ID 链接：通过 ID 跳转到标题
- * - 内部标题链接：跳转到文档内的标题
- * 
  * @class LinkCommands
  */
 export class LinkCommands {
+
+  private static linkInsertionService = LinkInsertionService.getInstance();
 
   /**
    * 注册链接相关命令
    */
   static registerCommands(context: vscode.ExtensionContext) {
-    // 跟随链接命令
     const followLinkCommand = vscode.commands.registerCommand('vorg.followLink', () => {
       return this.followLinkAtCursor();
     });
 
-    // 插入链接命令
     const insertLinkCommand = vscode.commands.registerCommand('vorg.insertLink', () => {
       return this.insertLink();
     });
@@ -60,123 +52,14 @@ export class LinkCommands {
     const position = editor.selection.active;
     const document = editor.document;
 
-    // 查找当前位置的链接
-    const linkMatch = this.findLinkAtPosition(document, position);
+    const linkMatch = LinkNavigationService.findLinkAtPosition(document, position);
     if (!linkMatch) {
       vscode.window.showInformationMessage('No link found at cursor position');
       return;
     }
 
-    await this.processLinkTarget(document, linkMatch.linkTarget);
-  }
-
-  /**
-   * 查找指定位置的链接
-   */
-  private static findLinkAtPosition(document: vscode.TextDocument, position: vscode.Position): { linkTarget: string; range: vscode.Range } | null {
-    const line = document.lineAt(position);
-    const lineText = line.text;
-
-    // 使用 LinkParser 检查光标位置是否在链接内
-    const link = LinkParser.isPositionInLink(lineText, position.character);
-
-    if (link) {
-      const range = new vscode.Range(
-        new vscode.Position(position.line, link.startCol),
-        new vscode.Position(position.line, link.endCol)
-      );
-
-      // 对于文件链接，保留 'file:' 前缀
-      let linkTarget = link.target;
-      if (link.type === 'file') {
-        linkTarget = `file:${link.target}`;
-      }
-
-      return { linkTarget, range };
-    }
-
-    return null;
-  }
-
-  /**
-   * 处理链接目标
-   */
-  private static async processLinkTarget(document: vscode.TextDocument, linkTarget: string) {
-
-    try {
-      // HTTP/HTTPS 链接
-      if (linkTarget.startsWith('http://') || linkTarget.startsWith('https://')) {
-        await vscode.env.openExternal(vscode.Uri.parse(linkTarget));
-        return;
-      }
-
-      // 文件链接
-      if (linkTarget.startsWith('file:')) {
-        const filePath = linkTarget.substring(5);
-        const uri = LinkUtils.resolveFilePath(document, filePath);
-        if (uri) {
-          await vscode.window.showTextDocument(uri);
-        }
-        return;
-      }
-
-      // ID链接
-      if (linkTarget.startsWith('id:')) {
-        const id = linkTarget.substring(3);
-        const location = await LinkUtils.findHeadlineById(document, id);
-        if (location) {
-          const editor = vscode.window.activeTextEditor;
-          if (editor && editor.document.uri.toString() === location.uri.toString()) {
-            // 在同一文档中跳转
-            editor.selection = new vscode.Selection(location.range.start, location.range.start);
-            editor.revealRange(location.range, vscode.TextEditorRevealType.InCenter);
-          } else {
-            const targetViewColumn = this.getTargetViewColumnForIdLink();
-            await vscode.window.showTextDocument(location.uri, {
-              viewColumn: targetViewColumn ?? vscode.ViewColumn.Beside,
-              selection: new vscode.Range(location.range.start, location.range.start)
-            });
-          }
-        } else {
-          vscode.window.showWarningMessage(`Headline with ID "${id}" not found`);
-        }
-        return;
-      }
-
-      // 内部标题链接或 ID 链接（备选路径）
-      let location: vscode.Location | null = null;
-      let headingText = linkTarget;
-
-      if (linkTarget.startsWith('*')) {
-        headingText = linkTarget.substring(1);
-      }
-
-      // 首先尝试作为标题查找
-      location = LinkUtils.findHeadlineByTitle(document, headingText);
-
-      // 如果没找到且不是明确的 * 开头，尝试作为 ID 查找（某些简写情况）
-      if (!location && !linkTarget.startsWith('*')) {
-        location = await LinkUtils.findHeadlineById(document, linkTarget);
-      }
-
-      if (location) {
-        const editor = vscode.window.activeTextEditor;
-        if (editor && editor.document.uri.toString() === document.uri.toString()) {
-          // 在同一文档中跳转
-          editor.selection = new vscode.Selection(location.range.start, location.range.start);
-          editor.revealRange(location.range, vscode.TextEditorRevealType.InCenter);
-        } else {
-          await vscode.window.showTextDocument(location.uri, {
-            selection: location.range
-          });
-        }
-      } else {
-        vscode.window.showWarningMessage(`Headline or ID "${linkTarget}" not found`);
-      }
-
-    } catch (error) {
-      vscode.window.showErrorMessage(`Failed to follow link: ${error}`);
-    }
+    const resolved = await LinkNavigationService.resolveLinkTarget(document, linkMatch.linkTarget);
+    await LinkNavigationService.navigateToResolved(document, resolved);
   }
 
   /**
@@ -188,11 +71,10 @@ export class LinkCommands {
       return;
     }
 
-    // 获取用户输入
     const linkType = await vscode.window.showQuickPick([
       { label: 'URL', description: 'Insert web link (http/https)' },
       { label: 'File', description: 'Link to file' },
-      { label: 'Heading', description: 'Link to heading in current file' },
+      { label: 'Heading', description: 'Link to heading across workspace' },
       { label: 'Custom', description: 'Custom link format' }
     ], {
       placeHolder: 'Select link type'
@@ -203,10 +85,9 @@ export class LinkCommands {
     }
 
     let linkText = '';
-    let description = '';
 
     switch (linkType.label) {
-      case 'URL':
+      case 'URL': {
         const url = await vscode.window.showInputBox({
           prompt: 'Enter URL',
           placeHolder: 'https://example.com'
@@ -215,15 +96,16 @@ export class LinkCommands {
           return;
         }
 
-        description = await vscode.window.showInputBox({
+        const description = await vscode.window.showInputBox({
           prompt: 'Enter link description (optional)',
           placeHolder: 'Link description'
         }) || '';
 
         linkText = description ? `[[${url}][${description}]]` : `[[${url}]]`;
         break;
+      }
 
-      case 'File':
+      case 'File': {
         const fileUri = await vscode.window.showOpenDialog({
           canSelectFiles: true,
           canSelectFolders: false,
@@ -236,33 +118,25 @@ export class LinkCommands {
         }
 
         const filePath = `file:${fileUri[0].fsPath}`;
-        description = await vscode.window.showInputBox({
+        const description = await vscode.window.showInputBox({
           prompt: 'Enter link description (optional)',
           placeHolder: 'File description'
         }) || '';
 
         linkText = description ? `[[${filePath}][${description}]]` : `[[${filePath}]]`;
         break;
+      }
 
-      case 'Heading':
-        const headings = this.extractHeadings(editor.document);
-        const selectedHeading = await vscode.window.showQuickPick(headings, {
-          placeHolder: 'Select heading to link to'
-        });
-
-        if (!selectedHeading) {
+      case 'Heading': {
+        const headingLinkText = await this.insertHeadingLink(editor);
+        if (!headingLinkText) {
           return;
         }
-
-        description = await vscode.window.showInputBox({
-          prompt: 'Enter link description (optional)',
-          placeHolder: selectedHeading.label
-        }) || '';
-
-        linkText = description ? `[[${selectedHeading.label}][${description}]]` : `[[${selectedHeading.label}]]`;
+        linkText = headingLinkText;
         break;
+      }
 
-      case 'Custom':
+      case 'Custom': {
         const customLink = await vscode.window.showInputBox({
           prompt: 'Enter link target',
           placeHolder: 'link-target'
@@ -271,13 +145,14 @@ export class LinkCommands {
           return;
         }
 
-        description = await vscode.window.showInputBox({
+        const description = await vscode.window.showInputBox({
           prompt: 'Enter link description (optional)',
           placeHolder: 'Link description'
         }) || '';
 
         linkText = description ? `[[${customLink}][${description}]]` : `[[${customLink}]]`;
         break;
+      }
     }
 
     if (linkText) {
@@ -288,47 +163,68 @@ export class LinkCommands {
   }
 
   /**
-   * 提取文档中的标题
+   * 通过统一插入服务生成跨文件 id: 标题链接
    */
-  private static extractHeadings(document: vscode.TextDocument): Array<{ label: string; description: string }> {
-    const headings: Array<{ label: string; description: string }> = [];
-    const text = document.getText();
-    const lines = text.split('\n');
+  private static async insertHeadingLink(editor: vscode.TextEditor): Promise<string | undefined> {
+    const candidates = await this.linkInsertionService.getHeadingCandidates();
+    if (candidates.length === 0) {
+      vscode.window.showInformationMessage('No headings found in workspace');
+      return undefined;
+    }
 
-    const config = getConfigService();
-    const todoKeywords = config.getAllKeywordStrings();
+    const quickPickItems = this.linkInsertionService.toQuickPickItems(candidates);
+    const selectedHeading = await vscode.window.showQuickPick<HeadingQuickPickItem>(quickPickItems, {
+      placeHolder: 'Select heading to link to',
+      matchOnDescription: true,
+      matchOnDetail: true
+    });
 
-    for (const line of lines) {
-      // 使用 HeadingParser 解析标题
-      const headingInfo = HeadingParser.parseHeading(line, true, todoKeywords);
+    if (!selectedHeading) {
+      return undefined;
+    }
 
-      if (headingInfo.level > 0) {
-        // 构建完整的标题显示文本（包含 TODO 状态）
-        const fullTitle = headingInfo.todoKeyword
-          ? `${headingInfo.todoKeyword} ${headingInfo.title}`
-          : headingInfo.title;
+    const description = await vscode.window.showInputBox({
+      prompt: 'Enter link description (optional)',
+      placeHolder: selectedHeading.symbol.text
+    });
 
-        headings.push({
-          label: headingInfo.title,  // 标签只显示标题文本（不含 TODO 状态）
-          description: `${'  '.repeat(headingInfo.level - 1)}${fullTitle}`  // 描述显示完整信息
-        });
+    if (description === undefined) {
+      return undefined;
+    }
+
+    const { symbol } = selectedHeading;
+    const { id, needsInsert, edit, targetDocument } = await this.linkInsertionService.ensureHeadingId(
+      symbol.uri,
+      symbol.line
+    );
+
+    const linkText = this.linkInsertionService.buildIdLinkText(
+      id,
+      symbol.text,
+      description || undefined
+    );
+
+    const currentDocument = editor.document;
+    const isSameDocument = currentDocument.uri.toString() === symbol.uri.toString();
+
+    if (needsInsert && edit) {
+      if (isSameDocument) {
+        const success = await vscode.workspace.applyEdit(edit);
+        if (!success) {
+          vscode.window.showErrorMessage('Failed to insert ID property for heading link');
+          return undefined;
+        }
+        await currentDocument.save();
+      } else {
+        await this.linkInsertionService.applyIdInsertionToTarget(
+          symbol.uri,
+          targetDocument,
+          symbol.line,
+          id
+        );
       }
     }
 
-    return headings;
+    return linkText;
   }
-
-  /**
-   * 在跟随 ID 链接时确定目标 Editor Group。
-   * - 如果存在其他可见的编辑器组，返回该组的列号
-   * - 如果当前只有一个组，则返回 undefined，调用方会使用 ViewColumn.Beside 来分屏
-   */
-  private static getTargetViewColumnForIdLink(): vscode.ViewColumn | undefined {
-    const activeColumn = vscode.window.activeTextEditor?.viewColumn;
-    const otherEditor = vscode.window.visibleTextEditors.find(
-      (editor) => editor.viewColumn !== undefined && editor.viewColumn !== activeColumn
-    );
-    return otherEditor?.viewColumn;
-  }
-
-} 
+}
