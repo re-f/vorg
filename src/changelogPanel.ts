@@ -16,13 +16,6 @@ interface ChangelogEntry {
 
 // 更新日志数据
 const CHANGELOG: Record<string, ChangelogEntry> = {
-  '1.2.1': {
-    title: '双语更新日志 / Bilingual Changelog',
-    items: [
-      { tag: '🔧', tagColor: '#79c0ff', textZh: '更新日志改为中英双语呈现', textEn: 'Release notes now bilingual (ZH/EN)' },
-      { tag: '🔧', tagColor: '#79c0ff', textZh: '内嵌更新日志条目精简并补英文', textEn: 'In-app changelog entries shortened with EN' },
-    ],
-  },
   '1.2.0': {
     title: '链接统一与强调格式 / Links & Emphasis',
     items: [

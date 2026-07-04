@@ -1,33 +1,5 @@
 # 更新日志 / Changelog
 
-## [1.2.1] - 2026-07-04
-
-### 🔧 改进优化 / Improvements
-
-- **中英双语更新日志**：`CHANGELOG.md`、`release.md` 与扩展内更新日志面板改为中英对照呈现。
-  - **Bilingual release notes**: `CHANGELOG.md`, `release.md`, and the in-app changelog panel now show Chinese and English side by side.
-- **内嵌更新日志精简**：更新日志面板条目压缩至规范长度，并补充英文说明。
-  - **Concise in-app changelog**: Panel entries are shortened and include English descriptions.
-
-### ✨ 新增功能 / New Features (since 1.2.0)
-
-- **强调格式切换 (org-emphasize)**：在选中文本或光标处切换粗体、斜体、下划线、等宽、删除线等 Org 强调格式。使用方法：`Ctrl+C Ctrl+X Ctrl+F`。
-  - **Emphasis toggling (org-emphasize)**: Wrap or unwrap bold, italic, underline, verbatim, code, and strike-through. Shortcut: `Ctrl+C Ctrl+X Ctrl+F`.
-- **隐藏强调标记**：新增 `vorg.hideEmphasisMarkers` 配置，可隐藏 `*` `/` `_` 等标记字符，光标移入时临时显示以便编辑。
-  - **Hide emphasis markers**: New `vorg.hideEmphasisMarkers` setting hides marker characters; markers reappear when the cursor enters the range.
-
-### 🔧 改进优化 / Improvements (since 1.2.0)
-
-- **链接插入统一**：输入 `[[` 补全与 `Ctrl+C Ctrl+L` → Heading 均生成跨文件稳定的 `[[id:UUID][标题]]`，目标标题无 ID 时自动写入。
-  - **Unified link insertion**: `[[` completion and `Ctrl+C Ctrl+L` → Heading both insert stable cross-file `[[id:UUID][title]]` links and auto-assign `:ID:` when missing.
-- **链接导航统一**：`Ctrl+C Ctrl+O`、Ctrl+Click / F12 使用同一套解析，支持纯标题、`*标题`、`file:path::*标题` 与 `file:path::#id` 锚点跳转。
-  - **Unified link navigation**: `Ctrl+C Ctrl+O`, Ctrl+Click, and F12 share one resolver for plain titles, `*title`, and `file:path::*title` / `file:path::#id` anchors.
-
-### 🐛 Bug 修复 / Bug Fixes (since 1.2.0)
-
-- **嵌套有序列表编号**：修复 Alt/Ctrl+Enter 插入列表项时嵌套有序列表编号错误的问题。
-  - **Nested ordered list numbering**: Fixed incorrect numbering when inserting items with Alt/Ctrl+Enter in nested ordered lists.
-
 ## [1.2.0] - 2026-07-04
 
 ### ✨ 新增功能 / New Features
