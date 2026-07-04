@@ -41,7 +41,9 @@ VOrg ensures that `.org` document structures are completely preserved in both th
 
 ### 2. Modernized Completion & Retrieval
 VOrg introduces interaction paradigms that better fit modern developers:
-- **Cross-File ID Completion**: Type `[[id:` to quickly search for heading IDs across the entire workspace and automatically insert them, conveniently building cross-file links.
+- **Cross-File ID Completion**: Type `[[` or `[[id:` to search headings workspace-wide and insert stable `[[id:UUID][title]]` links; missing `:ID:` properties are assigned automatically.
+- **Unified Link Insertion**: `Ctrl+C Ctrl+L` → Heading uses the same cross-file id-link flow as `[[` completion.
+- **Unified Link Navigation**: `Ctrl+C Ctrl+O`, Ctrl+Click, and F12 follow the same resolver, including `file:path::*title` and `file:path::#id` anchors.
 - **VOrgQL Custom Views**: A declarative query block inspired by `org-ql`, allowing users to dynamically aggregate cross-file to-do tasks within documents.
 
 ### 3. Use Org-mode in Modern IDEs

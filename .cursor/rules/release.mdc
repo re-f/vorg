@@ -37,6 +37,7 @@ alwaysApply: false
   - **不要写实现细节**：禁止在 CHANGELOG 中写内部实现细节，如"自动重算层级"、"保留 TODO 关键字"、"索引更新"等。只写用户能直接感受到的功能效果。
   - **不要写文档更新**：CHANGELOG 中不要包含 `📝 文档更新` 类别，文档更新不应作为版本发布内容
   - **分类要准确**：outline path 显示、文件路径显示等 UI 增强应归为 `🔧 改进优化`，而不是 `✨ 新增功能`
+- **中英双语**：`CHANGELOG.md`、`release.md` 与 `src/changelogPanel.ts` 的用户可见条目须中英对照（中文主行 + 英文副行）
 - 从 git 历史中提取变更信息：
   ```bash
   git log --oneline --since="上次发布版本日期"
@@ -68,6 +69,7 @@ alwaysApply: false
   - 只写用户可见的功能，不写实现细节
   - 分类准确：`✨` 用于新功能，`🔧` 用于改进优化，`🐛` 用于 Bug 修复
   - 每条内容尽量精简，控制在 50 字以内
+  - 使用 `textZh` + `textEn` 双语字段
 - 示例格式：
   ```typescript
   const CHANGELOG: Record<string, ChangelogEntry> = {

@@ -5,7 +5,8 @@ type ShowMode = 'welcome' | 'update' | 'manual';
 interface ChangelogItem {
   tag: string;
   tagColor: string;
-  text: string;
+  textZh: string;
+  textEn: string;
 }
 
 interface ChangelogEntry {
@@ -15,32 +16,39 @@ interface ChangelogEntry {
 
 // 更新日志数据
 const CHANGELOG: Record<string, ChangelogEntry> = {
-  '1.2.0': {
-    title: '链接统一与强调格式',
+  '1.2.1': {
+    title: '双语更新日志 / Bilingual Changelog',
     items: [
-      { tag: '✨', tagColor: '#3fb950', text: '强调格式切换：Ctrl+C Ctrl+X Ctrl+F 在粗体/斜体/下划线等格式间切换' },
-      { tag: '✨', tagColor: '#3fb950', text: '隐藏强调标记：vorg.hideEmphasisMarkers 可隐藏 * / _ 等标记，光标移入时临时显示' },
-      { tag: '🔧', tagColor: '#79c0ff', text: '链接插入统一：[[ 补全与 Ctrl+C Ctrl+L → Heading 均生成跨文件 id 链接并自动补 ID' },
-      { tag: '🔧', tagColor: '#79c0ff', text: '链接导航统一：Ctrl+C Ctrl+O、Ctrl+Click 支持标题、*标题、file::锚点跳转' },
-      { tag: '🐛', tagColor: '#58a6ff', text: '修复 Alt/Ctrl+Enter 插入列表项时嵌套有序列表编号错误' },
+      { tag: '🔧', tagColor: '#79c0ff', textZh: '更新日志改为中英双语呈现', textEn: 'Release notes now bilingual (ZH/EN)' },
+      { tag: '🔧', tagColor: '#79c0ff', textZh: '内嵌更新日志条目精简并补英文', textEn: 'In-app changelog entries shortened with EN' },
+    ],
+  },
+  '1.2.0': {
+    title: '链接统一与强调格式 / Links & Emphasis',
+    items: [
+      { tag: '✨', tagColor: '#3fb950', textZh: '强调切换：Ctrl+C Ctrl+X Ctrl+F', textEn: 'Emphasis toggle: Ctrl+C Ctrl+X Ctrl+F' },
+      { tag: '✨', tagColor: '#3fb950', textZh: '可隐藏强调标记字符', textEn: 'Hide emphasis markers (setting)' },
+      { tag: '🔧', tagColor: '#79c0ff', textZh: '[[ 与 Ctrl+C Ctrl+L 统一 id 链接', textEn: 'Unified id links via [[ and Ctrl+C Ctrl+L' },
+      { tag: '🔧', tagColor: '#79c0ff', textZh: '链接跳转支持 file:: 锚点', textEn: 'Link follow supports file:: anchors' },
+      { tag: '🐛', tagColor: '#58a6ff', textZh: '修复嵌套有序列表编号', textEn: 'Fix nested ordered list numbering' },
     ],
   },
   '1.1.0': {
-    title: 'Org Refile 子树移动',
+    title: 'Org Refile 子树移动 / Org Refile',
     items: [
-      { tag: '✨', tagColor: '#3fb950', text: 'Org Refile：支持将子树移动到同一文件或跨文件的指定目标标题下。使用方法：Ctrl+C Ctrl+W' },
-      { tag: '🔧', tagColor: '#79c0ff', text: '跨文件目标在 Quick Pick 描述中显示文件路径，便于区分同名标题' },
-      { tag: '🔧', tagColor: '#79c0ff', text: '拼音搜索增强：工作区符号搜索支持文件名路径匹配' },
-      { tag: '🐛', tagColor: '#58a6ff', text: '修复了集成测试不稳定问题' },
+      { tag: '✨', tagColor: '#3fb950', textZh: 'Org Refile：Ctrl+C Ctrl+W 移动子树', textEn: 'Org Refile: move subtrees with Ctrl+C Ctrl+W' },
+      { tag: '🔧', tagColor: '#79c0ff', textZh: '跨文件目标显示文件路径', textEn: 'Cross-file targets show file paths' },
+      { tag: '🔧', tagColor: '#79c0ff', textZh: '符号搜索支持路径拼音匹配', textEn: 'Symbol search matches file path pinyin' },
+      { tag: '🐛', tagColor: '#58a6ff', textZh: '修复集成测试不稳定', textEn: 'Fix flaky integration tests' },
     ],
   },
   '1.0.0': {
-    title: 'VOrg-QL 透视视图与全量索引',
+    title: 'VOrg-QL 透视视图与全量索引 / VOrg-QL & Index',
     items: [
-      { tag: '✨', tagColor: '#3fb950', text: 'VOrg-QL 透视视图 (Perspectives)，支持自定义查询语句和保存视图' },
-      { tag: '✨', tagColor: '#3fb950', text: '全量工作区索引，支撑大型 Org 知识库快速检索，符号搜索支持拼音匹配' },
-      { tag: '✨', tagColor: '#3fb950', text: '完成任务时自动记录 CLOSED 时间戳，对齐 Emacs 标准；支持 Shift+Up/Down 循环切换优先级' },
-      { tag: '✨', tagColor: '#3fb950', text: 'Mermaid 图表预览（流程图、时序图、甘特图等），自动适配明暗主题' },
+      { tag: '✨', tagColor: '#3fb950', textZh: 'VOrg-QL 透视视图与自定义查询', textEn: 'VOrg-QL Perspectives and custom queries' },
+      { tag: '✨', tagColor: '#3fb950', textZh: '全量工作区索引与拼音搜索', textEn: 'Full workspace index with pinyin search' },
+      { tag: '✨', tagColor: '#3fb950', textZh: 'DONE 自动记录 CLOSED 时间戳', textEn: 'DONE auto-records CLOSED timestamps' },
+      { tag: '✨', tagColor: '#3fb950', textZh: 'Mermaid 图表预览', textEn: 'Mermaid diagram preview' },
     ],
   },
 };
@@ -103,12 +111,15 @@ export class ChangelogPanel {
     const entries = CHANGELOG[this.version];
 
     const itemsHtml = (entries?.items ?? [])
-      .map(({ tag, tagColor, text }) => {
+      .map(({ tag, tagColor, textZh, textEn }) => {
         const typeLabel = tag === '✨' ? 'NEW' : tag === '🐛' ? 'FIX' : 'UPD';
         return `
           <div class="item-row">
             <div class="item-tag" style="color: ${tagColor}; border-color: ${tagColor}44; background: ${tagColor}11;">${typeLabel}</div>
-            <div class="item-text">${text}</div>
+            <div class="item-text">
+              <div class="item-text-zh">${textZh}</div>
+              <div class="item-text-en">${textEn}</div>
+            </div>
           </div>`;
       })
       .join('');
@@ -228,6 +239,12 @@ export class ChangelogPanel {
     font-weight: 400;
     color: var(--fg);
     opacity: 0.9;
+  }
+
+  .item-text-en {
+    font-size: 13px;
+    opacity: 0.65;
+    margin-top: 4px;
   }
 
   /* 页脚 */
